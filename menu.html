@@ -1387,8 +1387,13 @@ window.addEventListener('hashchange',handleHash);
   const wrapper = document.getElementById('heroWrapper');
   if(!video || !wrapper) return;
 
-  video.pause();
-  video.currentTime = 0;
+  // Forzar carga en móvil: arrancar y pausar para que el browser bufferea el video
+  video.play().then(() => {
+    video.pause();
+    video.currentTime = 0;
+  }).catch(() => {
+    video.currentTime = 0;
+  });
 
   function scrub(){
     if(!video.duration) return;
@@ -1399,6 +1404,7 @@ window.addEventListener('hashchange',handleHash);
   }
 
   video.addEventListener('loadedmetadata', scrub);
+  video.addEventListener('canplay', scrub);
   window.addEventListener('scroll', scrub, {passive: true});
 })();
 
