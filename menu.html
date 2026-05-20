@@ -269,6 +269,16 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .notes-field:focus{outline:none;border-color:rgba(232,100,26,.5)}
 .notes-field::placeholder{color:var(--mt)}
 
+/* ── COMPROBANTE UPLOAD ── */
+.upload-section{margin:1rem 0;padding:1.2rem;background:rgba(232,100,26,.07);border:1.5px dashed var(--or);border-radius:14px;text-align:center}
+.upload-title{font-weight:900;font-size:.9rem;margin-bottom:.3rem;color:var(--or)}
+.upload-sub{font-size:.78rem;color:var(--mt);margin-bottom:.9rem}
+.upload-btn-lbl{background:var(--or);color:#fff;padding:.7rem 1.5rem;border-radius:10px;font-weight:800;font-size:.85rem;cursor:pointer;display:inline-block;transition:background .2s}
+.upload-btn-lbl:hover{background:var(--orl)}
+.upload-preview{max-width:100%;max-height:180px;object-fit:contain;border-radius:10px;margin-top:.8rem;display:none;border:1px solid var(--bd)}
+.upload-ok{color:#27AE60;font-weight:800;font-size:.85rem;margin-top:.6rem;display:none}
+.upload-err{color:#E74C3C;font-weight:800;font-size:.82rem;margin-top:.5rem;display:none}
+
 /* ── ORDER TRACKING TIMELINE ── */
 .order-timeline{margin:1.5rem 0;padding:1.4rem 1.2rem;background:var(--dk3);border:1px solid var(--bd);border-radius:16px}
 .tl-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;color:var(--or);text-align:center;margin-bottom:1.4rem}
@@ -605,6 +615,19 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           <div class="confirm-status">¡Tu orden está en preparación! 🔥</div>
           <div class="confirm-sub">Te avisamos cuando esté lista. ¡Gracias por preferir KAN BURGER!</div>
           <div class="confirm-receipt" id="confirmReceipt"></div>
+
+          <!-- COMPROBANTE DE PAGO -->
+          <div class="upload-section" id="uploadSection" style="display:none">
+            <div class="upload-title">📸 Sube tu comprobante de pago</div>
+            <div class="upload-sub">Toma foto del comprobante de Nequi / Daviplata / Llave y súbelo aquí para que el restaurante verifique tu pago</div>
+            <label class="upload-btn-lbl">
+              📷 Seleccionar foto
+              <input type="file" accept="image/*" style="display:none" id="comprobanteInput" onchange="subirComprobante(this)">
+            </label>
+            <img id="uploadPreview" class="upload-preview">
+            <div class="upload-ok" id="uploadOk">✅ Comprobante enviado al restaurante</div>
+            <div class="upload-err" id="uploadErr">❌ Error al subir. Intenta de nuevo.</div>
+          </div>
 
           <!-- TIMELINE DE SEGUIMIENTO -->
           <div class="order-timeline">
@@ -1195,6 +1218,10 @@ async function placeOrder(){
 
 function buildConfirmation(){
   document.getElementById('confirmNum').textContent='#'+state.orderNum;
+  document.getElementById('uploadSection').style.display = state.payment !== 'efectivo' ? 'block' : 'none';
+  document.getElementById('uploadPreview').style.display = 'none';
+  document.getElementById('uploadOk').style.display = 'none';
+  document.getElementById('uploadErr').style.display = 'none';
   const ts=new Date();
   const dt=ts.toLocaleDateString('es-CO')+' '+ts.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
 
@@ -1256,6 +1283,36 @@ function printReceipt(){
   <script>setTimeout(()=>{window.print();},300);<\/script>
   </body></html>`);
   w.document.close();
+}
+
+// ── COMPROBANTE ──────────────────────────────────
+async function subirComprobante(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const preview = document.getElementById('uploadPreview');
+  const ok      = document.getElementById('uploadOk');
+  const err     = document.getElementById('uploadErr');
+  ok.style.display = 'none';
+  err.style.display = 'none';
+
+  const reader = new FileReader();
+  reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+  reader.readAsDataURL(file);
+
+  try {
+    const fileName = state.orderNum + '.jpg';
+    const { error: upErr } = await sb.storage
+      .from('COMPROBANTES')
+      .upload(fileName, file, { upsert: true, contentType: file.type });
+    if (upErr) throw upErr;
+
+    const { data: urlData } = sb.storage.from('COMPROBANTES').getPublicUrl(fileName);
+    await sb.from('ordenes').update({ comprobante_url: urlData.publicUrl }).eq('id', state.orderNum);
+    ok.style.display = 'block';
+  } catch(e) {
+    err.style.display = 'block';
+  }
 }
 
 // ── ORDER TRACKING ──────────────────────────────

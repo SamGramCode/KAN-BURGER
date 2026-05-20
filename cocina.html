@@ -159,6 +159,18 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
   .btn-ready{flex:100%}
 }
 @media(max-width:480px){.login-box{margin:1rem;padding:2rem 1.5rem}}
+
+/* COMPROBANTE */
+.oc-comprobante{padding:.8rem 1.2rem;border-top:1px solid var(--bd)}
+.comprobante-img{width:100%;max-height:200px;object-fit:contain;border-radius:10px;cursor:pointer;border:1px solid var(--bd);margin:.5rem 0;transition:transform .2s}
+.comprobante-img:hover{transform:scale(1.02)}
+.btn-pago-ok{width:100%;padding:.75rem;border-radius:10px;background:rgba(39,174,96,.15);border:1px solid rgba(39,174,96,.3);color:#27AE60;font-weight:900;font-size:.85rem;margin-top:.4rem;cursor:pointer;transition:all .3s}
+.btn-pago-ok:hover{background:rgba(39,174,96,.25)}
+.pago-verificado-badge{background:rgba(39,174,96,.12);border:1px solid rgba(39,174,96,.25);color:#27AE60;border-radius:8px;padding:.5rem .8rem;font-size:.8rem;font-weight:800;text-align:center;margin-top:.4rem}
+
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+.lightbox img{max-width:95vw;max-height:90vh;border-radius:12px;object-fit:contain}
 </style>
 </head>
 <body>
@@ -433,6 +445,15 @@ function buildCard(order) {
       <div class="oc-section"><div class="oc-sec-label">📦 Empaque</div>${packHTML}</div>
       ${order.notas ? `<div class="oc-notes"><span>📝</span><span>${esc(order.notas)}</span></div>` : ''}
     </div>
+    ${order.comprobante_url ? `
+    <div class="oc-comprobante">
+      <div class="oc-sec-label">💳 COMPROBANTE DE PAGO</div>
+      <img src="${order.comprobante_url}" class="comprobante-img" onclick="verComprobante('${order.comprobante_url}')" title="Click para ampliar">
+      ${order.pago_verificado
+        ? '<div class="pago-verificado-badge">✅ Pago verificado</div>'
+        : `<button class="btn-pago-ok" onclick="verificarPago('${order.id}')">✅ Confirmar pago recibido</button>`
+      }
+    </div>` : ''}
     <div class="oc-foot">
       <button class="btn-ready" ${allDone ? '' : 'disabled'} onclick="marcarListo('${order.id}')">
         ${allDone ? '✅ Marcar como Lista' : `⏳ Faltan ${total - checked} ítems`}
@@ -604,6 +625,22 @@ function playSound() {
 // ── UTILIDADES ────────────────────────────────────────────────────────
 function fmt(n) { return '$' + (n || 0).toLocaleString('es-CO'); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function verificarPago(orderId) {
+  const order = ordersCache.find(o => o.id === orderId);
+  if (!order) return;
+  order.pago_verificado = true;
+  renderizar();
+  try { await sb.from('ordenes').update({ pago_verificado: true }).eq('id', orderId); } catch(e) {}
+}
+
+function verComprobante(url) {
+  const lb = document.createElement('div');
+  lb.className = 'lightbox';
+  lb.innerHTML = `<img src="${url}">`;
+  lb.onclick = () => lb.remove();
+  document.body.appendChild(lb);
+}
 function elapsed(from) {
   const d = Date.now() - new Date(from).getTime();
   const m = Math.floor(d / 60000);
