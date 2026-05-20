@@ -1632,6 +1632,16 @@ function toggleTheme(){
   initReveal();
   handleHash();
 })();
+
+// Realtime — actualiza vitrina al instante cuando cocina activa/desactiva productos
+sb.channel('menu_config_rt')
+  .on('postgres_changes',
+    { event: '*', schema: 'public', table: 'menu_config' },
+    async () => {
+      await cargarProductosActivos();
+      buildShowcase();
+    }
+  ).subscribe();
 </script>
 </body>
 </html>
