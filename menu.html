@@ -834,6 +834,15 @@ const SUPABASE_URL = 'https://enjlbusizeospzadndwj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sUXpKKZgEDbE7r77VRjFpQ_z815AhOd';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Configuración de productos activos — se carga de Supabase al iniciar
+let productosActivos = {};
+async function cargarProductosActivos() {
+  try {
+    const { data } = await sb.from('menu_config').select('*');
+    if (data) data.forEach(r => productosActivos[r.id] = r.activo);
+  } catch(e) {}
+}
+
 // ══════════════════════════════════════════════
 // DATA
 // ══════════════════════════════════════════════
@@ -903,9 +912,11 @@ function totalItems(){
 // SHOWCASE (static sections)
 // ══════════════════════════════════════════════
 function buildShowcase(){
+  const activo = id => productosActivos[id] !== false;
+
   // Menu
   const mg=document.getElementById('menuShowcase');
-  mg.innerHTML=MENU_ITEMS.map(m=>`
+  mg.innerHTML=MENU_ITEMS.filter(m=>activo(m.id)).map(m=>`
     <div class="mcard reveal" data-filter="${m.cat}">
       <div class="mcard-img"><img src="${m.img}" alt="${m.name}"><div class="mcard-badge">${m.badge}</div></div>
       <div class="mcard-body">
@@ -920,7 +931,7 @@ function buildShowcase(){
 
   // Bebidas
   const bg=document.getElementById('bebidasShowcase');
-  bg.innerHTML=DRINKS.map(d=>`
+  bg.innerHTML=DRINKS.filter(d=>activo(d.id)).map(d=>`
     <div class="bcard reveal">
       <div class="bcard-ic">${d.icon}</div>
       <div class="bcard-name">${d.name}</div>
@@ -929,7 +940,7 @@ function buildShowcase(){
 
   // Salsas
   const sg=document.getElementById('salsasShowcase');
-  sg.innerHTML=SAUCES.map(s=>`
+  sg.innerHTML=SAUCES.filter(s=>activo(s.id)).map(s=>`
     <div class="scard reveal">
       <div class="sdot" style="background:${s.color}"></div>
       <div><div class="sname">${s.name}</div><div class="sdesc">Artesanal · Gratis</div></div>
@@ -970,7 +981,7 @@ function closeModal(){
 // Build food grid
 function buildFoodGrid(){
   const g=document.getElementById('foodGrid');
-  g.innerHTML=MENU_ITEMS.map(m=>`
+  g.innerHTML=MENU_ITEMS.filter(m=>productosActivos[m.id]!==false).map(m=>`
     <div class="ocard ${state.food[m.id]?'in-cart':''}" id="ocard_${m.id}">
       <div class="ocard-img"><img src="${m.img}" alt="${m.name}"></div>
       <div class="ocard-body">
@@ -1000,7 +1011,7 @@ function changeQty(id,delta){
 // Build drink grid
 function buildDrinkGrid(){
   const g=document.getElementById('drinkGrid');
-  g.innerHTML=DRINKS.map(d=>`
+  g.innerHTML=DRINKS.filter(d=>productosActivos[d.id]!==false).map(d=>`
     <div class="dorder-card ${state.drinks[d.id]?'in-cart':''}" id="dcard_${d.id}">
       <div class="do-ic">${d.icon}</div>
       <div class="do-name">${d.name}</div>
@@ -1027,7 +1038,7 @@ function changeDrink(id,delta){
 // Build sauce grid
 function buildSauceGrid(){
   const g=document.getElementById('sauceGrid');
-  g.innerHTML=SAUCES.map(s=>`
+  g.innerHTML=SAUCES.filter(s=>productosActivos[s.id]!==false).map(s=>`
     <div class="socard ${state.sauces.includes(s.id)?'selected':''}" onclick="toggleSauce('${s.id}',this)">
       <div class="so-dot" style="background:${s.color}"></div>
       <div class="so-name">${s.name}</div>
@@ -1045,10 +1056,10 @@ function filterOrderCat(btn){
   document.querySelectorAll('#step0 .fbtn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   const cat=btn.dataset.cat;
-  document.querySelectorAll('#foodGrid .ocard').forEach((c,i)=>{
-    const id=MENU_ITEMS[i].id;
+  document.querySelectorAll('#foodGrid .ocard').forEach(c=>{
+    const id=c.id.replace('ocard_','');
     const item=MENU_ITEMS.find(m=>m.id===id);
-    c.style.display=(cat==='all'||item.cat===cat)?'':'none';
+    c.style.display=(cat==='all'||!item||item.cat===cat)?'':'none';
   });
 }
 
@@ -1615,9 +1626,12 @@ function toggleTheme(){
 })();
 
 // ── INIT ──
-buildShowcase();
-initReveal();
-handleHash();
+(async function(){
+  await cargarProductosActivos();
+  buildShowcase();
+  initReveal();
+  handleHash();
+})();
 </script>
 </body>
 </html>

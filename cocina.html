@@ -160,6 +160,33 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 }
 @media(max-width:480px){.login-box{margin:1rem;padding:2rem 1.5rem}}
 
+/* BOTÓN MENÚ */
+.tb-menu-btn{background:rgba(255,255,255,.08);border:1px solid var(--bd);color:var(--cr);border-radius:10px;width:38px;height:38px;font-size:1.3rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;flex-shrink:0}
+.tb-menu-btn:hover{background:rgba(232,100,26,.2);border-color:var(--or)}
+
+/* PANEL LATERAL */
+.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;backdrop-filter:blur(3px)}
+.menu-overlay.open{display:block}
+.menu-panel{position:fixed;top:0;right:-420px;width:400px;max-width:95vw;height:100vh;background:var(--dk2);border-left:1px solid var(--bd);z-index:201;display:flex;flex-direction:column;transition:right .35s cubic-bezier(.4,0,.2,1);box-shadow:-10px 0 40px rgba(0,0,0,.5)}
+.menu-panel.open{right:0}
+.mp-head{padding:1.2rem 1.4rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.mp-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--or)}
+.mp-close{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:var(--cr);border-radius:8px;width:32px;height:32px;font-size:1rem;cursor:pointer}
+.mp-body{flex:1;overflow-y:auto;padding:1rem}
+.mp-category{font-size:.65rem;font-weight:900;text-transform:uppercase;letter-spacing:3px;color:var(--mt);margin:1.2rem 0 .6rem;padding-bottom:.4rem;border-bottom:1px solid var(--bd)}
+.mp-item{display:flex;align-items:center;gap:.9rem;padding:.65rem .5rem;border-radius:10px;margin-bottom:.3rem;transition:background .2s}
+.mp-item:hover{background:rgba(255,255,255,.03)}
+.mp-item-name{flex:1;font-size:.88rem;font-weight:700}
+.mp-item-name.agotado{color:rgba(255,255,255,.3);text-decoration:line-through}
+.mp-item-price{font-size:.78rem;color:var(--mt);margin-right:.5rem}
+.toggle-wrap{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle-wrap input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,.12);border-radius:24px;cursor:pointer;transition:background .3s}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .3s}
+.toggle-wrap input:checked + .toggle-slider{background:var(--done)}
+.toggle-wrap input:checked + .toggle-slider::before{transform:translateX(20px)}
+.mp-agotado-badge{font-size:.68rem;font-weight:800;color:var(--rej);background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.2);padding:.1rem .5rem;border-radius:50px}
+
 /* COMPROBANTE */
 .oc-comprobante{padding:.8rem 1.2rem;border-top:1px solid var(--bd)}
 .comprobante-img{width:100%;max-height:200px;object-fit:contain;border-radius:10px;cursor:pointer;border:1px solid var(--bd);margin:.5rem 0;transition:transform .2s}
@@ -202,7 +229,20 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
       <div class="tb-date" id="tbDate"></div>
     </div>
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+    <button class="tb-menu-btn" onclick="abrirMenuPanel()" title="Gestión de menú">☰</button>
     <button class="tb-logout" onclick="doLogout()">Salir</button>
+  </div>
+
+  <!-- PANEL GESTIÓN DE MENÚ -->
+  <div class="menu-overlay" id="menuOverlay" onclick="cerrarMenuPanel()"></div>
+  <div class="menu-panel" id="menuPanel">
+    <div class="mp-head">
+      <div class="mp-title">📋 Gestión del Menú</div>
+      <button class="mp-close" onclick="cerrarMenuPanel()">✕</button>
+    </div>
+    <div class="mp-body" id="mpBody">
+      <div style="color:var(--mt);text-align:center;padding:2rem">Cargando productos...</div>
+    </div>
   </div>
 
   <div class="statsbar">
@@ -281,6 +321,7 @@ async function iniciarPanel() {
     Notification.requestPermission();
   }
 
+  await cargarMenuConfig();
   setInterval(actualizarReloj, 1000);
   actualizarReloj();
 
@@ -623,6 +664,86 @@ function playSound() {
 }
 
 // ── UTILIDADES ────────────────────────────────────────────────────────
+// ── GESTIÓN DE MENÚ ──────────────────────────────────────────────────
+const TODOS_PRODUCTOS = [
+  {id:'b1',name:'La Clásica',price:12000,cat:'🍔 Burgers'},
+  {id:'b2',name:'La Crispy',price:13000,cat:'🍔 Burgers'},
+  {id:'b3',name:'La Blanca',price:12000,cat:'🍔 Burgers'},
+  {id:'b4',name:'La Doble',price:16000,cat:'🍔 Burgers'},
+  {id:'b5',name:'La Mega KAN',price:20000,cat:'🍔 Burgers'},
+  {id:'b6',name:'Combo KAN',price:15000,cat:'🍔 Burgers'},
+  {id:'v1',name:'Perro KAN',price:8000,cat:'🇻🇪 Venezolanos'},
+  {id:'v2',name:'Pabellón KAN',price:14000,cat:'🇻🇪 Venezolanos'},
+  {id:'v3',name:'Patacón KAN',price:16000,cat:'🇻🇪 Venezolanos'},
+  {id:'a1',name:'Salchipapa KAN',price:8000,cat:'🍟 Acompañantes'},
+  {id:'a2',name:'Papas Cargadas',price:9000,cat:'🍟 Acompañantes'},
+  {id:'a3',name:'Papas Simples',price:5000,cat:'🍟 Acompañantes'},
+  {id:'d1',name:'Frescolita',price:3000,cat:'🥤 Bebidas'},
+  {id:'d2',name:'Malta',price:3000,cat:'🥤 Bebidas'},
+  {id:'d3',name:'Jugo Natural',price:4000,cat:'🥤 Bebidas'},
+  {id:'d4',name:'Limonada',price:4000,cat:'🥤 Bebidas'},
+  {id:'d5',name:'Refresco',price:2500,cat:'🥤 Bebidas'},
+  {id:'d6',name:'Agua Fría',price:2000,cat:'🥤 Bebidas'},
+  {id:'sa1',name:'Salsa BBQ',price:0,cat:'🥫 Salsas'},
+  {id:'sa2',name:'Cheddar',price:0,cat:'🥫 Salsas'},
+  {id:'sa3',name:'Mayonesa de Ajo',price:0,cat:'🥫 Salsas'},
+  {id:'sa4',name:'Ketchup',price:0,cat:'🥫 Salsas'},
+  {id:'sa5',name:'Mostaza',price:0,cat:'🥫 Salsas'},
+  {id:'sa6',name:'Salsa Rosada',price:0,cat:'🥫 Salsas'},
+  {id:'sa7',name:'Guasacaca',price:0,cat:'🥫 Salsas'},
+  {id:'sa8',name:'Salsa de la Casa',price:0,cat:'🥫 Salsas'}
+];
+
+let menuConfig = {};
+
+async function cargarMenuConfig() {
+  try {
+    const { data } = await sb.from('menu_config').select('*');
+    if (data) data.forEach(r => menuConfig[r.id] = r.activo);
+  } catch(e) {}
+}
+
+function abrirMenuPanel() {
+  document.getElementById('menuOverlay').classList.add('open');
+  document.getElementById('menuPanel').classList.add('open');
+  renderMenuPanel();
+}
+
+function cerrarMenuPanel() {
+  document.getElementById('menuOverlay').classList.remove('open');
+  document.getElementById('menuPanel').classList.remove('open');
+}
+
+function renderMenuPanel() {
+  const cats = [...new Set(TODOS_PRODUCTOS.map(p => p.cat))];
+  const body = document.getElementById('mpBody');
+  body.innerHTML = cats.map(cat => {
+    const items = TODOS_PRODUCTOS.filter(p => p.cat === cat);
+    return `<div class="mp-category">${cat}</div>` +
+      items.map(p => {
+        const activo = menuConfig[p.id] !== false;
+        return `<div class="mp-item">
+          <div style="flex:1">
+            <div class="mp-item-name ${activo ? '' : 'agotado'}">${p.name} ${activo ? '' : '<span class="mp-agotado-badge">AGOTADO</span>'}</div>
+            ${p.price ? `<div class="mp-item-price">$${p.price.toLocaleString('es-CO')}</div>` : ''}
+          </div>
+          <label class="toggle-wrap">
+            <input type="checkbox" ${activo ? 'checked' : ''} onchange="toggleProducto('${p.id}', this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>`;
+      }).join('');
+  }).join('');
+}
+
+async function toggleProducto(id, activo) {
+  menuConfig[id] = activo;
+  renderMenuPanel();
+  try {
+    await sb.from('menu_config').update({ activo }).eq('id', id);
+  } catch(e) {}
+}
+
 function fmt(n) { return '$' + (n || 0).toLocaleString('es-CO'); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
