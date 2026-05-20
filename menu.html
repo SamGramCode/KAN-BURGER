@@ -269,6 +269,48 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .notes-field:focus{outline:none;border-color:rgba(232,100,26,.5)}
 .notes-field::placeholder{color:var(--mt)}
 
+/* ── ORDER TRACKING TIMELINE ── */
+.order-timeline{margin:1.5rem 0;padding:1.4rem 1.2rem;background:var(--dk3);border:1px solid var(--bd);border-radius:16px}
+.tl-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;color:var(--or);text-align:center;margin-bottom:1.4rem}
+.tl-row{display:flex;align-items:center;gap:1rem;padding:.4rem 0;transition:all .5s}
+.tl-icon-wrap{width:62px;height:62px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);transition:all .5s}
+.tl-row.active .tl-icon-wrap{border-color:var(--or);background:rgba(232,100,26,.1);box-shadow:0 0 22px rgba(232,100,26,.25)}
+.tl-row.done .tl-icon-wrap{border-color:#27AE60;background:rgba(39,174,96,.1)}
+.tl-connector{width:2px;height:28px;background:rgba(255,255,255,.07);margin-left:30px;border-radius:2px;transition:background .6s}
+.tl-connector.filled{background:#27AE60}
+.tl-label{font-weight:800;font-size:.92rem;color:rgba(255,255,255,.25);transition:color .5s}
+.tl-row.active .tl-label{color:var(--cr)}
+.tl-row.done .tl-label{color:#27AE60}
+.tl-sub{font-size:.76rem;color:var(--mt);margin-top:.15rem}
+.tl-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.1);margin-top:.5rem;transition:background .5s}
+.tl-row.active .tl-dot{background:var(--or);animation:dotGlow 1.2s ease-in-out infinite}
+.tl-row.done .tl-dot{background:#27AE60}
+@keyframes dotGlow{0%,100%{box-shadow:0 0 0 0 rgba(232,100,26,.5)}50%{box-shadow:0 0 0 7px rgba(232,100,26,0)}}
+
+/* Icono paso 1 — tienda pulsando */
+.icon-store{font-size:1.9rem}
+.tl-row.active .icon-store{animation:storePulse 1.4s ease-in-out infinite}
+@keyframes storePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+
+/* Icono paso 2 — burger con tapa que sube y baja */
+.burger-anim{display:flex;flex-direction:column;align-items:center;gap:2px}
+.b-top{width:36px;height:13px;background:#C8641A;border-radius:18px 18px 3px 3px;position:relative}
+.b-top::after{content:'';position:absolute;top:-4px;left:7px;right:7px;height:6px;background:#D97830;border-radius:50%}
+.b-seed1{position:absolute;width:5px;height:3px;background:#E8A060;border-radius:50%;top:2px;left:6px}
+.b-seed2{position:absolute;width:5px;height:3px;background:#E8A060;border-radius:50%;top:2px;right:6px}
+.b-seed3{position:absolute;width:4px;height:3px;background:#E8A060;border-radius:50%;top:4px;left:50%;transform:translateX(-50%)}
+.b-cheese{width:38px;height:5px;background:#F5C842;border-radius:1px}
+.b-patty{width:34px;height:9px;background:#3E1F00;border-radius:4px}
+.b-lettuce{width:38px;height:5px;background:#27AE60;border-radius:2px;opacity:.9}
+.b-bot{width:36px;height:10px;background:#C8641A;border-radius:3px 3px 14px 14px}
+.tl-row.active .b-top{animation:bunOpen 1s ease-in-out infinite}
+@keyframes bunOpen{0%,100%{transform:translateY(0) rotate(0deg)}45%,55%{transform:translateY(-16px) rotate(-4deg)}}
+
+/* Icono paso 3 — scooter con rebote */
+.icon-scooter{font-size:1.9rem;display:inline-block}
+.tl-row.active .icon-scooter{animation:scooterGo .5s ease-in-out infinite alternate}
+@keyframes scooterGo{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-9px) rotate(3deg)}}
+
 /* confirmation */
 .confirm-wrap{text-align:center;padding:2rem 1rem}
 .confirm-icon{font-size:5rem;margin-bottom:1.2rem;animation:popIn .5s cubic-bezier(.175,.885,.32,1.275)}
@@ -563,6 +605,59 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           <div class="confirm-status">¡Tu orden está en preparación! 🔥</div>
           <div class="confirm-sub">Te avisamos cuando esté lista. ¡Gracias por preferir KAN BURGER!</div>
           <div class="confirm-receipt" id="confirmReceipt"></div>
+
+          <!-- TIMELINE DE SEGUIMIENTO -->
+          <div class="order-timeline">
+            <div class="tl-title">📍 ESTADO DE TU PEDIDO</div>
+
+            <div class="tl-row active" id="tl1">
+              <div class="tl-icon-wrap">
+                <span class="icon-store">🏪</span>
+              </div>
+              <div style="flex:1">
+                <div class="tl-label">Restaurante confirmando</div>
+                <div class="tl-sub">Tu pedido llegó al restaurante</div>
+                <div class="tl-dot"></div>
+              </div>
+            </div>
+
+            <div class="tl-connector" id="tlconn1"></div>
+
+            <div class="tl-row" id="tl2">
+              <div class="tl-icon-wrap">
+                <div class="burger-anim">
+                  <div class="b-top">
+                    <div class="b-seed1"></div>
+                    <div class="b-seed2"></div>
+                    <div class="b-seed3"></div>
+                  </div>
+                  <div class="b-cheese"></div>
+                  <div class="b-patty"></div>
+                  <div class="b-lettuce"></div>
+                  <div class="b-bot"></div>
+                </div>
+              </div>
+              <div style="flex:1">
+                <div class="tl-label">Pedido en preparación</div>
+                <div class="tl-sub">El equipo está cocinando 🔥</div>
+                <div class="tl-dot"></div>
+              </div>
+            </div>
+
+            <div class="tl-connector" id="tlconn2"></div>
+
+            <div class="tl-row" id="tl3">
+              <div class="tl-icon-wrap">
+                <span class="icon-scooter">🛵</span>
+              </div>
+              <div style="flex:1">
+                <div class="tl-label" id="tl3label">¡Tu pedido está listo!</div>
+                <div class="tl-sub" id="tl3sub">En camino a tu domicilio 🎉</div>
+                <div class="tl-dot"></div>
+              </div>
+            </div>
+          </div>
+
           <div style="display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;margin-top:1rem">
             <button class="btn-p" onclick="closeModal()">← Volver al menú</button>
           </div>
@@ -1095,6 +1190,7 @@ async function placeOrder(){
   }
 
   renderStep(4);
+  iniciarTracking(state.orderNum);
 }
 
 function buildConfirmation(){
@@ -1162,7 +1258,46 @@ function printReceipt(){
   w.document.close();
 }
 
+// ── ORDER TRACKING ──────────────────────────────
+let trackingInterval = null;
+
+function iniciarTracking(orderId) {
+  actualizarTimeline('pendiente');
+  if (trackingInterval) clearInterval(trackingInterval);
+  trackingInterval = setInterval(async () => {
+    try {
+      const { data } = await sb.from('ordenes').select('estado').eq('id', orderId).single();
+      if (data) {
+        actualizarTimeline(data.estado);
+        if (data.estado === 'listo' || data.estado === 'rechazado') {
+          clearInterval(trackingInterval);
+          trackingInterval = null;
+        }
+      }
+    } catch(e) {}
+  }, 5000);
+}
+
+function actualizarTimeline(estado) {
+  const map = { pendiente: 0, en_preparacion: 1, listo: 2 };
+  const idx = map[estado] ?? 0;
+  ['tl1','tl2','tl3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'tl-row ' + (i < idx ? 'done' : i === idx ? 'active' : '');
+  });
+  const c1 = document.getElementById('tlconn1');
+  const c2 = document.getElementById('tlconn2');
+  if (c1) c1.classList.toggle('filled', idx > 0);
+  if (c2) c2.classList.toggle('filled', idx > 1);
+  if (estado === 'rechazado') {
+    const lbl = document.getElementById('tl1');
+    if (lbl) lbl.querySelector('.tl-label').textContent = '❌ Pedido cancelado';
+  }
+}
+
 function resetOrder(){
+  if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
   state={step:0,food:{},drinks:{},sauces:[],payment:null,notes:'',orderNum:null};
   renderStep(0);
   updateFloatCart();
