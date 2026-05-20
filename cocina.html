@@ -198,6 +198,44 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 /* LIGHTBOX */
 .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out}
 .lightbox img{max-width:95vw;max-height:90vh;border-radius:12px;object-fit:contain}
+
+/* CIERRE DE CAJA */
+.cierre-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;backdrop-filter:blur(4px)}
+.cierre-overlay.open{display:block}
+.cierre-panel{position:fixed;top:0;right:-520px;width:500px;max-width:97vw;height:100vh;background:var(--dk2);border-left:1px solid var(--bd);z-index:301;display:flex;flex-direction:column;transition:right .35s cubic-bezier(.4,0,.2,1);box-shadow:-10px 0 50px rgba(0,0,0,.6)}
+.cierre-panel.open{right:0}
+.cp-head{padding:1.2rem 1.4rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cp-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--or)}
+.cp-close{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:var(--cr);border-radius:8px;width:32px;height:32px;font-size:1rem;cursor:pointer}
+.cp-body{flex:1;overflow-y:auto;padding:1.2rem}
+.cp-foot{padding:1rem 1.4rem;border-top:1px solid var(--bd);display:flex;gap:.8rem;flex-shrink:0}
+.btn-print-cierre{flex:1;background:var(--or);color:#fff;padding:.9rem;border-radius:12px;font-weight:900;font-size:.95rem;letter-spacing:1px;text-transform:uppercase}
+.btn-print-cierre:hover{background:var(--orl)}
+.btn-close-cierre{background:rgba(255,255,255,.06);border:1px solid var(--bd);color:var(--mt);padding:.9rem 1.2rem;border-radius:12px;font-weight:700;font-size:.9rem}
+
+.cierre-resumen{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.4rem}
+.cr-stat{background:var(--dk3);border:1px solid var(--bd);border-radius:14px;padding:1rem;text-align:center}
+.cr-stat-val{font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1;color:var(--or)}
+.cr-stat-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--mt);margin-top:.3rem}
+.cr-section-title{font-size:.65rem;font-weight:900;text-transform:uppercase;letter-spacing:3px;color:var(--mt);margin:1rem 0 .6rem;padding-bottom:.4rem;border-bottom:1px solid var(--bd)}
+.cr-pay-row{display:flex;align-items:center;justify-content:space-between;padding:.65rem .8rem;border-radius:10px;margin-bottom:.3rem;background:var(--dk3);border:1px solid var(--bd)}
+.cr-pay-label{font-weight:700;font-size:.88rem;display:flex;align-items:center;gap:.5rem}
+.cr-pay-amount{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--or);letter-spacing:1px}
+.cr-pay-count{font-size:.72rem;color:var(--mt)}
+.cr-order-row{display:flex;align-items:center;gap:.8rem;padding:.6rem .8rem;border-radius:10px;margin-bottom:.3rem;background:var(--dk3);border:1px solid rgba(39,174,96,.12)}
+.cr-or-num{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--done);letter-spacing:1px;min-width:70px}
+.cr-or-items{font-size:.78rem;color:var(--mt);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr-or-total{font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--or);letter-spacing:.5px}
+.cr-or-time{font-size:.7rem;color:var(--mt);min-width:42px;text-align:right}
+.cr-total-row{display:flex;justify-content:space-between;align-items:center;background:rgba(232,100,26,.1);border:1px solid rgba(232,100,26,.25);border-radius:14px;padding:1rem 1.2rem;margin-top:1rem}
+.cr-total-label{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px}
+.cr-total-val{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--or);letter-spacing:1px}
+
+@media print{
+  body *{visibility:hidden!important}
+  #printCierre,#printCierre *{visibility:visible!important}
+  #printCierre{position:fixed!important;inset:0!important;background:#fff!important;color:#000!important;padding:1.5rem!important;font-family:'Courier New',monospace!important;font-size:12px!important;overflow:visible!important;z-index:99999!important}
+}
 </style>
 </head>
 <body>
@@ -229,9 +267,27 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
       <div class="tb-date" id="tbDate"></div>
     </div>
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+    <button class="tb-menu-btn" onclick="abrirCierre()" title="Cierre de caja" style="font-size:1rem">📊</button>
     <button class="tb-menu-btn" onclick="abrirMenuPanel()" title="Gestión de menú">☰</button>
     <button class="tb-logout" onclick="doLogout()">Salir</button>
   </div>
+
+  <!-- CIERRE DE CAJA -->
+  <div class="cierre-overlay" id="cierreOverlay" onclick="cerrarCierre()"></div>
+  <div class="cierre-panel" id="cierrePanel">
+    <div class="cp-head">
+      <div class="cp-title">📊 Cierre de Caja</div>
+      <button class="cp-close" onclick="cerrarCierre()">✕</button>
+    </div>
+    <div class="cp-body" id="cierreBody">
+      <div style="color:var(--mt);text-align:center;padding:2rem">Cargando...</div>
+    </div>
+    <div class="cp-foot">
+      <button class="btn-print-cierre" onclick="imprimirCierre()">🖨️ Imprimir Cierre</button>
+      <button class="btn-close-cierre" onclick="cerrarCierre()">Cerrar</button>
+    </div>
+  </div>
+  <div id="printCierre" style="display:none"></div>
 
   <!-- PANEL GESTIÓN DE MENÚ -->
   <div class="menu-overlay" id="menuOverlay" onclick="cerrarMenuPanel()"></div>
@@ -767,6 +823,133 @@ function elapsed(from) {
   const m = Math.floor(d / 60000);
   const s = Math.floor((d % 60000) / 1000);
   return m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60) + 'min' : m > 0 ? m + ' min ' + s + 's' : s + ' seg';
+}
+
+// ── CIERRE DE CAJA ────────────────────────────────────────────────────
+function abrirCierre() {
+  document.getElementById('cierreOverlay').classList.add('open');
+  document.getElementById('cierrePanel').classList.add('open');
+  renderCierre();
+}
+
+function cerrarCierre() {
+  document.getElementById('cierreOverlay').classList.remove('open');
+  document.getElementById('cierrePanel').classList.remove('open');
+}
+
+function renderCierre() {
+  const hoy = new Date().toDateString();
+  const fecha = new Date().toLocaleDateString('es-CO', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  const done = ordersCache.filter(o => o.estado === 'listo' && new Date(o.fecha_hora).toDateString() === hoy);
+  const canceladas = ordersCache.filter(o => o.estado === 'rechazado' && new Date(o.fecha_hora).toDateString() === hoy);
+  const totalVentas = done.reduce((s, o) => s + (o.total || 0), 0);
+
+  const payMethods = { efectivo:'💵 Efectivo', nequi:'💜 Nequi', daviplata:'❤️ Daviplata', llave:'🔑 Llave' };
+  const payStats = {};
+  done.forEach(o => {
+    const m = o.metodo_pago || 'efectivo';
+    if (!payStats[m]) payStats[m] = { count: 0, total: 0 };
+    payStats[m].count++;
+    payStats[m].total += (o.total || 0);
+  });
+
+  const resumen = `
+    <div class="cierre-resumen">
+      <div class="cr-stat"><div class="cr-stat-val">${done.length}</div><div class="cr-stat-lbl">✅ Completadas</div></div>
+      <div class="cr-stat"><div class="cr-stat-val">${fmt(totalVentas)}</div><div class="cr-stat-lbl">💰 Total ventas</div></div>
+      <div class="cr-stat"><div class="cr-stat-val">${ordersCache.filter(o=>o.estado==='pendiente'||o.estado==='en_preparacion').length}</div><div class="cr-stat-lbl">⏳ Pendientes</div></div>
+      <div class="cr-stat"><div class="cr-stat-val">${canceladas.length}</div><div class="cr-stat-lbl">❌ Canceladas</div></div>
+    </div>`;
+
+  const porMetodo = Object.entries(payMethods).map(([key, label]) => {
+    const s = payStats[key];
+    if (!s) return '';
+    return `<div class="cr-pay-row">
+      <div><div class="cr-pay-label">${label}</div><div class="cr-pay-count">${s.count} orden${s.count!==1?'es':''}</div></div>
+      <div class="cr-pay-amount">${fmt(s.total)}</div>
+    </div>`;
+  }).join('');
+
+  const ordenesList = [...done].reverse().map(o => {
+    const hora = new Date(o.fecha_hora).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+    const items = [...(o.comida||[]).map(i=>`${i.qty}x ${i.name}`),...(o.bebidas||[]).map(d=>`${d.qty}x ${d.name}`)].join(' · ') || '—';
+    return `<div class="cr-order-row">
+      <div class="cr-or-num">#${o.id}</div>
+      <div class="cr-or-items">${esc(items)}</div>
+      <div class="cr-or-total">${fmt(o.total)}</div>
+      <div class="cr-or-time">${hora}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('cierreBody').innerHTML = `
+    <div style="font-size:.8rem;color:var(--mt);margin-bottom:1.2rem;text-transform:capitalize">${fecha}</div>
+    ${resumen}
+    <div class="cr-section-title">Por método de pago</div>
+    ${porMetodo || '<div style="color:var(--mt);font-size:.85rem">Sin ventas aún</div>'}
+    <div class="cr-total-row"><span class="cr-total-label">Total del día</span><span class="cr-total-val">${fmt(totalVentas)}</span></div>
+    <div class="cr-section-title" style="margin-top:1.4rem">Detalle de órdenes completadas</div>
+    ${ordenesList || '<div style="color:var(--mt);font-size:.85rem">Sin órdenes completadas</div>'}`;
+}
+
+function imprimirCierre() {
+  const hoy = new Date().toDateString();
+  const fecha = new Date().toLocaleDateString('es-CO', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  const done = ordersCache.filter(o => o.estado === 'listo' && new Date(o.fecha_hora).toDateString() === hoy);
+  const canceladas = ordersCache.filter(o => o.estado === 'rechazado' && new Date(o.fecha_hora).toDateString() === hoy);
+  const totalVentas = done.reduce((s, o) => s + (o.total || 0), 0);
+  const payMethods = { efectivo:'Efectivo', nequi:'Nequi', daviplata:'Daviplata', llave:'Llave' };
+  const payStats = {};
+  done.forEach(o => {
+    const m = o.metodo_pago || 'efectivo';
+    if (!payStats[m]) payStats[m] = { count:0, total:0 };
+    payStats[m].count++;
+    payStats[m].total += (o.total || 0);
+  });
+
+  const payRows = Object.entries(payMethods).map(([k,l]) => {
+    const s = payStats[k];
+    return s ? `<tr><td>${l}</td><td>${s.count} órdenes</td><td style="text-align:right">${fmt(s.total)}</td></tr>` : '';
+  }).join('');
+
+  const orderRows = [...done].reverse().map(o => {
+    const hora = new Date(o.fecha_hora).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+    const items = [...(o.comida||[]).map(i=>`${i.qty}x ${i.name}`),...(o.bebidas||[]).map(d=>`${d.qty}x ${d.name}`)].join(', ');
+    return `<tr><td>${o.id}</td><td style="font-size:10px">${items}</td><td>${hora}</td><td style="text-align:right">${fmt(o.total)}</td></tr>`;
+  }).join('');
+
+  const w = window.open('', '_blank', 'width=400,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cierre de Caja</title>
+  <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;padding:16px;max-width:340px;margin:0 auto}
+  .hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:12px}
+  .logo{font-size:22px;font-weight:bold;letter-spacing:4px}.sub{font-size:10px;color:#555}
+  h3{font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:12px 0 6px;border-bottom:1px dashed #000;padding-bottom:4px}
+  table{width:100%;border-collapse:collapse}td{padding:3px 2px;font-size:11px}
+  .tot td{font-weight:bold;font-size:14px;border-top:2px solid #000;padding-top:8px;margin-top:4px}
+  .ft{text-align:center;font-size:10px;color:#555;margin-top:14px;border-top:1px dashed #000;padding-top:8px}
+  </style></head><body>
+  <div class="hdr">
+    <div class="logo">KAN BURGER</div>
+    <div class="sub">CIERRE DE CAJA DIARIO</div>
+    <div class="sub" style="margin-top:4px;text-transform:capitalize">${fecha}</div>
+    <div class="sub">Impreso: ${new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}</div>
+  </div>
+  <h3>Resumen</h3>
+  <table>
+    <tr><td>Órdenes completadas</td><td style="text-align:right">${done.length}</td></tr>
+    <tr><td>Órdenes canceladas</td><td style="text-align:right">${canceladas.length}</td></tr>
+  </table>
+  <h3>Por método de pago</h3>
+  <table>${payRows || '<tr><td colspan="3">Sin ventas</td></tr>'}</table>
+  <table style="margin-top:8px"><tr class="tot"><td colspan="2">TOTAL DEL DÍA</td><td style="text-align:right">${fmt(totalVentas)}</td></tr></table>
+  <h3>Detalle de órdenes</h3>
+  <table>
+    <tr style="font-weight:bold;border-bottom:1px solid #000"><td>#</td><td>Ítems</td><td>Hora</td><td>Total</td></tr>
+    ${orderRows || '<tr><td colspan="4">Sin órdenes</td></tr>'}
+  </table>
+  <div class="ft">KAN BURGER · Hecho con ❤ en Venezuela<br>Gracias por tu trabajo hoy 🙌</div>
+  <script>setTimeout(()=>{window.print();},300);<\/script>
+  </body></html>`);
+  w.document.close();
 }
 
 // ── TEMA ──────────────────────────────────────────────────────────────
