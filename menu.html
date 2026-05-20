@@ -1312,16 +1312,23 @@ async function subirComprobante(input) {
   reader.readAsDataURL(file);
 
   try {
-    const fileName = state.orderNum + '.jpg';
+    const ext = file.type.includes('png') ? 'png' : file.type.includes('webp') ? 'webp' : file.type.includes('gif') ? 'gif' : 'jpg';
+    const safeName = (state.orderNum || 'pedido').replace(/[^a-zA-Z0-9]/g, '_');
+    const fileName = safeName + '_' + Date.now() + '.' + ext;
+
     const { error: upErr } = await sb.storage
       .from('COMPROBANTES')
       .upload(fileName, file, { upsert: true, contentType: file.type });
     if (upErr) throw upErr;
 
     const { data: urlData } = sb.storage.from('COMPROBANTES').getPublicUrl(fileName);
-    await sb.from('ordenes').update({ comprobante_url: urlData.publicUrl }).eq('id', state.orderNum);
+    if (state.orderNum) {
+      await sb.from('ordenes').update({ comprobante_url: urlData.publicUrl }).eq('id', state.orderNum);
+    }
     ok.style.display = 'block';
   } catch(e) {
+    console.error('Comprobante error:', e);
+    err.textContent = '❌ Error: ' + (e.message || e.error || 'Intenta de nuevo');
     err.style.display = 'block';
   }
 }
