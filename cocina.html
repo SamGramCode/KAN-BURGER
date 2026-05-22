@@ -205,6 +205,11 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 .cierre-panel{position:fixed;top:0;right:-520px;width:500px;max-width:97vw;height:100vh;background:var(--dk2);border-left:1px solid var(--bd);z-index:301;display:flex;flex-direction:column;transition:right .35s cubic-bezier(.4,0,.2,1);box-shadow:-10px 0 50px rgba(0,0,0,.6)}
 .cierre-panel.open{right:0}
 .cp-head{padding:1.2rem 1.4rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cp-nav{display:flex;align-items:center;gap:.6rem;padding:.8rem 1.4rem;border-bottom:1px solid var(--bd);flex-shrink:0;background:var(--dk3)}
+.cp-nav-btn{background:rgba(232,100,26,.12);border:1px solid var(--bd);color:var(--cr);border-radius:8px;width:34px;height:34px;font-size:.9rem;cursor:pointer;transition:all .2s;flex-shrink:0}
+.cp-nav-btn:hover{background:var(--or);border-color:var(--or)}
+.cp-date-input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--bd);color:var(--cr);border-radius:8px;padding:.5rem .8rem;font-size:.85rem;font-family:inherit;text-align:center;cursor:pointer}
+.cp-date-input::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;cursor:pointer}
 .cp-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--or)}
 .cp-close{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:var(--cr);border-radius:8px;width:32px;height:32px;font-size:1rem;cursor:pointer}
 .cp-body{flex:1;overflow-y:auto;padding:1.2rem}
@@ -278,6 +283,11 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
     <div class="cp-head">
       <div class="cp-title">📊 Cierre de Caja</div>
       <button class="cp-close" onclick="cerrarCierre()">✕</button>
+    </div>
+    <div class="cp-nav">
+      <button class="cp-nav-btn" onclick="cambiarDiaCierre(-1)">◀</button>
+      <input type="date" class="cp-date-input" id="cierreFecha" onchange="cargarCierreHistorico()">
+      <button class="cp-nav-btn" onclick="cambiarDiaCierre(1)">▶</button>
     </div>
     <div class="cp-body" id="cierreBody">
       <div style="color:var(--mt);text-align:center;padding:2rem">Cargando...</div>
@@ -826,10 +836,15 @@ function elapsed(from) {
 }
 
 // ── CIERRE DE CAJA ────────────────────────────────────────────────────
+let cierreData = []; // órdenes del día seleccionado en el cierre
+
 function abrirCierre() {
   document.getElementById('cierreOverlay').classList.add('open');
   document.getElementById('cierrePanel').classList.add('open');
-  renderCierre();
+  const input = document.getElementById('cierreFecha');
+  input.value = new Date().toISOString().slice(0, 10);
+  input.max = new Date().toISOString().slice(0, 10);
+  cargarCierreHistorico();
 }
 
 function cerrarCierre() {
@@ -837,11 +852,46 @@ function cerrarCierre() {
   document.getElementById('cierrePanel').classList.remove('open');
 }
 
+function cambiarDiaCierre(delta) {
+  const input = document.getElementById('cierreFecha');
+  const d = new Date(input.value + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  const hoy = new Date().toISOString().slice(0, 10);
+  const nueva = d.toISOString().slice(0, 10);
+  if (nueva > hoy) return;
+  input.value = nueva;
+  cargarCierreHistorico();
+}
+
+async function cargarCierreHistorico() {
+  const input = document.getElementById('cierreFecha');
+  const fechaStr = input.value;
+  const inicio = new Date(fechaStr + 'T00:00:00');
+  const fin    = new Date(fechaStr + 'T23:59:59');
+
+  document.getElementById('cierreBody').innerHTML =
+    '<div style="color:var(--mt);text-align:center;padding:2rem">⏳ Cargando...</div>';
+
+  try {
+    const { data } = await sb.from('ordenes').select('*')
+      .gte('fecha_hora', inicio.toISOString())
+      .lte('fecha_hora', fin.toISOString())
+      .order('fecha_hora', { ascending: true });
+    cierreData = data || [];
+  } catch(e) {
+    cierreData = [];
+  }
+  renderCierre();
+}
+
 function renderCierre() {
-  const hoy = new Date().toDateString();
-  const fecha = new Date().toLocaleDateString('es-CO', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
-  const done = ordersCache.filter(o => o.estado === 'listo' && new Date(o.fecha_hora).toDateString() === hoy);
-  const canceladas = ordersCache.filter(o => o.estado === 'rechazado' && new Date(o.fecha_hora).toDateString() === hoy);
+  const fechaStr = document.getElementById('cierreFecha').value;
+  const fechaObj = new Date(fechaStr + 'T12:00:00');
+  const fecha = fechaObj.toLocaleDateString('es-CO', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  const esHoy = fechaStr === new Date().toISOString().slice(0,10);
+
+  const done      = cierreData.filter(o => o.estado === 'listo');
+  const canceladas = cierreData.filter(o => o.estado === 'rechazado');
   const totalVentas = done.reduce((s, o) => s + (o.total || 0), 0);
 
   const payMethods = { efectivo:'💵 Efectivo', nequi:'💜 Nequi', daviplata:'❤️ Daviplata', llave:'🔑 Llave' };
@@ -853,11 +903,12 @@ function renderCierre() {
     payStats[m].total += (o.total || 0);
   });
 
+  const pendientesHoy = esHoy ? ordersCache.filter(o=>o.estado==='pendiente'||o.estado==='en_preparacion').length : 0;
   const resumen = `
     <div class="cierre-resumen">
       <div class="cr-stat"><div class="cr-stat-val">${done.length}</div><div class="cr-stat-lbl">✅ Completadas</div></div>
       <div class="cr-stat"><div class="cr-stat-val">${fmt(totalVentas)}</div><div class="cr-stat-lbl">💰 Total ventas</div></div>
-      <div class="cr-stat"><div class="cr-stat-val">${ordersCache.filter(o=>o.estado==='pendiente'||o.estado==='en_preparacion').length}</div><div class="cr-stat-lbl">⏳ Pendientes</div></div>
+      <div class="cr-stat"><div class="cr-stat-val">${cierreData.length}</div><div class="cr-stat-lbl">📋 Total órdenes</div></div>
       <div class="cr-stat"><div class="cr-stat-val">${canceladas.length}</div><div class="cr-stat-lbl">❌ Canceladas</div></div>
     </div>`;
 
@@ -892,10 +943,10 @@ function renderCierre() {
 }
 
 function imprimirCierre() {
-  const hoy = new Date().toDateString();
-  const fecha = new Date().toLocaleDateString('es-CO', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
-  const done = ordersCache.filter(o => o.estado === 'listo' && new Date(o.fecha_hora).toDateString() === hoy);
-  const canceladas = ordersCache.filter(o => o.estado === 'rechazado' && new Date(o.fecha_hora).toDateString() === hoy);
+  const fechaStr = document.getElementById('cierreFecha').value;
+  const fecha = new Date(fechaStr + 'T12:00:00').toLocaleDateString('es-CO', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
+  const done = cierreData.filter(o => o.estado === 'listo');
+  const canceladas = cierreData.filter(o => o.estado === 'rechazado');
   const totalVentas = done.reduce((s, o) => s + (o.total || 0), 0);
   const payMethods = { efectivo:'Efectivo', nequi:'Nequi', daviplata:'Daviplata', llave:'Llave' };
   const payStats = {};
