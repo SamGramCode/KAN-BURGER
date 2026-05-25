@@ -375,7 +375,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 }
 </style>
 </head>
-<body>
+<body class="light">
 
 <!-- ████████ KITCHEN PANEL ████████ -->
 <div id="kitchenPanel">
@@ -444,7 +444,6 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
     <li><a href="#contacto">Contacto</a></li>
   </ul>
   <a href="#" class="nav-cta" onclick="openModal();return false">🍔 Ordenar Ahora</a>
-  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Cambiar tema">☀️</button>
   <button class="nav-ham" onclick="openMob()"><span></span><span></span><span></span></button>
 </nav>
 
@@ -1400,20 +1399,6 @@ window.addEventListener('hashchange',handleHash);
 
   video.addEventListener('loadedmetadata', scrub);
   window.addEventListener('scroll', scrub, {passive: true});
-})();
-
-// ── THEME TOGGLE ──
-function toggleTheme(){
-  const isLight=document.body.classList.toggle('light');
-  localStorage.setItem('kb_theme',isLight?'light':'dark');
-  document.getElementById('themeBtn').textContent=isLight?'🌙':'☀️';
-}
-(function initTheme(){
-  if(localStorage.getItem('kb_theme')==='light'){
-    document.body.classList.add('light');
-    const btn=document.getElementById('themeBtn');
-    if(btn) btn.textContent='🌙';
-  }
 })();
 
 // ── INIT ──
