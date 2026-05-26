@@ -202,7 +202,12 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .pb-sep.done{background:var(--or)}
 
 /* step content */
-.modal-body{flex:1;overflow-y:auto;padding:1.4rem 1.5rem}
+.modal-body{flex:1;overflow-y:auto;padding:1.4rem 1.5rem;position:relative}
+.scroll-hint{position:sticky;bottom:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;padding:.5rem 0 .2rem;pointer-events:none;transition:opacity .3s}
+.scroll-hint.hidden{opacity:0}
+.scroll-hint-arrow{width:36px;height:36px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#fff;box-shadow:0 4px 14px rgba(232,100,26,.5);animation:scrollBounce .9s ease-in-out infinite}
+.scroll-hint-txt{font-size:.68rem;font-weight:800;color:var(--or);letter-spacing:.5px;text-transform:uppercase;margin-top:.25rem;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+@keyframes scrollBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
 .step{display:none}
 .step.active{display:block}
 .step-title{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:1px;margin-bottom:1.2rem}
@@ -728,6 +733,11 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           </div>
         </div>
       </div>
+      <!-- Scroll hint arrow -->
+      <div class="scroll-hint hidden" id="scrollHint">
+        <div class="scroll-hint-arrow">▼</div>
+        <span class="scroll-hint-txt">Desliza para ver más</span>
+      </div>
     </div>
 
     <!-- Modal Footer -->
@@ -1026,10 +1036,25 @@ function filterMenu(btn){
 // ══════════════════════════════════════════════
 // ORDER MODAL
 // ══════════════════════════════════════════════
+function checkScrollHint(){
+  const body=document.querySelector('.modal-body');
+  const hint=document.getElementById('scrollHint');
+  if(!body||!hint) return;
+  const atBottom=body.scrollHeight-body.scrollTop-body.clientHeight<20;
+  hint.classList.toggle('hidden',atBottom);
+}
+
 function openModal(){
   document.getElementById('orderModal').classList.add('open');
   document.body.style.overflow='hidden';
   renderStep(state.step);
+  setTimeout(()=>{
+    const body=document.querySelector('.modal-body');
+    if(body){
+      body.addEventListener('scroll',checkScrollHint,{passive:true});
+      checkScrollHint();
+    }
+  },100);
 }
 function openModalAtItem(id){
   state.step=0;
@@ -1331,6 +1356,9 @@ function renderStep(s){
 
   updateTotalDisplay();
   updateNextBtn();
+  const body=document.querySelector('.modal-body');
+  if(body) body.scrollTop=0;
+  setTimeout(checkScrollHint,150);
 }
 
 function nextStep(){
