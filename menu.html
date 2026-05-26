@@ -1344,7 +1344,13 @@ function renderStep(s){
   if(s===1) buildDrinkGrid();
   if(s===2) buildSauceGrid();
   if(s===3) buildAdditionsGrid();
-  if(s===4){buildSummary();updateNextBtn();}
+  if(s===4){
+    buildSummary();
+    ['orderTorre','orderApto','orderTelefono'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){el.removeEventListener('input',updateNextBtn);el.addEventListener('input',updateNextBtn);}
+    });
+  }
   if(s===5) buildConfirmation();
 
   // Progress (6 steps)
@@ -1393,8 +1399,10 @@ function updateNextBtn(){
   if(!btn) return;
   if(state.step===4){
     btn.textContent='✅ Confirmar Pedido';
+    const torre=(document.getElementById('orderTorre')?.value||'').trim();
+    const tel=(document.getElementById('orderTelefono')?.value||'').trim();
     const needsComprobante=state.payment&&state.payment!=='efectivo'&&!state.comprobanteFile;
-    btn.disabled=!state.payment||needsComprobante;
+    btn.disabled=!state.payment||needsComprobante||!torre||!tel;
   } else if(state.step===0){
     btn.textContent='Siguiente →';
     const sinComida=Object.keys(state.food).length===0;
