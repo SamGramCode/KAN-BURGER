@@ -122,8 +122,8 @@ section{padding:5rem 2rem}
 .mcard:hover{transform:translateY(-8px);border-color:var(--or);box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 30px rgba(232,100,26,.2)}
 .mcard.hidden{display:none}
 .mcard-img{height:210px;overflow:hidden;position:relative;background:var(--dk3)}
-.mcard-img img{width:100%;height:100%;object-fit:contain;transition:transform .6s}
-.mcard:hover .mcard-img img{transform:scale(1.06)}
+.mcard-bg{position:absolute;inset:0;background-repeat:no-repeat;transition:transform .6s}
+.mcard:hover .mcard-bg{transform:scale(1.06)}
 .mcard-badge{position:absolute;top:10px;left:10px;background:var(--or);color:#fff;font-size:.68rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:50px}
 .mcard-body{padding:1.3rem}
 .mcard-name{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:1px;margin-bottom:.3rem}
@@ -137,12 +137,12 @@ section{padding:5rem 2rem}
 /* ── BEBIDAS ── */
 #bebidas{background:var(--dk)}
 .beb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1.1rem;max-width:900px;margin:0 auto}
-.bcard{background:var(--dkc);border:1px solid var(--bd);border-radius:14px;padding:1.8rem 1rem;text-align:center;transition:all .3s;cursor:pointer}
+.bcard{background:var(--dkc);border:1px solid var(--bd);border-radius:14px;overflow:hidden;text-align:center;transition:all .3s;cursor:pointer}
 .bcard:hover{border-color:var(--or);transform:translateY(-5px);box-shadow:0 15px 40px rgba(0,0,0,.4)}
 .bcard.selected{border-color:var(--or);background:rgba(232,100,26,.08)}
-.bcard-ic{font-size:2.8rem;margin-bottom:.8rem}
-.bcard-name{font-weight:800;font-size:.95rem;margin-bottom:.3rem}
-.bcard-price{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--or)}
+.bcard-img{height:180px;background-repeat:no-repeat}
+.bcard-name{font-weight:800;font-size:.92rem;margin:.7rem .5rem .3rem;line-height:1.3}
+.bcard-price{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--or);margin-bottom:.8rem}
 
 /* ── SALSAS ── */
 #salsas{background:var(--dk2)}
@@ -904,24 +904,24 @@ async function cargarProductosActivos() {
 // DATA
 // ══════════════════════════════════════════════
 const MENU_ITEMS = [
-  {id:'b1',cat:'burger',name:'Sencilla Res',price:14000,badge:'🍔 Burger',img:'img/sencilla-res.jpg',imgPos:'center 30%',desc:'Carne de res 130gr, queso cheddar, huevo, tocineta, vegetales frescos, salsa de la casa, pan brioche'},
-  {id:'b2',cat:'burger',name:'Sencilla Pollo',price:14000,badge:'🍔 Burger',img:'img/sencilla-pollo.jpg',imgPos:'center 30%',desc:'Pechuga a la plancha 130gr, queso cheddar, huevo, tocineta, vegetales frescos, salsa de la casa, pan brioche'},
-  {id:'b3',cat:'burger',name:'Especial Res',price:21000,badge:'🔥 Especial',img:'img/especial-res.jpg',imgPos:'center 35%',desc:'Doble carne de 130gr cada una, queso cheddar, huevo, tocineta, vegetales frescos, salsa de la casa, pan brioche'},
-  {id:'b4',cat:'burger',name:'Especial Pollo Crispy',price:17000,badge:'🍗 Crispy',img:'img/especial-pollo.jpg',imgPos:'center 30%',desc:'Pollo crispy 130gr, bañado en salsa barbacoa, queso cheddar, topping de tocineta crocante, lechuga y salsa de la casa, pan brioche'},
-  {id:'b5',cat:'burger',name:'Mixta',price:21000,badge:'💥 Mixta',img:'img/mixta.jpg',imgPos:'center 35%',desc:'Carne de res 130gr, Pollo crispy 130gr, queso cheddar, huevo, tocineta, vegetales frescos, salsa de la casa, pan brioche'},
-  {id:'v1',cat:'venezolano',name:'Perro Caliente Sencillo',price:9500,badge:'🌭 Venezolano',img:'img/perro-sencillo.jpg',imgPos:'center 30%',desc:'Salchicha americana, cebolla, papas chips, queso rallado, salsa de la casa'},
-  {id:'v2',cat:'venezolano',name:'Perro Caliente Especial',price:13500,badge:'🌭 Especial',img:'img/perro-especial.jpg',imgPos:'center 30%',desc:'Salchicha americana, cebolla, papas chips, queso rallado, tocineta, huevo, queso cheddar y salsas de la casa'},
-  {id:'v3',cat:'venezolano',name:'Arepa Cabimera Volcán',price:21000,badge:'🇻🇪 Venezolano',img:'img/arepa-cabimera.jpg',imgPos:'center 35%',desc:'Arepa frita, carne mechada, ensalada de repollo y zanahoria aderezada, aguacate, tocineta, queso cheddar, queso rallado, huevo y salsas de la casa'},
-  {id:'v4',cat:'venezolano',name:'Patacón',price:22000,badge:'🇻🇪 Especial',img:'img/patacon.jpg',imgPos:'center 35%',desc:'Patacón frito pinto, carne mechada, ensalada de repollo y zanahoria aderezada, tocineta, queso cheddar, aguacate y salsas de la casa'},
-  {id:'a1',cat:'plato',name:'Salchipapa',price:14000,badge:'🍟 Plato',img:'img/salchipapa.jpg',imgPos:'center 35%',desc:'Papas francesas 250gr, salchicha americana, chorizo, maíz, queso rallado y salsa de la casa'},
-  {id:'a2',cat:'acompanante',name:'Papas al Queso Cheddar',price:14000,badge:'🧀 Acompañante',img:'img/papas-cheddar.jpg',imgPos:'center center',desc:'Papas francesas 250gr, aderezo de queso cheddar y topping de tocineta crocante'}
+  {id:'v1',cat:'venezolano',name:'Perro Caliente Sencillo',price:9500,badge:'🌭 Venezolano',img:'img/perro-sencillo.jpg',bgSize:'cover',bgPos:'50% 50%',desc:'Salchicha americana, cebolla, papas chips, queso rallado, salsa de la casa'},
+  {id:'v2',cat:'venezolano',name:'Perro Caliente Especial',price:13500,badge:'🌭 Especial',img:'img/perro-especial.jpg',bgSize:'cover',bgPos:'50% 67%',desc:'Salchicha americana, cebolla, papas chips, queso rallado, tocineta, huevo, queso cheddar y salsas de la casa'},
+  {id:'b1',cat:'burger',name:'Sencilla Res',price:14000,badge:'🍔 Burger',img:'img/sencilla-res.jpg',bgSize:'101%',bgPos:'100% 54%',desc:'Carne de res 130gr, queso cheddar, huevo, tocineta, vegetales frescos, salsa de la casa, pan brioche'},
+  {id:'b3',cat:'burger',name:'Especial Res',price:21000,badge:'🔥 Especial',img:'img/especial-res.jpg',bgSize:'102%',bgPos:'50% 60%',desc:'Doble carne de 130gr cada una, queso cheddar, huevo, tocineta, vegetales frescos, salsa de la casa, pan brioche'},
+  {id:'b2',cat:'burger',name:'Sencilla Pollo',price:14000,badge:'🍔 Burger',img:'img/sencilla-pollo.jpg',bgSize:'110%',bgPos:'87% 54%',desc:'Pechuga a la plancha 130gr, queso cheddar, huevo, tocineta, vegetales frescos, salsa de la casa, pan brioche'},
+  {id:'b4',cat:'burger',name:'Especial Pollo Crispy',price:17000,badge:'🍗 Crispy',img:'img/especial-pollo.jpg',bgSize:'128%',bgPos:'50% 48%',desc:'Pollo crispy 130gr, bañado en salsa barbacoa, queso cheddar, topping de tocineta crocante, lechuga y salsa de la casa, pan brioche'},
+  {id:'b5',cat:'burger',name:'Mixta',price:21000,badge:'💥 Mixta',img:'img/mixta.jpg',bgSize:'101%',bgPos:'50% 62%',desc:'Carne de res 130gr, Pollo crispy 130gr, queso cheddar, huevo, tocineta, vegetales frescos, salsa de la casa, pan brioche'},
+  {id:'v3',cat:'venezolano',name:'Arepa Cabimera Volcán',price:21000,badge:'🇻🇪 Venezolano',img:'img/arepa-cabimera.jpg',bgSize:'cover',bgPos:'50% 68%',desc:'Arepa frita, carne mechada, ensalada de repollo y zanahoria aderezada, aguacate, tocineta, queso cheddar, queso rallado, huevo y salsas de la casa'},
+  {id:'v4',cat:'venezolano',name:'Patacón',price:22000,badge:'🇻🇪 Especial',img:'img/patacon.jpg',bgSize:'101%',bgPos:'50% 68%',desc:'Patacón frito pinto, carne mechada, ensalada de repollo y zanahoria aderezada, tocineta, queso cheddar, aguacate y salsas de la casa'},
+  {id:'a1',cat:'plato',name:'Salchipapa',price:14000,badge:'🍟 Plato',img:'img/salchipapa.jpg',bgSize:'cover',bgPos:'50% 66%',desc:'Papas francesas 250gr, salchicha americana, chorizo, maíz, queso rallado y salsa de la casa'},
+  {id:'a2',cat:'acompanante',name:'Papas al Queso Cheddar',price:14000,badge:'🧀 Acompañante',img:'img/papas-cheddar.jpg',bgSize:'101%',bgPos:'50% 16%',desc:'Papas francesas 250gr, aderezo de queso cheddar y topping de tocineta crocante'}
 ];
 const DRINKS = [
-  {id:'d1',name:'Coca-Cola',price:3500,icon:'🥤',img:'img/coca-cola.jpg'},
-  {id:'d2',name:'Sprite',price:3500,icon:'🥤',img:'img/sprite.jpg'},
-  {id:'d3',name:'Jugo HIT',price:3500,icon:'🍊',img:'img/jugo-hit.jpg'},
-  {id:'d4',name:'Agua',price:3000,icon:'💧',img:'img/agua.jpg'},
-  {id:'d5',name:'Agua con Gas',price:3000,icon:'💧',img:'img/agua-gas.jpg'}
+  {id:'d1',name:'Coca-Cola',price:3500,icon:'🥤',img:'img/coca-cola.jpg',bgSize:'cover',bgPos:'50% 86%'},
+  {id:'d2',name:'Sprite',price:3500,icon:'🥤',img:'img/sprite.jpg',bgSize:'cover',bgPos:'50% 25%'},
+  {id:'d3',name:'Jugo HIT',price:3500,icon:'🍊',img:'img/jugo-hit.jpg',bgSize:'cover',bgPos:'50% 55%'},
+  {id:'d4',name:'Agua',price:3000,icon:'💧',img:'img/agua.jpg',bgSize:'cover',bgPos:'50% 50%'},
+  {id:'d5',name:'Agua con Gas',price:3000,icon:'💧',img:'img/agua-gas.jpg',bgSize:'cover',bgPos:'50% 15%'}
 ];
 const SAUCES = [
   {id:'sa1',name:'Salsa de la Casa',color:'#2980B9'},
@@ -999,7 +999,7 @@ function buildShowcase(){
   const mg=document.getElementById('menuShowcase');
   mg.innerHTML=MENU_ITEMS.filter(m=>activo(m.id)).map(m=>`
     <div class="mcard reveal" data-filter="${m.cat}">
-      <div class="mcard-img"><img src="${m.img}" alt="${m.name}" style="object-position:${m.imgPos||'center center'}"><div class="mcard-badge">${m.badge}</div></div>
+      <div class="mcard-img"><div class="mcard-bg" style="background-image:url('${m.img}');background-size:${m.bgSize||'cover'};background-position:${m.bgPos||'center center'}"></div><div class="mcard-badge">${m.badge}</div></div>
       <div class="mcard-body">
         <div class="mcard-name">${m.name}</div>
         <div class="mcard-desc">${m.desc}</div>
@@ -1014,7 +1014,7 @@ function buildShowcase(){
   const bg=document.getElementById('bebidasShowcase');
   bg.innerHTML=DRINKS.filter(d=>activo(d.id)).map(d=>`
     <div class="bcard reveal">
-      <div class="bcard-ic">${d.icon}</div>
+      <div class="bcard-img" style="background-image:url('${d.img}');background-size:${d.bgSize||'cover'};background-position:${d.bgPos||'center center'}"></div>
       <div class="bcard-name">${d.name}</div>
       <div class="bcard-price">${fmt(d.price)}</div>
     </div>`).join('');

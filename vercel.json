@@ -1,0 +1,5 @@
+{
+  "redirects": [
+    { "source": "/cocina", "destination": "/cocina.html", "permanent": false }
+  ]
+}
