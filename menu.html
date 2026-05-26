@@ -1063,6 +1063,7 @@ function changeQty(id,delta){
   buildVegPerItemGrid();
   updateTotalDisplay();
   updateFloatCart();
+  updateNextBtn();
 }
 
 // Build drink grid
@@ -1243,6 +1244,7 @@ function setVegetal(itemId,vegName,value,btn){
       ?'<span style="color:var(--ef);font-size:.75rem;margin-left:.5rem">✓ Listo</span>'
       :'<span style="color:#E74C3C;font-size:.75rem;margin-left:.5rem">⚠ Pendiente</span>';
   }
+  updateNextBtn();
 }
 
 // Build additions grid
@@ -1326,6 +1328,14 @@ function updateNextBtn(){
   if(state.step===4){
     btn.textContent='✅ Confirmar Pedido';
     btn.disabled=!state.payment;
+  } else if(state.step===0){
+    btn.textContent='Siguiente →';
+    const sinComida=Object.keys(state.food).length===0;
+    const sinVeg=Object.keys(state.food).some(id=>{
+      const v=state.vegetales[id];
+      return !v||VEGETALES.some(n=>v[n]===null||v[n]===undefined);
+    });
+    btn.disabled=sinComida||sinVeg;
   } else {
     btn.textContent='Siguiente →';
     btn.disabled=false;
