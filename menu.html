@@ -239,6 +239,9 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .veg-btn{padding:.3rem .9rem;border-radius:50px;border:1.5px solid var(--bd);background:transparent;color:var(--mt);font-size:.8rem;font-weight:800;cursor:pointer;transition:all .2s}
 .veg-btn.si.active{background:rgba(39,174,96,.15);border-color:#27AE60;color:#27AE60}
 .veg-btn.no.active{background:rgba(231,76,60,.1);border-color:#E74C3C;color:#E74C3C}
+.add-food-block{background:var(--dkc);border:1px solid var(--bd);border-radius:14px;padding:1rem;margin-bottom:1rem}
+.add-food-title{font-weight:900;font-size:.92rem;color:var(--or);margin-bottom:.8rem;display:flex;align-items:center;gap:.4rem}
+.add-food-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.6rem}
 .socard{background:var(--dkc);border:2px solid var(--bd);border-radius:12px;padding:1rem;display:flex;align-items:center;gap:.8rem;cursor:pointer;transition:all .3s;user-select:none}
 .socard:hover{border-color:rgba(232,100,26,.4)}
 .socard.selected{border-color:var(--or);background:rgba(232,100,26,.08)}
@@ -592,8 +595,8 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
       <!-- STEP 3: ADICIONES -->
       <div class="step" id="step3">
         <div class="step-title">¿Algún <span>Extra</span>?</div>
-        <p style="font-size:.85rem;color:var(--mt);margin-bottom:1.2rem">Adiciona ingredientes a tu pedido</p>
-        <div class="drink-order-grid" id="additionsGrid"></div>
+        <p style="font-size:.85rem;color:var(--mt);margin-bottom:1.2rem">Selecciona a cuál hamburguesa le quieres agregar extras</p>
+        <div id="additionsGrid"></div>
       </div>
 
       <!-- STEP 4: PAYMENT -->
@@ -957,7 +960,13 @@ function fmt(n){return'$'+n.toLocaleString('es-CO')}
 
 function foodTotal(){return Object.entries(state.food).reduce((s,[id,q])=>{const m=MENU_ITEMS.find(x=>x.id===id);return s+(m?m.price*q:0)},0)}
 function drinkTotal(){return Object.entries(state.drinks).reduce((s,[id,q])=>{const d=DRINKS.find(x=>x.id===id);return s+(d?d.price*q:0)},0)}
-function additionTotal(){return Object.entries(state.additions).reduce((s,[id,q])=>{const a=ADDITIONS.find(x=>x.id===id);return s+(a?a.price*q:0)},0)}
+function additionTotal(){
+  let t=0;
+  Object.values(state.additions).forEach(foodAdds=>{
+    Object.entries(foodAdds).forEach(([adId,q])=>{const a=ADDITIONS.find(x=>x.id===adId);if(a)t+=a.price*q;});
+  });
+  return t;
+}
 function grandTotal(){return foodTotal()+drinkTotal()+additionTotal()+DELIVERY_FEE}
 
 function totalItems(){
@@ -1164,10 +1173,17 @@ function buildSummary(){
       </div>`;
     });
   }
-  const addList=Object.entries(state.additions).map(([id,q])=>{const a=ADDITIONS.find(x=>x.id===id);return a?{name:a.name,price:a.price,qty:q}:null}).filter(Boolean);
-  if(addList.length){
+  const addEntries=Object.entries(state.additions).filter(([,adds])=>Object.keys(adds).length>0);
+  if(addEntries.length){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Extras</div>`;
-    addList.forEach(a=>{html+=`<div class="summary-row"><span>${a.qty}x ${a.name}</span><span>${fmt(a.price*a.qty)}</span></div>`;});
+    addEntries.forEach(([fid,adds])=>{
+      const food=MENU_ITEMS.find(m=>m.id===fid);
+      html+=`<div style="font-size:.75rem;color:var(--or);font-weight:800;margin:.3rem 0 .1rem">→ ${food?.name||fid}</div>`;
+      Object.entries(adds).forEach(([adId,q])=>{
+        const a=ADDITIONS.find(x=>x.id===adId);
+        if(a) html+=`<div class="summary-row"><span>${q}x ${a.name}</span><span>${fmt(a.price*q)}</span></div>`;
+      });
+    });
   }
   html+=`<div class="summary-row"><span>🛵 Domicilio</span><span>${fmt(DELIVERY_FEE)}</span></div>`;
   html+=`<div class="summary-total"><span>TOTAL A PAGAR</span><span class="summary-total-price">${fmt(grandTotal())}</span></div>`;
@@ -1247,28 +1263,42 @@ function setVegetal(itemId,vegName,value,btn){
   updateNextBtn();
 }
 
-// Build additions grid
+// Build additions grid — per food item
 function buildAdditionsGrid(){
   const g=document.getElementById('additionsGrid');
-  g.innerHTML=ADDITIONS.map(a=>`
-    <div class="dorder-card ${state.additions[a.id]?'in-cart':''}" id="adcard_${a.id}">
-      <div class="do-ic">${a.icon}</div>
-      <div class="do-name">${a.name}</div>
-      <div class="do-price">${fmt(a.price)}</div>
-      <div class="qty-ctrl" style="justify-content:center">
-        <button class="qty-btn" onclick="changeAddition('${a.id}',-1)">−</button>
-        <span class="qty-val" id="adqty_${a.id}">${state.additions[a.id]||0}</span>
-        <button class="qty-btn" onclick="changeAddition('${a.id}',1)">+</button>
+  const orderedFoods=Object.keys(state.food);
+  if(!orderedFoods.length){g.innerHTML='<div style="color:var(--mt);font-size:.85rem;text-align:center;padding:.5rem">Selecciona un producto primero 👆</div>';return;}
+  orderedFoods.forEach(fid=>{if(!state.additions[fid])state.additions[fid]={};});
+  Object.keys(state.additions).forEach(fid=>{if(!state.food[fid])delete state.additions[fid];});
+  g.innerHTML=orderedFoods.map(fid=>{
+    const food=MENU_ITEMS.find(m=>m.id===fid);
+    const foodAdds=state.additions[fid]||{};
+    return `<div class="add-food-block">
+      <div class="add-food-title">🍔 ${food.name} ×${state.food[fid]}</div>
+      <div class="add-food-grid">
+        ${ADDITIONS.map(a=>`
+          <div class="dorder-card ${foodAdds[a.id]?'in-cart':''}" id="adcard_${fid}_${a.id}">
+            <div class="do-ic">${a.icon}</div>
+            <div class="do-name">${a.name}</div>
+            <div class="do-price">${fmt(a.price)}</div>
+            <div class="qty-ctrl" style="justify-content:center">
+              <button class="qty-btn" onclick="changeAddition('${fid}','${a.id}',-1)">−</button>
+              <span class="qty-val" id="adqty_${fid}_${a.id}">${foodAdds[a.id]||0}</span>
+              <button class="qty-btn" onclick="changeAddition('${fid}','${a.id}',1)">+</button>
+            </div>
+          </div>`).join('')}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-function changeAddition(id,delta){
-  const cur=state.additions[id]||0;
+function changeAddition(foodId,adId,delta){
+  if(!state.additions[foodId])state.additions[foodId]={};
+  const cur=state.additions[foodId][adId]||0;
   const nv=Math.max(0,cur+delta);
-  if(nv===0) delete state.additions[id]; else state.additions[id]=nv;
-  const el=document.getElementById('adqty_'+id);
-  const card=document.getElementById('adcard_'+id);
+  if(nv===0) delete state.additions[foodId][adId]; else state.additions[foodId][adId]=nv;
+  const el=document.getElementById('adqty_'+foodId+'_'+adId);
+  const card=document.getElementById('adcard_'+foodId+'_'+adId);
   if(el) el.textContent=nv||0;
   if(card) card.classList.toggle('in-cart',nv>0);
   updateTotalDisplay();
@@ -1382,10 +1412,13 @@ async function placeOrder(){
       const s=SAUCES.find(x=>x.id===id);
       return s?{id:s.id,name:s.name}:null;
     }).filter(Boolean),
-    adiciones: Object.entries(state.additions).map(([id,q])=>{
-      const a=ADDITIONS.find(x=>x.id===id);
-      return a?{id:a.id,name:a.name,price:a.price,qty:q}:null;
-    }).filter(Boolean),
+    adiciones: Object.entries(state.additions).flatMap(([fid,adds])=>{
+      const food=MENU_ITEMS.find(m=>m.id===fid);
+      return Object.entries(adds).map(([adId,q])=>{
+        const a=ADDITIONS.find(x=>x.id===adId);
+        return a?{foodId:fid,foodName:food?.name||fid,id:a.id,name:a.name,price:a.price,qty:q}:null;
+      }).filter(Boolean);
+    }),
     vegetales: Object.entries(state.vegetales).map(([id,vegs])=>{
       const item=MENU_ITEMS.find(m=>m.id===id);
       return {itemId:id,itemName:item?.name||id,si:VEGETALES.filter(v=>vegs[v]===true),no:VEGETALES.filter(v=>vegs[v]===false)};
@@ -1431,7 +1464,11 @@ function buildConfirmation(){
 
   const foodItems=Object.entries(state.food).map(([id,q])=>{const m=MENU_ITEMS.find(x=>x.id===id);return m?`<div class="receipt-item"><span>${q}x ${m.name}</span><span>${fmt(m.price*q)}</span></div>`:''}).join('');
   const drinkItems=Object.entries(state.drinks).map(([id,q])=>{const d=DRINKS.find(x=>x.id===id);return d?`<div class="receipt-item"><span>${q}x ${d.name}</span><span>${fmt(d.price*q)}</span></div>`:''}).join('');
-  const addItems=Object.entries(state.additions).map(([id,q])=>{const a=ADDITIONS.find(x=>x.id===id);return a?`<div class="receipt-item"><span>${q}x ${a.name}</span><span>${fmt(a.price*q)}</span></div>`:''}).join('');
+  const addItems=Object.entries(state.additions).flatMap(([fid,adds])=>{
+    const food=MENU_ITEMS.find(m=>m.id===fid);
+    const rows=Object.entries(adds).map(([adId,q])=>{const a=ADDITIONS.find(x=>x.id===adId);return a?`<div class="receipt-item"><span>${q}x ${a.name} (${food?.name||fid})</span><span>${fmt(a.price*q)}</span></div>`:''});
+    return rows;
+  }).join('');
   const sauceList=state.sauces.map(id=>SAUCES.find(s=>s.id===id)?.name).filter(Boolean).join(', ');
   const vegList=Object.entries(state.vegetales).map(([id,vegs])=>{
     const item=MENU_ITEMS.find(m=>m.id===id);

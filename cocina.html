@@ -567,7 +567,7 @@ function buildCard(order) {
   const foodHTML    = comida.map((item, i)  => mkItem('f'  + i, '🍔', item.name, 'x' + item.qty)).join('');
   const drinkHTML   = bebidas.map((d, i)    => mkItem('dk' + i, '🥤', d.name,    'x' + d.qty)).join('');
   const sauceHTML   = salsas.map((s, i)     => mkItem('sa' + i, '🥫', s.name,    '')).join('');
-  const adicionHTML = adiciones.map((a, i)  => mkItem('ad' + i, '➕', a.name,    'x' + a.qty)).join('');
+  const adicionHTML = adiciones.map((a, i)  => mkItem('ad' + i, '➕', a.foodName?`${a.name} → ${a.foodName}`:a.name, 'x' + a.qty)).join('');
   const packHTML    = mkItem('pack', '📦', 'Cubiertos · Servilletas · Todo empacado', '');
   const vegHTML = Array.isArray(vegetales) && vegetales.length
     ? `<div class="oc-section"><div class="oc-sec-label">🥬 Vegetales</div>${
@@ -1101,7 +1101,7 @@ function verDetalleOrden(orderId){
   const mkRow=(name,val)=>`<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.85rem"><span>${name}</span><span style="font-weight:800">${val}</span></div>`;
   const foodHTML=(order.comida||[]).map(i=>mkRow(`🍔 ${i.qty}x ${esc(i.name)}`,fmt(i.price*i.qty))).join('');
   const drinkHTML=(order.bebidas||[]).map(d=>mkRow(`🥤 ${d.qty}x ${esc(d.name)}`,fmt(d.price*d.qty))).join('');
-  const adicionHTML=(order.adiciones||[]).map(a=>mkRow(`➕ ${a.qty}x ${esc(a.name)}`,fmt(a.price*a.qty))).join('');
+  const adicionHTML=(order.adiciones||[]).map(a=>mkRow(`➕ ${a.qty}x ${esc(a.name)}${a.foodName?' → '+esc(a.foodName):''}`,fmt(a.price*a.qty))).join('');
   const sauces=(order.salsas||[]).map(s=>s.name).join(', ');
   const vegetales=(order.vegetales||[]).join(', ');
   document.getElementById('detTitle').textContent=`Pedido #${order.id}`;
