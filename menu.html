@@ -636,6 +636,17 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           <div class="pay-info-num" id="payInfoNum"></div>
           <div class="pay-info-note" id="payInfoNote"></div>
         </div>
+        <!-- COMPROBANTE DE PAGO -->
+        <div class="upload-section" id="uploadSection" style="display:none">
+          <div class="upload-title">📸 Sube tu comprobante de pago</div>
+          <div class="upload-sub">Toma foto o captura del comprobante de Nequi / Daviplata / Llave — <strong style="color:var(--or)">obligatorio para confirmar el pedido</strong></div>
+          <label class="upload-btn-lbl">
+            📷 Seleccionar foto
+            <input type="file" accept="image/*" style="display:none" id="comprobanteInput" onchange="previewComprobante(this)">
+          </label>
+          <img id="uploadPreview" class="upload-preview">
+          <div class="upload-ok" id="uploadOk" style="display:none">✅ Foto lista — ya puedes confirmar tu pedido</div>
+        </div>
         <textarea class="notes-field" id="orderNotes" placeholder="Nota especial para tu pedido (alergias, indicaciones, etc.)"></textarea>
         <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📍 Dirección de entrega</p>
         <input type="text" id="orderTorre" placeholder="Torre / Edificio / Conjunto" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.6rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
@@ -662,19 +673,6 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
             <span id="queuePos">⏳ Calculando posición...</span>
           </div>
           <div class="confirm-receipt" id="confirmReceipt"></div>
-
-          <!-- COMPROBANTE DE PAGO -->
-          <div class="upload-section" id="uploadSection" style="display:none">
-            <div class="upload-title">📸 Sube tu comprobante de pago</div>
-            <div class="upload-sub">Toma foto del comprobante de Nequi / Daviplata / Llave y súbelo aquí para que el restaurante verifique tu pago</div>
-            <label class="upload-btn-lbl">
-              📷 Seleccionar foto
-              <input type="file" accept="image/*" style="display:none" id="comprobanteInput" onchange="subirComprobante(this)">
-            </label>
-            <img id="uploadPreview" class="upload-preview">
-            <div class="upload-ok" id="uploadOk">✅ Comprobante enviado al restaurante</div>
-            <div class="upload-err" id="uploadErr">❌ Error al subir. Intenta de nuevo.</div>
-          </div>
 
           <!-- TIMELINE DE SEGUIMIENTO -->
           <div class="order-timeline">
@@ -959,6 +957,7 @@ let state = {
   additions: {},
   vegetales: {},
   payment: null,
+  comprobanteFile: null,
   notes: '',
   direccion: '',
   telefono: '',
@@ -1217,6 +1216,7 @@ function buildSummary(){
 
 function selectPayment(method,card){
   state.payment=method;
+  state.comprobanteFile=null;
   document.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('selected'));
   card.classList.add('selected');
   const info=PAYMENT_INFO[method];
@@ -1225,6 +1225,14 @@ function selectPayment(method,card){
   document.getElementById('payInfoNum').textContent=info.num;
   document.getElementById('payInfoNote').textContent=info.note;
   pi.classList.add('show');
+  const us=document.getElementById('uploadSection');
+  const upOk=document.getElementById('uploadOk');
+  const upPrev=document.getElementById('uploadPreview');
+  const upInput=document.getElementById('comprobanteInput');
+  if(us) us.style.display=method!=='efectivo'?'block':'none';
+  if(upOk) upOk.style.display='none';
+  if(upPrev){upPrev.style.display='none';upPrev.src='';}
+  if(upInput) upInput.value='';
   updateNextBtn();
 }
 
@@ -1385,7 +1393,8 @@ function updateNextBtn(){
   if(!btn) return;
   if(state.step===4){
     btn.textContent='✅ Confirmar Pedido';
-    btn.disabled=!state.payment;
+    const needsComprobante=state.payment&&state.payment!=='efectivo'&&!state.comprobanteFile;
+    btn.disabled=!state.payment||needsComprobante;
   } else if(state.step===0){
     btn.textContent='Siguiente →';
     const sinComida=Object.keys(state.food).length===0;
@@ -1461,6 +1470,20 @@ async function placeOrder(){
     cantidad_items: itemCount
   };
 
+  // Subir comprobante si existe
+  if(state.comprobanteFile){
+    try{
+      const f=state.comprobanteFile;
+      const ext=f.type.includes('png')?'png':f.type.includes('webp')?'webp':f.type.includes('gif')?'gif':'jpg';
+      const fileName=state.orderNum+'_'+Date.now()+'.'+ext;
+      const {error:upErr}=await sb.storage.from('COMPROBANTES').upload(fileName,f,{upsert:true,contentType:f.type});
+      if(!upErr){
+        const {data:urlData}=sb.storage.from('COMPROBANTES').getPublicUrl(fileName);
+        order.comprobante_url=urlData.publicUrl;
+      }
+    }catch(e){console.error('Error subiendo comprobante:',e);}
+  }
+
   // Save to Supabase
   try {
     const { error } = await sb.from('ordenes').insert(order);
@@ -1483,10 +1506,6 @@ async function placeOrder(){
 
 function buildConfirmation(){
   document.getElementById('confirmNum').textContent='#'+state.orderNum;
-  document.getElementById('uploadSection').style.display = state.payment !== 'efectivo' ? 'block' : 'none';
-  document.getElementById('uploadPreview').style.display = 'none';
-  document.getElementById('uploadOk').style.display = 'none';
-  document.getElementById('uploadErr').style.display = 'none';
   const ts=new Date();
   const dt=ts.toLocaleDateString('es-CO')+' '+ts.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
 
@@ -1568,6 +1587,17 @@ function printReceipt(){
 }
 
 // ── COMPROBANTE ──────────────────────────────────
+function previewComprobante(input){
+  const file=input.files[0];
+  if(!file) return;
+  state.comprobanteFile=file;
+  const preview=document.getElementById('uploadPreview');
+  const ok=document.getElementById('uploadOk');
+  if(preview){preview.src=URL.createObjectURL(file);preview.style.display='block';}
+  if(ok) ok.style.display='block';
+  updateNextBtn();
+}
+
 async function subirComprobante(input) {
   const file = input.files[0];
   if (!file) return;
@@ -1680,7 +1710,7 @@ function actualizarTimeline(estado) {
 function resetOrder(){
   if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  state={step:0,food:{},drinks:{},sauces:[],additions:{},vegetales:{},payment:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
+  state={step:0,food:{},drinks:{},sauces:[],additions:{},vegetales:{},payment:null,comprobanteFile:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
   renderStep(0);
   updateFloatCart();
 }
