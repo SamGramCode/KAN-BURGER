@@ -683,9 +683,11 @@ function imprimirTicket(orderId) {
   const ts     = new Date(order.fecha_hora);
   const dt     = ts.toLocaleDateString('es-CO') + ' ' + ts.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   const payLbl = { nequi: 'Nequi', daviplata: 'Daviplata', llave: 'Llave', efectivo: 'Efectivo' };
-  const foodR  = (order.comida  || []).map(i => `<tr><td>${i.qty}x ${i.name}</td><td style="text-align:right">${fmt(i.price * i.qty)}</td></tr>`).join('');
-  const drinkR = (order.bebidas || []).map(d => `<tr><td>${d.qty}x ${d.name}</td><td style="text-align:right">${fmt(d.price * d.qty)}</td></tr>`).join('');
-  const sauceL = (order.salsas  || []).map(s => s.name).join(', ');
+  const foodR    = (order.comida    || []).map(i => `<tr><td>${i.qty}x ${i.name}</td><td style="text-align:right">${fmt(i.price * i.qty)}</td></tr>`).join('');
+  const drinkR   = (order.bebidas   || []).map(d => `<tr><td>${d.qty}x ${d.name}</td><td style="text-align:right">${fmt(d.price * d.qty)}</td></tr>`).join('');
+  const adicionR = (order.adiciones || []).map(a => `<tr><td>➕ ${a.qty}x ${a.name}</td><td style="text-align:right">${fmt(a.price * a.qty)}</td></tr>`).join('');
+  const sauceL   = (order.salsas    || []).map(s => s.name).join(', ');
+  const vegL     = (order.vegetales || []).join(', ');
   const w = window.open('', '_blank', 'width=360,height=640');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket #${order.id}</title>
   <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;padding:16px;max-width:300px;margin:0 auto}.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:10px}.logo{font-size:20px;font-weight:bold;letter-spacing:3px}.num{text-align:center;font-size:18px;font-weight:bold;margin:8px 0}table{width:100%}td{padding:3px 0}.tot td{font-weight:bold;font-size:15px;border-top:2px solid #000;padding-top:6px}.ft{text-align:center;font-size:10px;color:#555;margin-top:10px}</style>
@@ -693,7 +695,9 @@ function imprimirTicket(orderId) {
   <div class="hdr"><div class="logo">KAN BURGER</div><div style="font-size:10px;color:#555">100% Artesanal</div></div>
   <div class="num">Pedido #${order.id}</div>
   <div style="text-align:center;font-size:10px;color:#555;margin-bottom:8px">${dt}</div>
-  <table>${foodR}${drinkR}${sauceL ? `<tr><td colspan="2" style="font-size:11px;border-top:1px dashed #000;padding-top:4px">Salsas: ${sauceL}</td></tr>` : ''}
+  <table>${foodR}${drinkR}${adicionR}
+  ${vegL   ? `<tr><td colspan="2" style="font-size:11px;border-top:1px dashed #000;padding-top:4px">🥬 Vegetales: ${vegL}</td></tr>`   : ''}
+  ${sauceL ? `<tr><td colspan="2" style="font-size:11px;border-top:1px dashed #000;padding-top:4px">Salsas: ${sauceL}</td></tr>` : ''}
   <tr class="tot"><td>TOTAL</td><td style="text-align:right">${fmt(order.total)}</td></tr></table>
   <div style="text-align:center;font-size:10px;margin-top:4px">Pago: ${payLbl[order.metodo_pago] || order.metodo_pago || ''}</div>
   ${order.notas ? `<div style="font-size:10px;border-top:1px dashed #000;margin-top:6px;padding-top:6px">📝 ${order.notas}</div>` : ''}
