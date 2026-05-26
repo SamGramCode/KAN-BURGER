@@ -626,6 +626,11 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           <div class="pay-info-note" id="payInfoNote"></div>
         </div>
         <textarea class="notes-field" id="orderNotes" placeholder="Nota especial para tu pedido (alergias, indicaciones, etc.)"></textarea>
+        <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📍 Dirección de entrega</p>
+        <input type="text" id="orderTorre" placeholder="Torre / Edificio / Conjunto" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.6rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
+        <input type="text" id="orderApto" placeholder="Apartamento / Casa #" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.8rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
+        <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📱 Teléfono de contacto</p>
+        <input type="tel" id="orderTelefono" placeholder="Número para llamar y avisar" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:1rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
       </div>
 
       <!-- STEP 5: CONFIRMATION -->
@@ -635,6 +640,16 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           <div class="confirm-order-num" id="confirmNum">#KB-0000</div>
           <div class="confirm-status">¡Tu orden está en preparación! 🔥</div>
           <div class="confirm-sub">Te avisamos cuando esté lista. ¡Gracias por preferir KAN BURGER!</div>
+          <!-- TIMER -->
+          <div style="background:rgba(232,100,26,.1);border:1px solid rgba(232,100,26,.3);border-radius:16px;padding:1.2rem;margin-bottom:1rem;text-align:center">
+            <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--mt);margin-bottom:.3rem">⏱ Tiempo estimado de entrega</div>
+            <div id="timerDisplay" style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;color:var(--or);letter-spacing:3px;line-height:1">30:00</div>
+            <div style="font-size:.75rem;color:var(--mt);margin-top:.2rem">Minutos aproximados de espera</div>
+          </div>
+          <!-- POSICIÓN EN FILA -->
+          <div id="queueWrap" style="background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:12px;padding:.8rem 1.2rem;margin-bottom:1rem;text-align:center;font-size:.85rem;font-weight:700">
+            <span id="queuePos">⏳ Calculando posición...</span>
+          </div>
           <div class="confirm-receipt" id="confirmReceipt"></div>
 
           <!-- COMPROBANTE DE PAGO -->
@@ -915,6 +930,7 @@ const PAYMENT_INFO = {
   llave:    {title:'Llave B-reve',num:'300 XXX XXXX',note:'Paga con tu Llave y muestra el comprobante.'},
   efectivo: {title:'Efectivo',num:'💵',note:'Pagas en efectivo cuando recojas tu pedido. ¡Ten el monto exacto si puedes!'}
 };
+const DELIVERY_FEE = 3000;
 
 // ══════════════════════════════════════════════
 // STATE
@@ -928,6 +944,9 @@ let state = {
   vegetales: [],
   payment: null,
   notes: '',
+  direccion: '',
+  telefono: '',
+  orderFechaHora: null,
   orderNum: null
 };
 
@@ -936,7 +955,7 @@ function fmt(n){return'$'+n.toLocaleString('es-CO')}
 function foodTotal(){return Object.entries(state.food).reduce((s,[id,q])=>{const m=MENU_ITEMS.find(x=>x.id===id);return s+(m?m.price*q:0)},0)}
 function drinkTotal(){return Object.entries(state.drinks).reduce((s,[id,q])=>{const d=DRINKS.find(x=>x.id===id);return s+(d?d.price*q:0)},0)}
 function additionTotal(){return Object.entries(state.additions).reduce((s,[id,q])=>{const a=ADDITIONS.find(x=>x.id===id);return s+(a?a.price*q:0)},0)}
-function grandTotal(){return foodTotal()+drinkTotal()+additionTotal()}
+function grandTotal(){return foodTotal()+drinkTotal()+additionTotal()+DELIVERY_FEE}
 
 function totalItems(){
   return Object.values(state.food).reduce((a,b)=>a+b,0)+Object.values(state.drinks).reduce((a,b)=>a+b,0);
@@ -1134,6 +1153,7 @@ function buildSummary(){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Extras</div>`;
     addList.forEach(a=>{html+=`<div class="summary-row"><span>${a.qty}x ${a.name}</span><span>${fmt(a.price*a.qty)}</span></div>`;});
   }
+  html+=`<div class="summary-row"><span>🛵 Domicilio</span><span>${fmt(DELIVERY_FEE)}</span></div>`;
   html+=`<div class="summary-total"><span>TOTAL A PAGAR</span><span class="summary-total-price">${fmt(grandTotal())}</span></div>`;
   document.getElementById('orderSummary').innerHTML=html;
 }
@@ -1233,6 +1253,8 @@ function nextStep(){
   }
   if(state.step===4){
     if(!state.payment){alert('Selecciona un método de pago 💳');return;}
+    if(!document.getElementById('orderTorre').value.trim()){alert('Ingresa tu dirección de entrega 📍');return;}
+    if(!document.getElementById('orderTelefono').value.trim()){alert('Ingresa tu número de teléfono 📱');return;}
     placeOrder();return;
   }
   renderStep(state.step+1);
@@ -1262,6 +1284,11 @@ function updateTotalDisplay(){
 // ══════════════════════════════════════════════
 async function placeOrder(){
   state.notes=document.getElementById('orderNotes').value;
+  const torre=document.getElementById('orderTorre').value.trim();
+  const apto=document.getElementById('orderApto').value.trim();
+  state.direccion=[torre,apto].filter(Boolean).join(', Apto ');
+  state.telefono=document.getElementById('orderTelefono').value.trim();
+  state.orderFechaHora=new Date().toISOString();
   state.orderNum='KB-'+Date.now().toString(36).toUpperCase().slice(-4)+Math.floor(10+Math.random()*90);
 
   // Disable next button while sending
@@ -1273,7 +1300,7 @@ async function placeOrder(){
 
   const order={
     id: state.orderNum,
-    fecha_hora: new Date().toISOString(),
+    fecha_hora: state.orderFechaHora,
     comida: Object.entries(state.food).map(([id,q])=>{
       const m=MENU_ITEMS.find(x=>x.id===id);
       return m?{id:m.id,name:m.name,price:m.price,qty:q}:null;
@@ -1293,6 +1320,8 @@ async function placeOrder(){
     vegetales: state.vegetales,
     metodo_pago: state.payment,
     notas: state.notes,
+    direccion: state.direccion,
+    telefono: state.telefono,
     total: grandTotal(),
     estado: 'pendiente',
     verificaciones: {},
@@ -1343,8 +1372,11 @@ function buildConfirmation(){
     <div class="receipt-items">${foodItems}${drinkItems}${addItems}
       ${vegList?`<div class="receipt-item"><span>🥬 Vegetales: ${vegList}</span><span style="color:var(--ef)">Gratis</span></div>`:''}
       ${sauceList?`<div class="receipt-item"><span>Salsas: ${sauceList}</span><span style="color:var(--ef)">Gratis</span></div>`:''}
+      <div class="receipt-item"><span>🛵 Domicilio</span><span>${fmt(DELIVERY_FEE)}</span></div>
     </div>
-    ${state.notes?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.5rem">Nota: ${state.notes}</div>`:''}
+    ${state.notes?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.3rem">📝 ${state.notes}</div>`:''}
+    ${state.direccion?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.3rem">📍 ${state.direccion}</div>`:''}
+    ${state.telefono?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.5rem">📱 ${state.telefono}</div>`:''}
     <div class="receipt-total"><span>TOTAL</span><span class="receipt-total-price">${fmt(grandTotal())}</span></div>
     <div class="receipt-payment">Método de pago: ${payLabel}</div>
     <div class="receipt-status">🔥 Tu orden está en preparación</div>`;
@@ -1432,15 +1464,50 @@ async function subirComprobante(input) {
 
 // ── ORDER TRACKING ──────────────────────────────
 let trackingInterval = null;
+let timerInterval = null;
+
+function iniciarTimer(){
+  clearInterval(timerInterval);
+  let seg=30*60;
+  const el=document.getElementById('timerDisplay');
+  if(!el) return;
+  function tick(){
+    if(seg<0){clearInterval(timerInterval);if(el)el.textContent='¡En camino! 🛵';return;}
+    const m=Math.floor(seg/60);
+    const s=seg%60;
+    if(el) el.textContent=m+':'+(s<10?'0':'')+s;
+    seg--;
+  }
+  tick();
+  timerInterval=setInterval(tick,1000);
+}
+
+async function cargarPosicionFila(fechaHora){
+  try{
+    const {data}=await sb.from('ordenes').select('id').in('estado',['pendiente','en_preparacion']).lt('fecha_hora',fechaHora);
+    const pos=(data||[]).length+1;
+    const el=document.getElementById('queuePos');
+    if(!el) return;
+    el.textContent=pos===1?'🎉 ¡Eres el primero en la fila!':`Tu posición: #${pos} — hay ${pos-1} pedido${pos-1>1?'s':''} antes que el tuyo`;
+  }catch(e){}
+}
 
 function iniciarTracking(orderId) {
   actualizarTimeline('pendiente');
+  iniciarTimer();
+  cargarPosicionFila(state.orderFechaHora);
   if (trackingInterval) clearInterval(trackingInterval);
   trackingInterval = setInterval(async () => {
     try {
       const { data } = await sb.from('ordenes').select('estado').eq('id', orderId).single();
       if (data) {
         actualizarTimeline(data.estado);
+        if(data.estado!=='listo'&&data.estado!=='rechazado'){
+          cargarPosicionFila(state.orderFechaHora);
+        } else {
+          const qw=document.getElementById('queueWrap');
+          if(qw) qw.style.display='none';
+        }
         if (data.estado === 'listo' || data.estado === 'rechazado') {
           clearInterval(trackingInterval);
           trackingInterval = null;
@@ -1470,7 +1537,8 @@ function actualizarTimeline(estado) {
 
 function resetOrder(){
   if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
-  state={step:0,food:{},drinks:{},sauces:[],additions:{},vegetales:[],payment:null,notes:'',orderNum:null};
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  state={step:0,food:{},drinks:{},sauces:[],additions:{},vegetales:[],payment:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
   renderStep(0);
   updateFloatCart();
 }
