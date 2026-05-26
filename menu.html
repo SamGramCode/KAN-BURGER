@@ -232,10 +232,13 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 
 /* sauce selection */
 .sauce-order-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.8rem}
-.veg-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem}
-.veg-card{background:var(--dkc);border:2px solid var(--bd);border-radius:12px;padding:.9rem;text-align:center;cursor:pointer;transition:all .25s;font-size:.92rem;font-weight:800;user-select:none}
-.veg-card:hover{border-color:rgba(232,100,26,.4)}
-.veg-card.selected{border-color:var(--or);background:rgba(232,100,26,.1);color:var(--or)}
+.veg-item-card{background:var(--dkc);border:1px solid var(--bd);border-radius:12px;padding:1rem;margin-bottom:.8rem}
+.veg-row{display:flex;align-items:center;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.veg-row:last-child{border-bottom:none}
+.veg-toggle{display:flex;gap:.4rem}
+.veg-btn{padding:.3rem .9rem;border-radius:50px;border:1.5px solid var(--bd);background:transparent;color:var(--mt);font-size:.8rem;font-weight:800;cursor:pointer;transition:all .2s}
+.veg-btn.si.active{background:rgba(39,174,96,.15);border-color:#27AE60;color:#27AE60}
+.veg-btn.no.active{background:rgba(231,76,60,.1);border-color:#E74C3C;color:#E74C3C}
 .socard{background:var(--dkc);border:2px solid var(--bd);border-radius:12px;padding:1rem;display:flex;align-items:center;gap:.8rem;cursor:pointer;transition:all .3s;user-select:none}
 .socard:hover{border-color:rgba(232,100,26,.4)}
 .socard.selected{border-color:var(--or);background:rgba(232,100,26,.08)}
@@ -564,11 +567,11 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           <button class="fbtn" data-cat="acompanante" onclick="filterOrderCat(this)">Acompañantes</button>
         </div>
         <div class="order-grid" id="foodGrid"></div>
-        <!-- Vegetales -->
-        <div style="margin-top:1.4rem">
-          <div class="step-title" style="font-size:1.2rem;margin-bottom:.5rem">¿Con qué <span>vegetales</span>?</div>
-          <p style="font-size:.82rem;color:var(--mt);margin-bottom:.8rem">Selecciona los que quieras — incluidos gratis 🥬</p>
-          <div class="veg-grid" id="vegGrid"></div>
+        <!-- Vegetales por producto -->
+        <div style="margin-top:1.4rem" id="vegSection">
+          <div class="step-title" style="font-size:1.2rem;margin-bottom:.3rem">¿Con qué <span>vegetales</span>?</div>
+          <p style="font-size:.82rem;color:var(--mt);margin-bottom:.8rem">Elige Sí o No para cada vegetal — obligatorio antes de continuar 🥬</p>
+          <div id="vegPerItemGrid"></div>
         </div>
       </div>
 
@@ -941,7 +944,7 @@ let state = {
   drinks: {},
   sauces: [],
   additions: {},
-  vegetales: [],
+  vegetales: {},
   payment: null,
   notes: '',
   direccion: '',
@@ -1056,6 +1059,8 @@ function changeQty(id,delta){
   const card=document.getElementById('ocard_'+id);
   if(qel) qel.textContent=nv||0;
   if(card) card.classList.toggle('in-cart',nv>0);
+  if(nv===0) delete state.vegetales[id];
+  buildVegPerItemGrid();
   updateTotalDisplay();
   updateFloatCart();
 }
@@ -1144,9 +1149,19 @@ function buildSummary(){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Salsas</div>`;
     html+=`<div class="summary-row"><span>${sauces.map(s=>s.name).join(', ')}</span><span style="color:var(--ef)">Gratis ✓</span></div>`;
   }
-  if(state.vegetales.length){
+  const vegEntries=Object.entries(state.vegetales);
+  if(vegEntries.length){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Vegetales</div>`;
-    html+=`<div class="summary-row"><span>🥬 ${state.vegetales.join(', ')}</span><span style="color:var(--ef)">Gratis ✓</span></div>`;
+    vegEntries.forEach(([id,vegs])=>{
+      const item=MENU_ITEMS.find(m=>m.id===id);
+      const si=VEGETALES.filter(v=>vegs[v]===true).join(', ');
+      const no=VEGETALES.filter(v=>vegs[v]===false).join(', ');
+      html+=`<div class="summary-row" style="flex-direction:column;align-items:flex-start;gap:.2rem">
+        <span style="font-weight:800;font-size:.8rem">${item?.name||id}</span>
+        ${si?`<span style="color:var(--ef);font-size:.78rem">✓ ${si}</span>`:''}
+        ${no?`<span style="color:#E74C3C;font-size:.78rem">✗ Sin ${no}</span>`:''}
+      </div>`;
+    });
   }
   const addList=Object.entries(state.additions).map(([id,q])=>{const a=ADDITIONS.find(x=>x.id===id);return a?{name:a.name,price:a.price,qty:q}:null}).filter(Boolean);
   if(addList.length){
@@ -1174,21 +1189,60 @@ function selectPayment(method,card){
 // ══════════════════════════════════════════════
 // STEP NAVIGATION
 // ══════════════════════════════════════════════
-// Build vegetales grid
-function buildVegGrid(){
-  const g=document.getElementById('vegGrid');
+// Build vegetales per-item grid
+function buildVegPerItemGrid(){
+  const g=document.getElementById('vegPerItemGrid');
   if(!g) return;
-  const icons={'Cebolla':'🧅','Tomate':'🍅','Lechuga':'🥬','Tocineta':'🥓'};
-  g.innerHTML=VEGETALES.map(v=>`
-    <div class="veg-card ${state.vegetales.includes(v)?'selected':''}" onclick="toggleVegetal('${v}',this)">
-      ${icons[v]||'🥗'} ${v}
-    </div>`).join('');
+  const ordered=Object.keys(state.food);
+  if(!ordered.length){
+    g.innerHTML='<div style="color:var(--mt);font-size:.85rem;text-align:center;padding:.5rem">Selecciona un producto arriba para configurar los vegetales 👆</div>';
+    return;
+  }
+  const icons={Cebolla:'🧅',Tomate:'🍅',Lechuga:'🥬',Tocineta:'🥓'};
+  // Inicializar y limpiar state.vegetales
+  ordered.forEach(id=>{
+    if(!state.vegetales[id]) state.vegetales[id]={Cebolla:null,Tomate:null,Lechuga:null,Tocineta:null};
+  });
+  Object.keys(state.vegetales).forEach(id=>{if(!state.food[id]) delete state.vegetales[id];});
+  g.innerHTML=ordered.map(id=>{
+    const item=MENU_ITEMS.find(m=>m.id===id);
+    if(!item) return '';
+    const vegs=state.vegetales[id]||{};
+    const allOk=VEGETALES.every(v=>vegs[v]!==null&&vegs[v]!==undefined);
+    const rows=VEGETALES.map(v=>`
+      <div class="veg-row">
+        <span style="font-weight:700;font-size:.88rem">${icons[v]||'🥗'} ${v}</span>
+        <div class="veg-toggle">
+          <button class="veg-btn si ${vegs[v]===true?'active':''}" onclick="setVegetal('${id}','${v}',true,this)">Sí</button>
+          <button class="veg-btn no ${vegs[v]===false?'active':''}" onclick="setVegetal('${id}','${v}',false,this)">No</button>
+        </div>
+      </div>`).join('');
+    return `<div class="veg-item-card" id="vegcard_${id}">
+      <div style="font-weight:900;font-size:.92rem;color:var(--or);margin-bottom:.7rem">
+        🍔 ${item.name} ×${state.food[id]}
+        ${allOk?'<span style="color:var(--ef);font-size:.75rem;margin-left:.5rem">✓ Listo</span>':'<span style="color:#E74C3C;font-size:.75rem;margin-left:.5rem">⚠ Pendiente</span>'}
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
 }
 
-function toggleVegetal(name,el){
-  const i=state.vegetales.indexOf(name);
-  if(i>-1) state.vegetales.splice(i,1); else state.vegetales.push(name);
-  el.classList.toggle('selected',state.vegetales.includes(name));
+function setVegetal(itemId,vegName,value,btn){
+  if(!state.vegetales[itemId]) state.vegetales[itemId]={};
+  state.vegetales[itemId][vegName]=value;
+  const row=btn.closest('.veg-toggle');
+  row.querySelectorAll('.veg-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Actualizar badge listo/pendiente
+  const card=document.getElementById('vegcard_'+itemId);
+  if(card){
+    const vegs=state.vegetales[itemId];
+    const allOk=VEGETALES.every(v=>vegs[v]!==null&&vegs[v]!==undefined);
+    const badge=card.querySelector('span[style*="margin-left"]');
+    if(badge) badge.outerHTML=allOk
+      ?'<span style="color:var(--ef);font-size:.75rem;margin-left:.5rem">✓ Listo</span>'
+      :'<span style="color:#E74C3C;font-size:.75rem;margin-left:.5rem">⚠ Pendiente</span>';
+  }
 }
 
 // Build additions grid
@@ -1221,7 +1275,7 @@ function changeAddition(id,delta){
 function renderStep(s){
   state.step=s;
   document.querySelectorAll('.step').forEach((el,i)=>el.classList.toggle('active',i===s));
-  if(s===0){buildFoodGrid();buildVegGrid();}
+  if(s===0){buildFoodGrid();buildVegPerItemGrid();}
   if(s===1) buildDrinkGrid();
   if(s===2) buildSauceGrid();
   if(s===3) buildAdditionsGrid();
@@ -1248,8 +1302,13 @@ function renderStep(s){
 }
 
 function nextStep(){
-  if(state.step===0&&Object.keys(state.food).length===0){
-    alert('Selecciona al menos un plato 🍔');return;
+  if(state.step===0){
+    if(Object.keys(state.food).length===0){alert('Selecciona al menos un plato 🍔');return;}
+    const sinConfirmar=Object.keys(state.food).some(id=>{
+      const v=state.vegetales[id];
+      return !v||VEGETALES.some(n=>v[n]===null||v[n]===undefined);
+    });
+    if(sinConfirmar){alert('Selecciona Sí o No para todos los vegetales de cada producto 🥬');return;}
   }
   if(state.step===4){
     if(!state.payment){alert('Selecciona un método de pago 💳');return;}
@@ -1317,7 +1376,10 @@ async function placeOrder(){
       const a=ADDITIONS.find(x=>x.id===id);
       return a?{id:a.id,name:a.name,price:a.price,qty:q}:null;
     }).filter(Boolean),
-    vegetales: state.vegetales,
+    vegetales: Object.entries(state.vegetales).map(([id,vegs])=>{
+      const item=MENU_ITEMS.find(m=>m.id===id);
+      return {itemId:id,itemName:item?.name||id,si:VEGETALES.filter(v=>vegs[v]===true),no:VEGETALES.filter(v=>vegs[v]===false)};
+    }),
     metodo_pago: state.payment,
     notas: state.notes,
     direccion: state.direccion,
@@ -1361,7 +1423,12 @@ function buildConfirmation(){
   const drinkItems=Object.entries(state.drinks).map(([id,q])=>{const d=DRINKS.find(x=>x.id===id);return d?`<div class="receipt-item"><span>${q}x ${d.name}</span><span>${fmt(d.price*q)}</span></div>`:''}).join('');
   const addItems=Object.entries(state.additions).map(([id,q])=>{const a=ADDITIONS.find(x=>x.id===id);return a?`<div class="receipt-item"><span>${q}x ${a.name}</span><span>${fmt(a.price*q)}</span></div>`:''}).join('');
   const sauceList=state.sauces.map(id=>SAUCES.find(s=>s.id===id)?.name).filter(Boolean).join(', ');
-  const vegList=state.vegetales.join(', ');
+  const vegList=Object.entries(state.vegetales).map(([id,vegs])=>{
+    const item=MENU_ITEMS.find(m=>m.id===id);
+    const si=VEGETALES.filter(v=>vegs[v]===true).join(', ');
+    const no=VEGETALES.filter(v=>vegs[v]===false).join(', ');
+    return `${item?.name||id}: ${si?'✓'+si:''}${no?' ✗'+no:''}`;
+  }).join(' | ');
   const payLabel={nequi:'Nequi 💜',daviplata:'Daviplata ❤️',llave:'Llave B-reve 🔑',efectivo:'Efectivo 💵'}[state.payment];
 
   document.getElementById('confirmReceipt').innerHTML=`
@@ -1538,7 +1605,7 @@ function actualizarTimeline(estado) {
 function resetOrder(){
   if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  state={step:0,food:{},drinks:{},sauces:[],additions:{},vegetales:[],payment:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
+  state={step:0,food:{},drinks:{},sauces:[],additions:{},vegetales:{},payment:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
   renderStep(0);
   updateFloatCart();
 }
