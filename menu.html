@@ -232,6 +232,10 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 
 /* sauce selection */
 .sauce-order-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.8rem}
+.veg-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem}
+.veg-card{background:var(--dkc);border:2px solid var(--bd);border-radius:12px;padding:.9rem;text-align:center;cursor:pointer;transition:all .25s;font-size:.92rem;font-weight:800;user-select:none}
+.veg-card:hover{border-color:rgba(232,100,26,.4)}
+.veg-card.selected{border-color:var(--or);background:rgba(232,100,26,.1);color:var(--or)}
 .socard{background:var(--dkc);border:2px solid var(--bd);border-radius:12px;padding:1rem;display:flex;align-items:center;gap:.8rem;cursor:pointer;transition:all .3s;user-select:none}
 .socard:hover{border-color:rgba(232,100,26,.4)}
 .socard.selected{border-color:var(--or);background:rgba(232,100,26,.08)}
@@ -535,12 +539,17 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
       <div class="pb-sep" id="pbs2"></div>
       <div class="pb-step">
         <div class="pb-dot" id="pb3">4</div>
-        <div class="pb-label" id="pbl3">Pago</div>
+        <div class="pb-label" id="pbl3">Extras</div>
       </div>
       <div class="pb-sep" id="pbs3"></div>
       <div class="pb-step">
-        <div class="pb-dot" id="pb4">✓</div>
-        <div class="pb-label" id="pbl4">Listo</div>
+        <div class="pb-dot" id="pb4">5</div>
+        <div class="pb-label" id="pbl4">Pago</div>
+      </div>
+      <div class="pb-sep" id="pbs4"></div>
+      <div class="pb-step">
+        <div class="pb-dot" id="pb5">✓</div>
+        <div class="pb-label" id="pbl5">Listo</div>
       </div>
     </div>
 
@@ -555,6 +564,12 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           <button class="fbtn" data-cat="acompanante" onclick="filterOrderCat(this)">Acompañantes</button>
         </div>
         <div class="order-grid" id="foodGrid"></div>
+        <!-- Vegetales -->
+        <div style="margin-top:1.4rem">
+          <div class="step-title" style="font-size:1.2rem;margin-bottom:.5rem">¿Con qué <span>vegetales</span>?</div>
+          <p style="font-size:.82rem;color:var(--mt);margin-bottom:.8rem">Selecciona los que quieras — incluidos gratis 🥬</p>
+          <div class="veg-grid" id="vegGrid"></div>
+        </div>
       </div>
 
       <!-- STEP 1: DRINKS -->
@@ -571,8 +586,15 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
         <div class="sauce-order-grid" id="sauceGrid"></div>
       </div>
 
-      <!-- STEP 3: PAYMENT -->
+      <!-- STEP 3: ADICIONES -->
       <div class="step" id="step3">
+        <div class="step-title">¿Algún <span>Extra</span>?</div>
+        <p style="font-size:.85rem;color:var(--mt);margin-bottom:1.2rem">Adiciona ingredientes a tu pedido</p>
+        <div class="drink-order-grid" id="additionsGrid"></div>
+      </div>
+
+      <!-- STEP 4: PAYMENT -->
+      <div class="step" id="step4">
         <div class="step-title">Método de <span>Pago</span></div>
         <div class="order-summary" id="orderSummary"></div>
         <p style="font-size:.82rem;font-weight:700;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">Forma de pago</p>
@@ -606,8 +628,8 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
         <textarea class="notes-field" id="orderNotes" placeholder="Nota especial para tu pedido (alergias, indicaciones, etc.)"></textarea>
       </div>
 
-      <!-- STEP 4: CONFIRMATION -->
-      <div class="step" id="step4">
+      <!-- STEP 5: CONFIRMATION -->
+      <div class="step" id="step5">
         <div class="confirm-wrap">
           <div class="confirm-icon">🎉</div>
           <div class="confirm-order-num" id="confirmNum">#KB-0000</div>
@@ -846,37 +868,47 @@ async function cargarProductosActivos() {
 // DATA
 // ══════════════════════════════════════════════
 const MENU_ITEMS = [
-  {id:'b1',cat:'burger',name:'La Clásica',price:12000,badge:'🍔 Burger',img:'img/IMG_2643.jpg',desc:'Carne de res, queso cheddar, huevo, tomate, lechuga'},
-  {id:'b2',cat:'burger',name:'La Crispy',price:13000,badge:'🍔 Burger',img:'img/IMG_2642.jpg',desc:'Pollo crispy, salsa cheddar BBQ, lechuga, tomate, tocineta'},
-  {id:'b3',cat:'burger',name:'La Blanca',price:12000,badge:'🍔 Burger',img:'img/IMG_2640.jpg',desc:'Carne de res, salsa blanca de la casa, queso cheddar'},
-  {id:'b4',cat:'burger',name:'La Doble',price:16000,badge:'🔥 Popular',img:'img/IMG_2646.jpg',desc:'Doble carne, doble cheddar, huevo, tocineta, tomate, lechuga'},
-  {id:'b5',cat:'burger',name:'La Mega KAN',price:20000,badge:'💥 Especial',img:'img/IMG_2647.jpg',desc:'Pollo crispy + carne + tocineta, triple queso, todas las salsas'},
-  {id:'b6',cat:'burger',name:'Combo KAN',price:15000,badge:'🍟 Combo',img:'img/IMG_2648.jpg',desc:'Burger clásica con papas fritas incluidas'},
-  {id:'v1',cat:'venezolano',name:'Perro KAN',price:8000,badge:'🌭 Venezolano',img:'img/IMG_2638.jpg',desc:'Perro caliente venezolano, repollo, queso rallado, mostaza cheddar'},
-  {id:'v2',cat:'venezolano',name:'Pabellón KAN',price:14000,badge:'🇻🇪 Venezolano',img:'img/IMG_2639.jpg',desc:'Carne mechada, tajadas de plátano, aguacate, queso blanco'},
-  {id:'v3',cat:'venezolano',name:'Patacón KAN',price:16000,badge:'🇻🇪 Especial',img:'img/IMG_2650.jpg',desc:'Patacón, carne mechada, camarones, huevo, aguacate, queso'},
-  {id:'a1',cat:'acompanante',name:'Salchipapa KAN',price:8000,badge:'🍟 Acompañante',img:'img/IMG_2637.jpg',desc:'Papas fritas con salchicha, maíz, crema y queso rallado'},
-  {id:'a2',cat:'acompanante',name:'Papas Cargadas',price:9000,badge:'🧀 Acompañante',img:'img/IMG_2641.jpg',desc:'Papas fritas con salsa cheddar y tocineta crujiente'},
-  {id:'a3',cat:'acompanante',name:'Papas Simples',price:5000,badge:'🍟 Acompañante',img:'img/IMG_2649.jpg',desc:'Papas fritas sazonadas con especias secretas KAN'}
+  {id:'b1',cat:'burger',name:'Sencilla Res',price:14000,badge:'🍔 Burger',img:'img/sencilla-res.jpg',desc:'Carne de res 130gr, queso cheddar, huevo, tocineta, vegetales frescos, salsa de la casa, pan brioche'},
+  {id:'b2',cat:'burger',name:'Sencilla Pollo',price:14000,badge:'🍔 Burger',img:'img/sencilla-pollo.jpg',desc:'Pechuga a la plancha 130gr, queso cheddar, huevo, tocineta, vegetales frescos, salsa de la casa, pan brioche'},
+  {id:'b3',cat:'burger',name:'Especial Res',price:21000,badge:'🔥 Especial',img:'img/especial-res.jpg',desc:'Doble carne de 130gr cada una, queso cheddar, huevo, tocineta, vegetales frescos, salsa de la casa, pan brioche'},
+  {id:'b4',cat:'burger',name:'Especial Pollo Crispy',price:17000,badge:'🍗 Crispy',img:'img/especial-pollo.jpg',desc:'Pollo crispy 130gr, bañado en salsa barbacoa, queso cheddar, topping de tocineta crocante, lechuga y salsa de la casa, pan brioche'},
+  {id:'b5',cat:'burger',name:'Mixta',price:21000,badge:'💥 Mixta',img:'img/mixta.jpg',desc:'Carne de res 130gr, Pollo crispy 130gr, queso cheddar, huevo, tocineta, vegetales frescos, salsa de la casa, pan brioche'},
+  {id:'v1',cat:'venezolano',name:'Perro Caliente Sencillo',price:9500,badge:'🌭 Venezolano',img:'img/perro-sencillo.jpg',desc:'Salchicha americana, cebolla, papas chips, queso rallado, salsa de la casa'},
+  {id:'v2',cat:'venezolano',name:'Perro Caliente Especial',price:13500,badge:'🌭 Especial',img:'img/perro-especial.jpg',desc:'Salchicha americana, cebolla, papas chips, queso rallado, tocineta, huevo, queso cheddar y salsas de la casa'},
+  {id:'v3',cat:'venezolano',name:'Arepa Cabimera Volcán',price:21000,badge:'🇻🇪 Venezolano',img:'img/arepa-cabimera.jpg',desc:'Arepa frita, carne mechada, ensalada de repollo y zanahoria aderezada, aguacate, tocineta, queso cheddar, queso rallado, huevo y salsas de la casa'},
+  {id:'v4',cat:'venezolano',name:'Patacón',price:22000,badge:'🇻🇪 Especial',img:'img/patacon.jpg',desc:'Patacón frito pinto, carne mechada, ensalada de repollo y zanahoria aderezada, tocineta, queso cheddar, aguacate y salsas de la casa'},
+  {id:'a1',cat:'acompanante',name:'Salchipapa',price:14000,badge:'🍟 Acompañante',img:'img/salchipapa.jpg',desc:'Papas francesas 250gr, salchicha americana, chorizo, maíz, queso rallado y salsa de la casa'},
+  {id:'a2',cat:'acompanante',name:'Papas al Queso Cheddar',price:14000,badge:'🧀 Acompañante',img:'img/papas-cheddar.jpg',desc:'Papas francesas 250gr, aderezo de queso cheddar y topping de tocineta crocante'}
 ];
 const DRINKS = [
-  {id:'d1',name:'Frescolita',price:3000,icon:'🥤'},
-  {id:'d2',name:'Malta',price:3000,icon:'🍺'},
-  {id:'d3',name:'Jugo Natural',price:4000,icon:'🍊'},
-  {id:'d4',name:'Limonada',price:4000,icon:'🍋'},
-  {id:'d5',name:'Refresco',price:2500,icon:'🫙'},
-  {id:'d6',name:'Agua Fría',price:2000,icon:'💧'}
+  {id:'d1',name:'Coca-Cola',price:3500,icon:'🥤',img:'img/coca-cola.jpg'},
+  {id:'d2',name:'Sprite',price:3500,icon:'🥤',img:'img/sprite.jpg'},
+  {id:'d3',name:'Jugo HIT',price:3500,icon:'🍊',img:'img/jugo-hit.jpg'},
+  {id:'d4',name:'Agua',price:3000,icon:'💧',img:'img/agua.jpg'},
+  {id:'d5',name:'Agua con Gas',price:3000,icon:'💧',img:'img/agua-gas.jpg'}
 ];
 const SAUCES = [
-  {id:'sa1',name:'Salsa BBQ',color:'#8B1A1A'},
-  {id:'sa2',name:'Cheddar',color:'#F5B400'},
-  {id:'sa3',name:'Mayonesa de Ajo',color:'#EEEED0'},
-  {id:'sa4',name:'Ketchup',color:'#E74C3C'},
-  {id:'sa5',name:'Mostaza',color:'#F1C40F'},
-  {id:'sa6',name:'Salsa Rosada',color:'#E8645A'},
-  {id:'sa7',name:'Guasacaca',color:'#27AE60'},
-  {id:'sa8',name:'Salsa de la Casa',color:'#2980B9'}
+  {id:'sa1',name:'Salsa de la Casa',color:'#2980B9'},
+  {id:'sa2',name:'BBQ',color:'#8B1A1A'},
+  {id:'sa3',name:'Salsa Rosada',color:'#E8645A'},
+  {id:'sa4',name:'Mostaza',color:'#F1C40F'},
+  {id:'sa5',name:'Salsa de Piña',color:'#F5B400'},
+  {id:'sa6',name:'Salsa de Tomate',color:'#E74C3C'},
+  {id:'sa7',name:'Salsa de Jalapeño',color:'#27AE60'},
+  {id:'sa8',name:'Salsa de Pepinillo',color:'#8BC34A'}
 ];
+const ADDITIONS = [
+  {id:'ad1',name:'Adición de carne',price:7500,icon:'🥩'},
+  {id:'ad2',name:'Adición de tocineta',price:1500,icon:'🥓'},
+  {id:'ad3',name:'Adición de huevo',price:1000,icon:'🍳'},
+  {id:'ad4',name:'Queso cheddar tajado',price:1000,icon:'🧀'},
+  {id:'ad5',name:'Adición de pollo',price:5500,icon:'🍗'},
+  {id:'ad6',name:'Adición de pollo crispy',price:6500,icon:'🍗'},
+  {id:'ad7',name:'Papas francesas',price:4500,icon:'🍟'},
+  {id:'ad8',name:'Adición de maíz',price:1500,icon:'🌽'},
+  {id:'ad9',name:'Adición de pepinillo',price:1500,icon:'🥒'}
+];
+const VEGETALES = ['Cebolla','Tomate','Lechuga','Tocineta'];
 const PAYMENT_INFO = {
   nequi:    {title:'Nequi',num:'300 XXX XXXX',note:'Envía el pago al número de arriba y sube el comprobante al llegar.'},
   daviplata:{title:'Daviplata',num:'300 XXX XXXX',note:'Transfiere al número y muestra el comprobante al recoger.'},
@@ -889,9 +921,11 @@ const PAYMENT_INFO = {
 // ══════════════════════════════════════════════
 let state = {
   step: 0,
-  food: {},   // {id: qty}
-  drinks: {}, // {id: qty}
-  sauces: [], // [id]
+  food: {},
+  drinks: {},
+  sauces: [],
+  additions: {},
+  vegetales: [],
   payment: null,
   notes: '',
   orderNum: null
@@ -901,7 +935,8 @@ function fmt(n){return'$'+n.toLocaleString('es-CO')}
 
 function foodTotal(){return Object.entries(state.food).reduce((s,[id,q])=>{const m=MENU_ITEMS.find(x=>x.id===id);return s+(m?m.price*q:0)},0)}
 function drinkTotal(){return Object.entries(state.drinks).reduce((s,[id,q])=>{const d=DRINKS.find(x=>x.id===id);return s+(d?d.price*q:0)},0)}
-function grandTotal(){return foodTotal()+drinkTotal()}
+function additionTotal(){return Object.entries(state.additions).reduce((s,[id,q])=>{const a=ADDITIONS.find(x=>x.id===id);return s+(a?a.price*q:0)},0)}
+function grandTotal(){return foodTotal()+drinkTotal()+additionTotal()}
 
 function totalItems(){
   return Object.values(state.food).reduce((a,b)=>a+b,0)+Object.values(state.drinks).reduce((a,b)=>a+b,0);
@@ -973,8 +1008,7 @@ function openModalAtItem(id){
 function closeModal(){
   document.getElementById('orderModal').classList.remove('open');
   document.body.style.overflow='';
-  // Si venía del paso de confirmación, reinicia para el próximo pedido
-  if(state.step===4) resetOrder();
+  if(state.step===5) resetOrder();
 }
 
 // Build food grid
@@ -1091,6 +1125,15 @@ function buildSummary(){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Salsas</div>`;
     html+=`<div class="summary-row"><span>${sauces.map(s=>s.name).join(', ')}</span><span style="color:var(--ef)">Gratis ✓</span></div>`;
   }
+  if(state.vegetales.length){
+    html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Vegetales</div>`;
+    html+=`<div class="summary-row"><span>🥬 ${state.vegetales.join(', ')}</span><span style="color:var(--ef)">Gratis ✓</span></div>`;
+  }
+  const addList=Object.entries(state.additions).map(([id,q])=>{const a=ADDITIONS.find(x=>x.id===id);return a?{name:a.name,price:a.price,qty:q}:null}).filter(Boolean);
+  if(addList.length){
+    html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Extras</div>`;
+    addList.forEach(a=>{html+=`<div class="summary-row"><span>${a.qty}x ${a.name}</span><span>${fmt(a.price*a.qty)}</span></div>`;});
+  }
   html+=`<div class="summary-total"><span>TOTAL A PAGAR</span><span class="summary-total-price">${fmt(grandTotal())}</span></div>`;
   document.getElementById('orderSummary').innerHTML=html;
 }
@@ -1111,29 +1154,74 @@ function selectPayment(method,card){
 // ══════════════════════════════════════════════
 // STEP NAVIGATION
 // ══════════════════════════════════════════════
+// Build vegetales grid
+function buildVegGrid(){
+  const g=document.getElementById('vegGrid');
+  if(!g) return;
+  const icons={'Cebolla':'🧅','Tomate':'🍅','Lechuga':'🥬','Tocineta':'🥓'};
+  g.innerHTML=VEGETALES.map(v=>`
+    <div class="veg-card ${state.vegetales.includes(v)?'selected':''}" onclick="toggleVegetal('${v}',this)">
+      ${icons[v]||'🥗'} ${v}
+    </div>`).join('');
+}
+
+function toggleVegetal(name,el){
+  const i=state.vegetales.indexOf(name);
+  if(i>-1) state.vegetales.splice(i,1); else state.vegetales.push(name);
+  el.classList.toggle('selected',state.vegetales.includes(name));
+}
+
+// Build additions grid
+function buildAdditionsGrid(){
+  const g=document.getElementById('additionsGrid');
+  g.innerHTML=ADDITIONS.map(a=>`
+    <div class="dorder-card ${state.additions[a.id]?'in-cart':''}" id="adcard_${a.id}">
+      <div class="do-ic">${a.icon}</div>
+      <div class="do-name">${a.name}</div>
+      <div class="do-price">${fmt(a.price)}</div>
+      <div class="qty-ctrl" style="justify-content:center">
+        <button class="qty-btn" onclick="changeAddition('${a.id}',-1)">−</button>
+        <span class="qty-val" id="adqty_${a.id}">${state.additions[a.id]||0}</span>
+        <button class="qty-btn" onclick="changeAddition('${a.id}',1)">+</button>
+      </div>
+    </div>`).join('');
+}
+
+function changeAddition(id,delta){
+  const cur=state.additions[id]||0;
+  const nv=Math.max(0,cur+delta);
+  if(nv===0) delete state.additions[id]; else state.additions[id]=nv;
+  const el=document.getElementById('adqty_'+id);
+  const card=document.getElementById('adcard_'+id);
+  if(el) el.textContent=nv||0;
+  if(card) card.classList.toggle('in-cart',nv>0);
+  updateTotalDisplay();
+}
+
 function renderStep(s){
   state.step=s;
   document.querySelectorAll('.step').forEach((el,i)=>el.classList.toggle('active',i===s));
-  if(s===0) buildFoodGrid();
+  if(s===0){buildFoodGrid();buildVegGrid();}
   if(s===1) buildDrinkGrid();
   if(s===2) buildSauceGrid();
-  if(s===3){buildSummary();updateNextBtn();}
-  if(s===4){buildConfirmation();}
+  if(s===3) buildAdditionsGrid();
+  if(s===4){buildSummary();updateNextBtn();}
+  if(s===5) buildConfirmation();
 
-  // Progress
-  for(let i=0;i<5;i++){
+  // Progress (6 steps)
+  for(let i=0;i<6;i++){
     const dot=document.getElementById('pb'+i);
     const lbl=document.getElementById('pbl'+i);
-    const sep=i<4?document.getElementById('pbs'+i):null;
+    const sep=i<5?document.getElementById('pbs'+i):null;
     dot.className='pb-dot'+(i<s?' done':i===s?' active':'');
     lbl.className='pb-label'+(i===s?' active':'');
     if(sep) sep.className='pb-sep'+(i<s?' done':'');
   }
 
-  document.getElementById('btnBack').style.display=s>0&&s<4?'block':'none';
+  document.getElementById('btnBack').style.display=s>0&&s<5?'block':'none';
   const nextBtn=document.getElementById('btnNext');
-  nextBtn.style.display=s<4?'flex':'none';
-  document.getElementById('modalFoot').style.display=s===4?'none':'flex';
+  nextBtn.style.display=s<5?'flex':'none';
+  document.getElementById('modalFoot').style.display=s===5?'none':'flex';
 
   updateTotalDisplay();
   updateNextBtn();
@@ -1143,7 +1231,7 @@ function nextStep(){
   if(state.step===0&&Object.keys(state.food).length===0){
     alert('Selecciona al menos un plato 🍔');return;
   }
-  if(state.step===3){
+  if(state.step===4){
     if(!state.payment){alert('Selecciona un método de pago 💳');return;}
     placeOrder();return;
   }
@@ -1154,7 +1242,7 @@ function prevStep(){renderStep(state.step-1);}
 function updateNextBtn(){
   const btn=document.getElementById('btnNext');
   if(!btn) return;
-  if(state.step===3){
+  if(state.step===4){
     btn.textContent='✅ Confirmar Pedido';
     btn.disabled=!state.payment;
   } else {
@@ -1198,6 +1286,11 @@ async function placeOrder(){
       const s=SAUCES.find(x=>x.id===id);
       return s?{id:s.id,name:s.name}:null;
     }).filter(Boolean),
+    adiciones: Object.entries(state.additions).map(([id,q])=>{
+      const a=ADDITIONS.find(x=>x.id===id);
+      return a?{id:a.id,name:a.name,price:a.price,qty:q}:null;
+    }).filter(Boolean),
+    vegetales: state.vegetales,
     metodo_pago: state.payment,
     notas: state.notes,
     total: grandTotal(),
@@ -1222,7 +1315,7 @@ async function placeOrder(){
     return;
   }
 
-  renderStep(4);
+  renderStep(5);
   iniciarTracking(state.orderNum);
 }
 
@@ -1237,7 +1330,9 @@ function buildConfirmation(){
 
   const foodItems=Object.entries(state.food).map(([id,q])=>{const m=MENU_ITEMS.find(x=>x.id===id);return m?`<div class="receipt-item"><span>${q}x ${m.name}</span><span>${fmt(m.price*q)}</span></div>`:''}).join('');
   const drinkItems=Object.entries(state.drinks).map(([id,q])=>{const d=DRINKS.find(x=>x.id===id);return d?`<div class="receipt-item"><span>${q}x ${d.name}</span><span>${fmt(d.price*q)}</span></div>`:''}).join('');
+  const addItems=Object.entries(state.additions).map(([id,q])=>{const a=ADDITIONS.find(x=>x.id===id);return a?`<div class="receipt-item"><span>${q}x ${a.name}</span><span>${fmt(a.price*q)}</span></div>`:''}).join('');
   const sauceList=state.sauces.map(id=>SAUCES.find(s=>s.id===id)?.name).filter(Boolean).join(', ');
+  const vegList=state.vegetales.join(', ');
   const payLabel={nequi:'Nequi 💜',daviplata:'Daviplata ❤️',llave:'Llave B-reve 🔑',efectivo:'Efectivo 💵'}[state.payment];
 
   document.getElementById('confirmReceipt').innerHTML=`
@@ -1245,7 +1340,10 @@ function buildConfirmation(){
       <div><div class="receipt-logo-txt"><span>KAN</span> BURGER</div><div class="receipt-meta">Comida 100% Artesanal</div></div>
       <div style="text-align:right"><div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--or)">#${state.orderNum}</div><div class="receipt-meta">${dt}</div></div>
     </div>
-    <div class="receipt-items">${foodItems}${drinkItems}${sauceList?`<div class="receipt-item"><span>Salsas: ${sauceList}</span><span style="color:var(--ef)">Gratis</span></div>`:''}</div>
+    <div class="receipt-items">${foodItems}${drinkItems}${addItems}
+      ${vegList?`<div class="receipt-item"><span>🥬 Vegetales: ${vegList}</span><span style="color:var(--ef)">Gratis</span></div>`:''}
+      ${sauceList?`<div class="receipt-item"><span>Salsas: ${sauceList}</span><span style="color:var(--ef)">Gratis</span></div>`:''}
+    </div>
     ${state.notes?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.5rem">Nota: ${state.notes}</div>`:''}
     <div class="receipt-total"><span>TOTAL</span><span class="receipt-total-price">${fmt(grandTotal())}</span></div>
     <div class="receipt-payment">Método de pago: ${payLabel}</div>
@@ -1372,7 +1470,7 @@ function actualizarTimeline(estado) {
 
 function resetOrder(){
   if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
-  state={step:0,food:{},drinks:{},sauces:[],payment:null,notes:'',orderNum:null};
+  state={step:0,food:{},drinks:{},sauces:[],additions:{},vegetales:[],payment:null,notes:'',orderNum:null};
   renderStep(0);
   updateFloatCart();
 }
@@ -1380,7 +1478,7 @@ function resetOrder(){
 function updateFloatCart(){
   const total=totalItems();
   const btn=document.getElementById('floatCart');
-  btn.classList.toggle('hidden',total===0||state.step===4);
+  btn.classList.toggle('hidden',total===0||state.step===5);
   document.getElementById('cartBadge').textContent=total;
   document.getElementById('cartTotalFloat').textContent=fmt(grandTotal());
 }

@@ -500,10 +500,12 @@ function buildCard(order) {
   const payLbls = { nequi: 'Nequi 💜', daviplata: 'Daviplata ❤️', llave: 'Llave 🔑', efectivo: 'Efectivo 💵' };
   const payCls  = { nequi: 'nequi', daviplata: 'daviplata', llave: 'llave', efectivo: 'efectivo' };
 
-  const comida  = order.comida  || [];
-  const bebidas = order.bebidas || [];
-  const salsas  = order.salsas  || [];
-  const checks  = order._checks || order.verificaciones || {};
+  const comida    = order.comida    || [];
+  const bebidas   = order.bebidas   || [];
+  const salsas    = order.salsas    || [];
+  const adiciones = order.adiciones || [];
+  const vegetales = order.vegetales || [];
+  const checks    = order._checks   || order.verificaciones || {};
 
   const keys    = getKeys(order);
   const checked = keys.filter(k => checks[k]).length;
@@ -521,10 +523,14 @@ function buildCard(order) {
     </div>`;
   };
 
-  const foodHTML  = comida.map((item, i)  => mkItem('f'  + i, '🍔', item.name, 'x' + item.qty)).join('');
-  const drinkHTML = bebidas.map((d, i)    => mkItem('dk' + i, '🥤', d.name,    'x' + d.qty)).join('');
-  const sauceHTML = salsas.map((s, i)     => mkItem('sa' + i, '🥫', s.name,    '')).join('');
-  const packHTML  = mkItem('pack', '📦', 'Cubiertos · Servilletas · Todo empacado', '');
+  const foodHTML    = comida.map((item, i)  => mkItem('f'  + i, '🍔', item.name, 'x' + item.qty)).join('');
+  const drinkHTML   = bebidas.map((d, i)    => mkItem('dk' + i, '🥤', d.name,    'x' + d.qty)).join('');
+  const sauceHTML   = salsas.map((s, i)     => mkItem('sa' + i, '🥫', s.name,    '')).join('');
+  const adicionHTML = adiciones.map((a, i)  => mkItem('ad' + i, '➕', a.name,    'x' + a.qty)).join('');
+  const packHTML    = mkItem('pack', '📦', 'Cubiertos · Servilletas · Todo empacado', '');
+  const vegHTML     = vegetales.length
+    ? `<div class="oc-section"><div class="oc-sec-label">🥬 Vegetales</div><div style="font-size:.85rem;padding:.3rem .7rem">${vegetales.map(v=>esc(v)).join(' · ')}</div></div>`
+    : '';
 
   return `<div class="order-card ${cls}" id="card_${order.id}">
     <div class="oc-head">
@@ -547,8 +553,10 @@ function buildCard(order) {
     </div>
     <div class="oc-body">
       <div class="oc-section"><div class="oc-sec-label">🍔 Comida</div>${foodHTML}</div>
-      ${bebidas.length ? `<div class="oc-section"><div class="oc-sec-label">🥤 Bebidas</div>${drinkHTML}</div>` : ''}
-      ${salsas.length  ? `<div class="oc-section"><div class="oc-sec-label">🥫 Salsas</div>${sauceHTML}</div>`  : ''}
+      ${vegHTML}
+      ${bebidas.length    ? `<div class="oc-section"><div class="oc-sec-label">🥤 Bebidas</div>${drinkHTML}</div>`           : ''}
+      ${salsas.length     ? `<div class="oc-section"><div class="oc-sec-label">🥫 Salsas</div>${sauceHTML}</div>`            : ''}
+      ${adiciones.length  ? `<div class="oc-section"><div class="oc-sec-label">➕ Extras / Adiciones</div>${adicionHTML}</div>` : ''}
       <div class="oc-section"><div class="oc-sec-label">📦 Empaque</div>${packHTML}</div>
       ${order.notas ? `<div class="oc-notes"><span>📝</span><span>${esc(order.notas)}</span></div>` : ''}
     </div>
@@ -573,9 +581,10 @@ function buildCard(order) {
 
 function getKeys(order) {
   const k = [];
-  (order.comida  || []).forEach((_, i) => k.push('f'  + i));
-  (order.bebidas || []).forEach((_, i) => k.push('dk' + i));
-  (order.salsas  || []).forEach((_, i) => k.push('sa' + i));
+  (order.comida    || []).forEach((_, i) => k.push('f'  + i));
+  (order.bebidas   || []).forEach((_, i) => k.push('dk' + i));
+  (order.salsas    || []).forEach((_, i) => k.push('sa' + i));
+  (order.adiciones || []).forEach((_, i) => k.push('ad' + i));
   k.push('pack');
   return k;
 }
@@ -732,32 +741,30 @@ function playSound() {
 // ── UTILIDADES ────────────────────────────────────────────────────────
 // ── GESTIÓN DE MENÚ ──────────────────────────────────────────────────
 const TODOS_PRODUCTOS = [
-  {id:'b1',name:'La Clásica',price:12000,cat:'🍔 Burgers'},
-  {id:'b2',name:'La Crispy',price:13000,cat:'🍔 Burgers'},
-  {id:'b3',name:'La Blanca',price:12000,cat:'🍔 Burgers'},
-  {id:'b4',name:'La Doble',price:16000,cat:'🍔 Burgers'},
-  {id:'b5',name:'La Mega KAN',price:20000,cat:'🍔 Burgers'},
-  {id:'b6',name:'Combo KAN',price:15000,cat:'🍔 Burgers'},
-  {id:'v1',name:'Perro KAN',price:8000,cat:'🇻🇪 Venezolanos'},
-  {id:'v2',name:'Pabellón KAN',price:14000,cat:'🇻🇪 Venezolanos'},
-  {id:'v3',name:'Patacón KAN',price:16000,cat:'🇻🇪 Venezolanos'},
-  {id:'a1',name:'Salchipapa KAN',price:8000,cat:'🍟 Acompañantes'},
-  {id:'a2',name:'Papas Cargadas',price:9000,cat:'🍟 Acompañantes'},
-  {id:'a3',name:'Papas Simples',price:5000,cat:'🍟 Acompañantes'},
-  {id:'d1',name:'Frescolita',price:3000,cat:'🥤 Bebidas'},
-  {id:'d2',name:'Malta',price:3000,cat:'🥤 Bebidas'},
-  {id:'d3',name:'Jugo Natural',price:4000,cat:'🥤 Bebidas'},
-  {id:'d4',name:'Limonada',price:4000,cat:'🥤 Bebidas'},
-  {id:'d5',name:'Refresco',price:2500,cat:'🥤 Bebidas'},
-  {id:'d6',name:'Agua Fría',price:2000,cat:'🥤 Bebidas'},
-  {id:'sa1',name:'Salsa BBQ',price:0,cat:'🥫 Salsas'},
-  {id:'sa2',name:'Cheddar',price:0,cat:'🥫 Salsas'},
-  {id:'sa3',name:'Mayonesa de Ajo',price:0,cat:'🥫 Salsas'},
-  {id:'sa4',name:'Ketchup',price:0,cat:'🥫 Salsas'},
-  {id:'sa5',name:'Mostaza',price:0,cat:'🥫 Salsas'},
-  {id:'sa6',name:'Salsa Rosada',price:0,cat:'🥫 Salsas'},
-  {id:'sa7',name:'Guasacaca',price:0,cat:'🥫 Salsas'},
-  {id:'sa8',name:'Salsa de la Casa',price:0,cat:'🥫 Salsas'}
+  {id:'b1',name:'Sencilla Res',price:14000,cat:'🍔 Burgers'},
+  {id:'b2',name:'Sencilla Pollo',price:14000,cat:'🍔 Burgers'},
+  {id:'b3',name:'Especial Res',price:21000,cat:'🍔 Burgers'},
+  {id:'b4',name:'Especial Pollo Crispy',price:17000,cat:'🍔 Burgers'},
+  {id:'b5',name:'Mixta',price:21000,cat:'🍔 Burgers'},
+  {id:'v1',name:'Perro Caliente Sencillo',price:9500,cat:'🇻🇪 Venezolanos'},
+  {id:'v2',name:'Perro Caliente Especial',price:13500,cat:'🇻🇪 Venezolanos'},
+  {id:'v3',name:'Arepa Cabimera Volcán',price:21000,cat:'🇻🇪 Venezolanos'},
+  {id:'v4',name:'Patacón',price:22000,cat:'🇻🇪 Venezolanos'},
+  {id:'a1',name:'Salchipapa',price:14000,cat:'🍟 Acompañantes'},
+  {id:'a2',name:'Papas al Queso Cheddar',price:14000,cat:'🍟 Acompañantes'},
+  {id:'d1',name:'Coca-Cola',price:3500,cat:'🥤 Bebidas'},
+  {id:'d2',name:'Sprite',price:3500,cat:'🥤 Bebidas'},
+  {id:'d3',name:'Jugo HIT',price:3500,cat:'🥤 Bebidas'},
+  {id:'d4',name:'Agua',price:3000,cat:'🥤 Bebidas'},
+  {id:'d5',name:'Agua con Gas',price:3000,cat:'🥤 Bebidas'},
+  {id:'sa1',name:'Salsa de la Casa',price:0,cat:'🥫 Salsas'},
+  {id:'sa2',name:'BBQ',price:0,cat:'🥫 Salsas'},
+  {id:'sa3',name:'Salsa Rosada',price:0,cat:'🥫 Salsas'},
+  {id:'sa4',name:'Mostaza',price:0,cat:'🥫 Salsas'},
+  {id:'sa5',name:'Salsa de Piña',price:0,cat:'🥫 Salsas'},
+  {id:'sa6',name:'Salsa de Tomate',price:0,cat:'🥫 Salsas'},
+  {id:'sa7',name:'Salsa de Jalapeño',price:0,cat:'🥫 Salsas'},
+  {id:'sa8',name:'Salsa de Pepinillo',price:0,cat:'🥫 Salsas'}
 ];
 
 let menuConfig = {};
