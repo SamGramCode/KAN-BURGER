@@ -1832,7 +1832,7 @@ function actualizarTimeline(estado) {
 function resetOrder(){
   if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  state={step:0,food:{},drinks:{},sauces:[],additions:{},vegetales:{},payment:null,entrega:null,comprobanteFile:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
+  state={step:0,food:{},drinks:{},sauces:{},additions:{},vegetales:{},payment:null,entrega:null,comprobanteFile:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
   renderStep(0);
   updateFloatCart();
 }

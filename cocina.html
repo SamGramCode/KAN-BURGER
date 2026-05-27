@@ -585,6 +585,7 @@ function buildCard(order) {
         <div class="oc-timestamp">Recibido: ${hora}</div>
       </div>
       <div style="text-align:right">
+        <div style="font-weight:900;font-size:.85rem;margin-bottom:.2rem">${order.tipo_entrega==='domicilio'?'🛵 Domicilio':'🏪 Recoger en tienda'}</div>
         <div class="oc-pay ${payCls[order.metodo_pago] || ''}">${payLbls[order.metodo_pago] || order.metodo_pago || ''}</div>
         <div class="oc-total">${fmt(order.total)}</div>
       </div>
@@ -602,7 +603,7 @@ function buildCard(order) {
       ${vegHTML}
       ${bebidas.length    ? `<div class="oc-section"><div class="oc-sec-label">🥤 Bebidas</div>${drinkHTML}</div>`           : ''}
       ${salsas.length     ? `<div class="oc-section"><div class="oc-sec-label">🥫 Salsas</div>${sauceHTML}</div>`            : ''}
-      ${adiciones.length  ? `<div class="oc-section"><div class="oc-sec-label">➕ Extras / Adiciones</div>${adicionHTML}</div>` : ''}
+      ${adiciones.length  ? `<div class="oc-section"><div class="oc-sec-label">➕ Adiciones</div>${adicionHTML}</div>` : ''}
       <div class="oc-section"><div class="oc-sec-label">📦 Empaque</div>${packHTML}</div>
       ${order.notas     ? `<div class="oc-notes"><span>📝</span><span>${esc(order.notas)}</span></div>`     : ''}
       ${order.direccion ? `<div class="oc-notes"><span>📍</span><span>${esc(order.direccion)}</span></div>` : ''}
