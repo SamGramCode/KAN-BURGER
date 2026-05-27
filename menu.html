@@ -217,6 +217,8 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 
 /* order item cards */
 .order-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+.food-section{margin-bottom:1.4rem}
+.food-section-title{font-weight:900;font-size:.88rem;color:var(--or);text-transform:uppercase;letter-spacing:.06em;padding:.35rem .6rem;background:rgba(232,100,26,.1);border-radius:8px;margin-bottom:.75rem;display:inline-block}
 .ocard{background:var(--dkc);border:1px solid var(--bd);border-radius:12px;overflow:hidden;transition:all .3s;position:relative}
 .ocard.in-cart{border-color:var(--or);box-shadow:0 0 15px rgba(232,100,26,.15)}
 .ocard-img{height:130px;overflow:hidden}
@@ -570,14 +572,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
     <div class="modal-body">
       <div class="step active" id="step0">
         <div class="step-title">Elige tu <span>Comida</span></div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem">
-
-          <button class="fbtn" data-cat="burger" onclick="filterOrderCat(this)">Burgers</button>
-          <button class="fbtn" data-cat="venezolano" onclick="filterOrderCat(this)">Venezolanos</button>
-          <button class="fbtn" data-cat="plato" onclick="filterOrderCat(this)">Platos</button>
-          <button class="fbtn" data-cat="acompanante" onclick="filterOrderCat(this)">Combos</button>
-        </div>
-        <div class="order-grid" id="foodGrid"></div>
+        <div id="foodGrid"></div>
         <!-- Vegetales por producto -->
         <div style="margin-top:1.4rem" id="vegSection">
           <div class="step-title" style="font-size:1.2rem;margin-bottom:.3rem">¿Con qué <span>vegetales</span>?</div>
@@ -1089,7 +1084,14 @@ function closeModal(){
 // Build food grid
 function buildFoodGrid(){
   const g=document.getElementById('foodGrid');
-  g.innerHTML=MENU_ITEMS.filter(m=>productosActivos[m.id]!==false).map(m=>`
+  const secciones=[
+    {cat:'burger',label:'🍔 Hamburguesas'},
+    {cat:'burgerfries',label:'🍔🍟 Hamburguesas + Francesas'},
+    {cat:'venezolano',label:'🌭 Venezolanos'},
+    {cat:'plato',label:'🍟 Platos'},
+    {cat:'acompanante',label:'💥 Combos'}
+  ];
+  const cardHtml=m=>`
     <div class="ocard ${state.food[m.id]?'in-cart':''}" id="ocard_${m.id}">
       <div class="ocard-img"><div class="ocard-img-bg" style="background-image:url('${m.img}');background-size:${m.bgSize||'cover'};background-position:${m.bgPos||'center center'}"></div></div>
       <div class="ocard-body">
@@ -1101,7 +1103,15 @@ function buildFoodGrid(){
           <button class="qty-btn" onclick="changeQty('${m.id}',1)">+</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  g.innerHTML=secciones.map(({cat,label})=>{
+    const items=MENU_ITEMS.filter(m=>m.cat===cat&&productosActivos[m.id]!==false);
+    if(!items.length) return '';
+    return `<div class="food-section">
+      <div class="food-section-title">${label}</div>
+      <div class="order-grid">${items.map(cardHtml).join('')}</div>
+    </div>`;
+  }).join('');
 }
 
 function changeQty(id,delta){
@@ -1185,16 +1195,7 @@ function toggleSauce(foodId,sauceId,el){
   buildSauceGrid();
 }
 
-function filterOrderCat(btn){
-  document.querySelectorAll('#step0 .fbtn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  const cat=btn.dataset.cat;
-  document.querySelectorAll('#foodGrid .ocard').forEach(c=>{
-    const id=c.id.replace('ocard_','');
-    const item=MENU_ITEMS.find(m=>m.id===id);
-    c.style.display=(cat==='all'||!item||item.cat===cat)?'':'none';
-  });
-}
+function filterOrderCat(){}
 
 // Build order summary
 function buildSummary(){
