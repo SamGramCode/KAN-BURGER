@@ -300,6 +300,8 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .entrega-btn{background:var(--dkc);border:2px solid var(--bd);border-radius:14px;padding:1rem;cursor:pointer;transition:all .3s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.3rem}
 .entrega-btn:hover{border-color:rgba(232,100,26,.4);transform:translateY(-2px)}
 .entrega-btn.selected{border-color:var(--or);background:rgba(232,100,26,.1);transform:translateY(-2px);box-shadow:0 8px 24px rgba(232,100,26,.2)}
+.entrega-btn.closed{opacity:.45;cursor:not-allowed;filter:grayscale(.6)}
+.entrega-btn.closed:hover{border-color:var(--bd);transform:none}
 .pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-bottom:1.5rem}
 .pay-card{background:var(--dkc);border:2px solid var(--bd);border-radius:14px;padding:1.3rem;cursor:pointer;transition:all .3s;text-align:center}
 .pay-card:hover{border-color:rgba(232,100,26,.4);transform:translateY(-3px)}
@@ -684,10 +686,10 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
             <div style="font-weight:800;font-size:.9rem">Recoger en tienda</div>
             <div style="font-size:.75rem;color:var(--mt)">Sin costo adicional</div>
           </div>
-          <div class="entrega-btn" id="ebtn-domicilio" onclick="selectEntrega('domicilio',this)">
+          <div class="entrega-btn" id="ebtn-domicilio" onclick="clickDomicilio(this)">
             <div style="font-size:1.6rem">🛵</div>
             <div style="font-weight:800;font-size:.9rem">Domicilio</div>
-            <div style="font-size:.75rem;color:var(--mt)">+ $2.500</div>
+            <div style="font-size:.75rem;color:var(--mt)" id="domicilioSubtxt">+ $2.500</div>
           </div>
         </div>
         <p style="font-size:.82rem;font-weight:700;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">Forma de pago</p>
@@ -1382,6 +1384,60 @@ function buildSummary(){
   document.getElementById('orderSummary').innerHTML=html;
 }
 
+const FERIADOS_CO=[
+  '2026-01-01','2026-01-12','2026-03-23','2026-04-02','2026-04-03',
+  '2026-05-01','2026-05-18','2026-06-08','2026-06-15','2026-06-29',
+  '2026-07-20','2026-08-07','2026-08-17','2026-10-12','2026-11-02',
+  '2026-11-16','2026-12-08','2026-12-25',
+  '2027-01-01','2027-01-11','2027-03-22','2027-04-01','2027-04-02',
+  '2027-05-01','2027-05-10','2027-05-31','2027-06-07','2027-06-28',
+  '2027-07-20','2027-08-07','2027-08-16','2027-10-18','2027-11-01',
+  '2027-11-15','2027-12-08','2027-12-25'
+];
+function esFeriado(d){
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');
+  return FERIADOS_CO.includes(`${y}-${m}-${dd}`);
+}
+function isDomicilioDisponible(){
+  const now=new Date();
+  const dia=now.getDay(); // 0=dom,1=lun...6=sab
+  const mins=now.getHours()*60+now.getMinutes();
+  const esDomOrFeriado=dia===0||esFeriado(now);
+  const limite=esDomOrFeriado ? 22*60 : 23*60; // dom/feriado→10PM, lun-sab→11PM
+  return mins < limite;
+}
+
+function aplicarEstadoDomicilio(){
+  const btn=document.getElementById('ebtn-domicilio');
+  const sub=document.getElementById('domicilioSubtxt');
+  if(!btn) return;
+  const disponible=isDomicilioDisponible();
+  const now=new Date();
+  const dia=now.getDay();
+  const esDomOrFeriado=dia===0||esFeriado(now);
+  const cierreHora=esDomOrFeriado?'10:00 PM':'11:00 PM';
+  if(disponible){
+    btn.classList.remove('closed');
+    if(sub) sub.textContent='+ $2.500';
+  } else {
+    btn.classList.add('closed');
+    if(sub) sub.textContent=`Cerrado · hasta las ${cierreHora}`;
+    // Si ya tenía domicilio seleccionado, cancelarlo
+    if(state.entrega==='domicilio'){
+      state.entrega=null;
+      document.querySelectorAll('.entrega-btn').forEach(b=>b.classList.remove('selected'));
+      const domFields=document.getElementById('domicilioFields');
+      if(domFields) domFields.style.display='none';
+      buildSummary();updateTotalDisplay();updateNextBtn();
+    }
+  }
+}
+
+function clickDomicilio(el){
+  if(!isDomicilioDisponible()) return; // bloqueado
+  selectEntrega('domicilio',el);
+}
+
 function selectEntrega(tipo,el){
   state.entrega=tipo;
   document.querySelectorAll('.entrega-btn').forEach(b=>b.classList.remove('selected'));
@@ -1534,6 +1590,7 @@ function renderStep(s){
   if(s===3) buildAdditionsGrid();
   if(s===4){
     buildSummary();
+    aplicarEstadoDomicilio();
     ['orderTorre','orderApto','orderTelefono'].forEach(id=>{
       const el=document.getElementById(id);
       if(el){el.removeEventListener('input',updateNextBtn);el.addEventListener('input',updateNextBtn);}
