@@ -558,7 +558,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
       <div class="pb-sep" id="pbs2"></div>
       <div class="pb-step">
         <div class="pb-dot" id="pb3">4</div>
-        <div class="pb-label" id="pbl3">Extras</div>
+        <div class="pb-label" id="pbl3">Adiciones</div>
       </div>
       <div class="pb-sep" id="pbs3"></div>
       <div class="pb-step">
@@ -601,8 +601,8 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 
       <!-- STEP 3: ADICIONES -->
       <div class="step" id="step3">
-        <div class="step-title">¿Algún <span>Extra</span>?</div>
-        <p style="font-size:.85rem;color:var(--mt);margin-bottom:1.2rem">Selecciona a cuál hamburguesa le quieres agregar extras</p>
+        <div class="step-title">¿Alguna <span>Adición</span>?</div>
+        <p style="font-size:.85rem;color:var(--mt);margin-bottom:1.2rem">Selecciona a cuál hamburguesa le quieres agregar adiciones</p>
         <div id="additionsGrid"></div>
       </div>
 
@@ -1254,7 +1254,7 @@ function buildSummary(){
   }
   const addEntries=Object.entries(state.additions).filter(([,adds])=>Object.keys(adds).length>0);
   if(addEntries.length){
-    html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Extras</div>`;
+    html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Adiciones</div>`;
     addEntries.forEach(([fid,adds])=>{
       const food=MENU_ITEMS.find(m=>m.id===fid);
       html+=`<div style="font-size:.75rem;color:var(--or);font-weight:800;margin:.3rem 0 .1rem">→ ${food?.name||fid}</div>`;
