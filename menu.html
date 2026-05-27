@@ -582,7 +582,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   <div class="ob-inner">
     <span class="ob-icon" id="obIcon">🔥</span>
     <div class="ob-info">
-      <div class="ob-num" id="obNum">#KN-00000</div>
+      <div class="ob-num" id="obNum">#KN-0000</div>
       <div class="ob-status" id="obStatus">En preparación...</div>
     </div>
     <div class="ob-timer" id="obTimer">40:00</div>
@@ -757,7 +757,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
       <div class="step" id="step5">
         <div class="confirm-wrap">
           <div class="confirm-icon">🎉</div>
-          <div class="confirm-order-num" id="confirmNum">#KN-00000</div>
+          <div class="confirm-order-num" id="confirmNum">#KN-0000</div>
           <div class="confirm-status">¡Tu orden está en preparación! 🔥</div>
           <div class="confirm-sub">Te avisamos cuando esté lista. ¡Gracias por preferir KAN BURGER!</div>
           <!-- TIMER -->
@@ -1728,9 +1728,9 @@ function updateTotalDisplay(){
 async function generarNumPedido(){
   try{
     const {count}=await sb.from('ordenes').select('*',{count:'exact',head:true});
-    return 'KN-'+String((count||0)+1).padStart(5,'0');
+    return 'KN-'+String((count||0)+1).padStart(4,'0');
   }catch(e){
-    return 'KN-'+String(Date.now()).slice(-5);
+    return 'KN-'+String(Date.now()).slice(-4);
   }
 }
 
