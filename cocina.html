@@ -636,9 +636,10 @@ function buildCard(order, posIdx = 0) {
 
   const foodHTML = comida.map((item, i) => {
     const isChecked = !!checks['f' + i];
+    const displayName = esCombo(item) ? nombreBurger(item) : item.name;
     let html = `<div class="check-item ${isChecked ? 'checked' : ''}" onclick="toggleCheck('${order.id}','f${i}')">
       <div class="check-box">${isChecked ? '✓' : ''}</div>
-      <div style="flex:1"><div class="check-item-name">🍔 ${esc(item.name)}</div></div>
+      <div style="flex:1"><div class="check-item-name">🍔 ${esc(displayName)}</div></div>
       <span class="check-item-qty">x${item.qty}</span>
     </div>`;
     if(esCombo(item)){
@@ -716,7 +717,16 @@ function buildCard(order, posIdx = 0) {
 }
 
 function esCombo(item){
-  return item.cat==='burgerfries'||/\+\s*Francesas/i.test(item.name||'');
+  return item.cat==='burgerfries'
+    || /\+\s*Francesas/i.test(item.name||'')
+    || /^combo\s/i.test(item.name||'')
+    || /francesas/i.test(item.name||'');
+}
+function nombreBurger(item){
+  return (item.name||'')
+    .replace(/\s*\+\s*Francesas/gi,'')
+    .replace(/^Combo\s*/i,'')
+    .trim();
 }
 
 function getKeys(order) {
@@ -828,12 +838,13 @@ function imprimirTicket(orderId) {
   const dt     = ts.toLocaleDateString('es-CO') + ' ' + ts.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   const payLbl = { nequi: 'Nequi', daviplata: 'Daviplata', llave: 'Llave', efectivo: 'Efectivo' };
   const foodR    = (order.comida    || []).map(i => {
-    let r=`<tr><td>${i.qty}x ${i.name}</td><td style="text-align:right">${fmt(i.price * i.qty)}</td></tr>`;
     if(esCombo(i)){
-      r+=`<tr><td style="padding-left:12px;font-size:11px">🍟 Papas 140gr x${i.qty}</td><td style="text-align:right;font-size:11px;color:#888">Incl.</td></tr>`;
-      r+=`<tr><td style="padding-left:12px;font-size:11px">🥤 Bebida x${i.qty}</td><td style="text-align:right;font-size:11px;color:#888">Incl.</td></tr>`;
+      const burger=nombreBurger(i);
+      return `<tr><td>${i.qty}x ${burger}</td><td style="text-align:right">${fmt(i.price * i.qty)}</td></tr>`
+        + `<tr><td style="padding-left:12px;font-size:11px">🍟 Papas 140gr x${i.qty}</td><td style="text-align:right;font-size:11px;color:#888">Incl.</td></tr>`
+        + `<tr><td style="padding-left:12px;font-size:11px">🥤 Bebida x${i.qty}</td><td style="text-align:right;font-size:11px;color:#888">Incl.</td></tr>`;
     }
-    return r;
+    return `<tr><td>${i.qty}x ${i.name}</td><td style="text-align:right">${fmt(i.price * i.qty)}</td></tr>`;
   }).join('');
   const drinkR   = (order.bebidas   || []).map(d => `<tr><td>${d.qty}x ${d.name}</td><td style="text-align:right">${fmt(d.price * d.qty)}</td></tr>`).join('');
   const adicionR = (order.adiciones || []).map(a => `<tr><td>➕ ${a.qty}x ${a.name}</td><td style="text-align:right">${fmt(a.price * a.qty)}</td></tr>`).join('');
@@ -1216,12 +1227,13 @@ function verDetalleOrden(orderId){
   const payCls={nequi:'nequi',daviplata:'daviplata',llave:'llave',efectivo:'efectivo'};
   const mkRow=(name,val)=>`<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.85rem"><span>${name}</span><span style="font-weight:800">${val}</span></div>`;
   const foodHTML=(order.comida||[]).map(i=>{
-    let html=mkRow(`🍔 ${i.qty}x ${esc(i.name)}`,fmt(i.price*i.qty));
     if(esCombo(i)){
-      html+=mkRow(`&nbsp;&nbsp;🍟 Papas 140gr x${i.qty}`,'<span style="color:#27AE60;font-size:.8rem">Incluido</span>');
-      html+=mkRow(`&nbsp;&nbsp;🥤 Bebida x${i.qty}`,'<span style="color:#27AE60;font-size:.8rem">Incluido</span>');
+      const burger=nombreBurger(i);
+      return mkRow(`🍔 ${i.qty}x ${esc(burger)}`,fmt(i.price*i.qty))
+        + mkRow(`&nbsp;&nbsp;🍟 Papas 140gr x${i.qty}`,'<span style="color:#27AE60;font-size:.8rem">Incluido</span>')
+        + mkRow(`&nbsp;&nbsp;🥤 Bebida x${i.qty}`,'<span style="color:#27AE60;font-size:.8rem">Incluido</span>');
     }
-    return html;
+    return mkRow(`🍔 ${i.qty}x ${esc(i.name)}`,fmt(i.price*i.qty));
   }).join('');
   const drinkHTML=(order.bebidas||[]).map(d=>mkRow(`🥤 ${d.qty}x ${esc(d.name)}`,fmt(d.price*d.qty))).join('');
   const adicionHTML=(order.adiciones||[]).map(a=>mkRow(`➕ ${a.qty}x ${esc(a.name)}${a.foodName?' → '+esc(a.foodName):''}`,fmt(a.price*a.qty))).join('');
