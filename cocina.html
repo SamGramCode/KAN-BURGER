@@ -585,14 +585,21 @@ function buildCard(order, posIdx = 0) {
   };
 
   const foodHTML = comida.map((item, i) => {
-    const isCombo = /combo/i.test(item.name || '');
     const isChecked = !!checks['f' + i];
-    const note = isCombo ? '<div style="font-size:.71rem;color:#E8641A;font-weight:800;margin-top:.1rem">🍟 140gr papas francesas · 🥤 Bebida incluida</div>' : '';
-    return `<div class="check-item ${isChecked ? 'checked' : ''}" onclick="toggleCheck('${order.id}','f${i}')">
+    let html = `<div class="check-item ${isChecked ? 'checked' : ''}" onclick="toggleCheck('${order.id}','f${i}')">
       <div class="check-box">${isChecked ? '✓' : ''}</div>
-      <div style="flex:1"><div class="check-item-name">🍔 ${esc(item.name)}</div>${note}</div>
+      <div style="flex:1"><div class="check-item-name">🍔 ${esc(item.name)}</div></div>
       <span class="check-item-qty">x${item.qty}</span>
     </div>`;
+    if(esCombo(item)){
+      const isPapasChecked = !!checks['f' + i + '_papas'];
+      html += `<div class="check-item ${isPapasChecked ? 'checked' : ''}" onclick="toggleCheck('${order.id}','f${i}_papas')" style="padding-left:1.8rem;margin-top:-.1rem">
+        <div class="check-box">${isPapasChecked ? '✓' : ''}</div>
+        <div style="flex:1"><div class="check-item-name" style="font-size:.85rem;font-weight:700">🍟 Papas 140gr</div></div>
+        <span class="check-item-qty">x${item.qty}</span>
+      </div>`;
+    }
+    return html;
   }).join('');
   const drinkHTML   = bebidas.map((d, i)    => mkItem('dk' + i, '🥤', d.name,    'x' + d.qty)).join('');
   const sauceHTML   = salsas.map((s, i)     => mkItem('sa' + i, '🥫', s.name,    '')).join('');
@@ -658,9 +665,16 @@ function buildCard(order, posIdx = 0) {
   </div>`;
 }
 
+function esCombo(item){
+  return item.cat==='burgerfries'||/\+\s*Francesas/i.test(item.name||'');
+}
+
 function getKeys(order) {
   const k = [];
-  (order.comida    || []).forEach((_, i) => k.push('f'  + i));
+  (order.comida || []).forEach((item, i) => {
+    k.push('f' + i);
+    if(esCombo(item)) k.push('f' + i + '_papas');
+  });
   (order.bebidas   || []).forEach((_, i) => k.push('dk' + i));
   (order.salsas    || []).forEach((_, i) => k.push('sa' + i));
   (order.adiciones || []).forEach((_, i) => k.push('ad' + i));
@@ -763,7 +777,14 @@ function imprimirTicket(orderId) {
   const ts     = new Date(order.fecha_hora);
   const dt     = ts.toLocaleDateString('es-CO') + ' ' + ts.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   const payLbl = { nequi: 'Nequi', daviplata: 'Daviplata', llave: 'Llave', efectivo: 'Efectivo' };
-  const foodR    = (order.comida    || []).map(i => `<tr><td>${i.qty}x ${i.name}</td><td style="text-align:right">${fmt(i.price * i.qty)}</td></tr>`).join('');
+  const foodR    = (order.comida    || []).map(i => {
+    let r=`<tr><td>${i.qty}x ${i.name}</td><td style="text-align:right">${fmt(i.price * i.qty)}</td></tr>`;
+    if(esCombo(i)){
+      r+=`<tr><td style="padding-left:12px;font-size:11px">🍟 Papas 140gr x${i.qty}</td><td style="text-align:right;font-size:11px;color:#888">Incl.</td></tr>`;
+      r+=`<tr><td style="padding-left:12px;font-size:11px">🥤 Bebida x${i.qty}</td><td style="text-align:right;font-size:11px;color:#888">Incl.</td></tr>`;
+    }
+    return r;
+  }).join('');
   const drinkR   = (order.bebidas   || []).map(d => `<tr><td>${d.qty}x ${d.name}</td><td style="text-align:right">${fmt(d.price * d.qty)}</td></tr>`).join('');
   const adicionR = (order.adiciones || []).map(a => `<tr><td>➕ ${a.qty}x ${a.name}</td><td style="text-align:right">${fmt(a.price * a.qty)}</td></tr>`).join('');
   const sauceL   = (order.salsas    || []).map(s => s.name).join(', ');
@@ -1132,7 +1153,10 @@ function imprimirCierre() {
 function contarProductos(done){
   const c={};
   done.forEach(o=>{
-    (o.comida   ||[]).forEach(i=>{c[i.name]=(c[i.name]||0)+i.qty;});
+    (o.comida   ||[]).forEach(i=>{
+      c[i.name]=(c[i.name]||0)+i.qty;
+      if(esCombo(i)) c['Papas 140gr']=(c['Papas 140gr']||0)+i.qty;
+    });
     (o.bebidas  ||[]).forEach(d=>{c[d.name]=(c[d.name]||0)+d.qty;});
     (o.adiciones||[]).forEach(a=>{c[a.name]=(c[a.name]||0)+a.qty;});
   });
@@ -1147,7 +1171,14 @@ function verDetalleOrden(orderId){
   const payLbls={nequi:'Nequi 💜',daviplata:'Daviplata ❤️',llave:'Llave 🔑',efectivo:'Efectivo 💵'};
   const payCls={nequi:'nequi',daviplata:'daviplata',llave:'llave',efectivo:'efectivo'};
   const mkRow=(name,val)=>`<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.85rem"><span>${name}</span><span style="font-weight:800">${val}</span></div>`;
-  const foodHTML=(order.comida||[]).map(i=>mkRow(`🍔 ${i.qty}x ${esc(i.name)}`,fmt(i.price*i.qty))).join('');
+  const foodHTML=(order.comida||[]).map(i=>{
+    let html=mkRow(`🍔 ${i.qty}x ${esc(i.name)}`,fmt(i.price*i.qty));
+    if(esCombo(i)){
+      html+=mkRow(`&nbsp;&nbsp;🍟 Papas 140gr x${i.qty}`,'<span style="color:#27AE60;font-size:.8rem">Incluido</span>');
+      html+=mkRow(`&nbsp;&nbsp;🥤 Bebida x${i.qty}`,'<span style="color:#27AE60;font-size:.8rem">Incluido</span>');
+    }
+    return html;
+  }).join('');
   const drinkHTML=(order.bebidas||[]).map(d=>mkRow(`🥤 ${d.qty}x ${esc(d.name)}`,fmt(d.price*d.qty))).join('');
   const adicionHTML=(order.adiciones||[]).map(a=>mkRow(`➕ ${a.qty}x ${esc(a.name)}${a.foodName?' → '+esc(a.foodName):''}`,fmt(a.price*a.qty))).join('');
   const sauces=(order.salsas||[]).map(s=>s.name).join(', ');

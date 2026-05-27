@@ -1350,6 +1350,8 @@ function buildSummary(){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Combos</div>`;
     combos.forEach(it=>{
       html+=`<div class="summary-row"><span>${it.qty}x ${it.name}</span><span>${fmt(it.price*it.qty)}</span></div>`;
+      html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
+      html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🥤 Bebida x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
     });
   }
   if(drinks.length){
@@ -1750,7 +1752,7 @@ async function placeOrder(){
     fecha_hora: state.orderFechaHora,
     comida: Object.entries(state.food).map(([id,q])=>{
       const m=MENU_ITEMS.find(x=>x.id===id);
-      return m?{id:m.id,name:m.name,price:m.price,qty:q}:null;
+      return m?{id:m.id,name:m.name,price:m.price,qty:q,cat:m.cat}:null;
     }).filter(Boolean),
     bebidas: Object.entries(state.drinks).map(([id,q])=>{
       const d=DRINKS.find(x=>x.id===id);
@@ -1830,7 +1832,16 @@ function buildConfirmation(){
   const ts=new Date();
   const dt=ts.toLocaleDateString('es-CO')+' '+ts.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
 
-  const foodItems=Object.entries(state.food).map(([id,q])=>{const m=MENU_ITEMS.find(x=>x.id===id);return m?`<div class="receipt-item"><span>${q}x ${m.name}</span><span>${fmt(m.price*q)}</span></div>`:''}).join('');
+  const foodItems=Object.entries(state.food).map(([id,q])=>{
+    const m=MENU_ITEMS.find(x=>x.id===id);
+    if(!m) return '';
+    let html=`<div class="receipt-item"><span>${q}x ${m.name}</span><span>${fmt(m.price*q)}</span></div>`;
+    if(m.cat==='burgerfries'){
+      html+=`<div class="receipt-item" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr x${q}</span><span style="font-size:.75rem;color:#27AE60">Incluido</span></div>`;
+      html+=`<div class="receipt-item" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🥤 Bebida x${q}</span><span style="font-size:.75rem;color:#27AE60">Incluido</span></div>`;
+    }
+    return html;
+  }).join('');
   const drinkItems=Object.entries(state.drinks).map(([id,q])=>{const d=DRINKS.find(x=>x.id===id);return d?`<div class="receipt-item"><span>${q}x ${d.name}</span><span>${fmt(d.price*q)}</span></div>`:''}).join('');
   const addItems=Object.entries(state.additions).flatMap(([fid,adds])=>{
     const food=MENU_ITEMS.find(m=>m.id===fid);
