@@ -1868,7 +1868,10 @@ function buildConfirmation(){
     const no=iv.filter(v=>vegs[v]===false).join(', ');
     return `${item?.name||id}: ${si?'✓'+si:''}${no?' ✗'+no:''}`;
   }).join(' | ');
-  const payLabel={nequi:'Nequi 💜',daviplata:'Daviplata ❤️',llave:'Llave B-reve 🔑',efectivo:'Efectivo 💵'}[state.payment];
+  const payLabels={nequi:'Nequi 💜',daviplata:'Daviplata ❤️',llave:'Llave B-reve 🔑',efectivo:'Efectivo 💵'};
+  const payLabel=payLabels[state.payment]||'—';
+  const totalMostrar=grandTotal()||state._savedTotal||0;
+  const comprobanteImg=state.comprobanteUrl||(state.comprobanteFile?URL.createObjectURL(state.comprobanteFile):null);
 
   document.getElementById('confirmReceipt').innerHTML=`
     <div class="receipt-header">
@@ -1883,9 +1886,12 @@ function buildConfirmation(){
     ${state.notes?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.3rem">📝 ${state.notes}</div>`:''}
     ${state.entrega==='domicilio'&&state.direccion?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.3rem">📍 ${state.direccion}</div>`:''}
     ${state.entrega==='domicilio'&&state.telefono?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.5rem">📱 ${state.telefono}</div>`:''}
-    <div class="receipt-total"><span>TOTAL</span><span class="receipt-total-price">${fmt(grandTotal())}</span></div>
+    <div class="receipt-total"><span>TOTAL</span><span class="receipt-total-price">${fmt(totalMostrar)}</span></div>
     <div style="display:flex;align-items:center;justify-content:center;gap:.5rem;background:rgba(232,100,26,.08);border:1px solid rgba(232,100,26,.25);border-radius:10px;padding:.55rem .9rem;margin-top:.7rem;font-weight:800;font-size:.85rem">💳 ${payLabel}</div>
-    ${state.comprobanteUrl?`<div style="margin-top:.8rem;text-align:center"><div style="font-size:.72rem;color:var(--mt);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:1px">✅ Comprobante guardado</div><img src="${state.comprobanteUrl}" style="max-width:100%;max-height:160px;border-radius:10px;border:1px solid var(--bd);object-fit:cover"></div>`:(state.comprobanteFile?`<div style="margin-top:.8rem;text-align:center"><div style="font-size:.72rem;color:var(--mt);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:1px">✅ Comprobante guardado</div><img src="${URL.createObjectURL(state.comprobanteFile)}" style="max-width:100%;max-height:160px;border-radius:10px;border:1px solid var(--bd);object-fit:cover"></div>`:'')}
+    ${comprobanteImg?`<div style="margin-top:.8rem;text-align:center">
+      <div style="font-size:.72rem;color:var(--mt);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:1px">✅ Comprobante de pago</div>
+      <img src="${comprobanteImg}" onclick="window.open('${comprobanteImg}','_blank')" style="max-width:100%;max-height:180px;border-radius:10px;border:2px solid var(--or);object-fit:cover;cursor:zoom-in" title="Toca para ampliar">
+    </div>`:''}
     <div class="receipt-status">${state.entrega==='domicilio'?'🛵 Tu pedido va en camino':'🏪 Listo para recoger en tienda'}</div>`;
 }
 
@@ -2218,11 +2224,14 @@ function cerrarHistorial(){
 
 // ── PERSISTENCIA LOCAL ─────────────────────────────────────────────────
 function saveActiveOrder(){
+  const total=grandTotal();
   localStorage.setItem('kan_active_order', JSON.stringify({
-    num: state.orderNum, total: grandTotal(), fecha: new Date().toISOString(), entrega: state.entrega
+    num: state.orderNum, total, fecha: new Date().toISOString(),
+    entrega: state.entrega, payment: state.payment,
+    comprobante_url: state.comprobanteUrl||null
   }));
   const hist = JSON.parse(localStorage.getItem('kan_order_history')||'[]');
-  hist.unshift({num:state.orderNum, total:grandTotal(), fecha:new Date().toISOString(), entrega:state.entrega, estado:'pendiente'});
+  hist.unshift({num:state.orderNum, total, fecha:new Date().toISOString(), entrega:state.entrega, payment:state.payment, estado:'pendiente'});
   if(hist.length>20) hist.pop();
   localStorage.setItem('kan_order_history', JSON.stringify(hist));
 }
@@ -2242,6 +2251,9 @@ function checkActiveOrder(){
   state.orderNum=active.num;
   state.entrega=active.entrega||null;
   state.orderFechaHora=active.fecha;
+  state.payment=active.payment||null;
+  state.comprobanteUrl=active.comprobante_url||null;
+  state._savedTotal=active.total||0;
   updateFloatCart();
   showOrderBar(active.num, active.entrega);
   iniciarTracking(active.num);
