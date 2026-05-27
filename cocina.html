@@ -1117,7 +1117,13 @@ function imprimirCierre() {
     ${orderRows || '<tr><td colspan="5">Sin órdenes</td></tr>'}
   </table>
   <div class="ft">KAN BURGER · Hecho con ❤ en Venezuela<br>Gracias por tu trabajo hoy 🙌</div>
-  <script>setTimeout(()=>{window.print();},300);<\/script>
+  <script>
+    setTimeout(()=>{window.print();},300);
+    window.onafterprint=function(){
+      window.close();
+      if(window.opener&&window.opener.doLogout) window.opener.doLogout();
+    };
+  <\/script>
   </body></html>`);
   w.document.close();
 }
