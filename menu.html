@@ -1839,7 +1839,22 @@ function iniciarTracking(orderId) {
           trackingInterval = null;
           updateHistoryEstado(orderId, data.estado);
           localStorage.removeItem('kan_active_order');
-          updateFloatCart();
+          // Cambiar el botón del carrito a estado final
+          const btn=document.getElementById('floatCart');
+          if(btn){
+            btn.classList.remove('tracking','hidden','empty');
+            btn.classList.add('tracking');
+            const badge=document.getElementById('cartBadge');
+            const total=document.getElementById('cartTotalFloat');
+            if(data.estado==='listo'){
+              if(badge) badge.textContent='✅';
+              if(total) total.textContent='¡Tu pedido está listo!';
+            } else {
+              if(badge) badge.textContent='❌';
+              if(total) total.textContent='Pedido cancelado';
+            }
+            btn.onclick=()=>{ resetOrder(); };
+          }
         }
       }
     } catch(e) {}
