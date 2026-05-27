@@ -591,7 +591,8 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
       <!-- STEP 1: DRINKS -->
       <div class="step" id="step1">
         <div class="step-title">Elige tu <span>Bebida</span></div>
-        <p style="font-size:.85rem;color:var(--mt);margin-bottom:1.2rem">Selecciona la cantidad de cada bebida</p>
+        <p style="font-size:.85rem;color:var(--mt);margin-bottom:.8rem">Selecciona la cantidad de cada bebida</p>
+        <div id="comboDrinkBanner" style="display:none;background:rgba(39,174,96,.12);border:1px solid rgba(39,174,96,.35);border-radius:12px;padding:.7rem 1rem;margin-bottom:1rem;font-weight:700;font-size:.88rem;color:#27AE60">🎁 Tu combo incluye <span id="comboDrinkCount">1</span> bebida gratis — elige la que quieras</div>
         <div class="drink-order-grid" id="drinkGrid"></div>
       </div>
 
@@ -1012,7 +1013,17 @@ let state = {
 function fmt(n){return'$'+n.toLocaleString('es-CO')}
 
 function foodTotal(){return Object.entries(state.food).reduce((s,[id,q])=>{const m=MENU_ITEMS.find(x=>x.id===id);return s+(m?m.price*q:0)},0)}
-function drinkTotal(){return Object.entries(state.drinks).reduce((s,[id,q])=>{const d=DRINKS.find(x=>x.id===id);return s+(d?d.price*q:0)},0)}
+function countCombos(){return Object.entries(state.food).reduce((s,[id,q])=>{const m=MENU_ITEMS.find(x=>x.id===id);return s+(m?.combo?q:0)},0);}
+function freeDrinkAmt(){
+  const free=countCombos();
+  if(!free) return 0;
+  const prices=Object.entries(state.drinks).flatMap(([id,q])=>{const d=DRINKS.find(x=>x.id===id);return d?Array(q).fill(d.price):[];}).sort((a,b)=>a-b);
+  return prices.slice(0,free).reduce((s,p)=>s+p,0);
+}
+function drinkTotal(){
+  const raw=Object.entries(state.drinks).reduce((s,[id,q])=>{const d=DRINKS.find(x=>x.id===id);return s+(d?d.price*q:0)},0);
+  return raw-freeDrinkAmt();
+}
 function additionTotal(){
   let t=0;
   Object.values(state.additions).forEach(foodAdds=>{
@@ -1161,29 +1172,38 @@ function changeQty(id,delta){
 // Build drink grid
 function buildDrinkGrid(){
   const g=document.getElementById('drinkGrid');
-  g.innerHTML=DRINKS.filter(d=>productosActivos[d.id]!==false).map(d=>`
-    <div class="dorder-card ${state.drinks[d.id]?'in-cart':''}" id="dcard_${d.id}">
+  const freeCount=countCombos();
+  const banner=document.getElementById('comboDrinkBanner');
+  const countEl=document.getElementById('comboDrinkCount');
+  if(banner){banner.style.display=freeCount>0?'block':'none';}
+  if(countEl) countEl.textContent=freeCount;
+  // Calculate which drinks are free (cheapest selected ones)
+  const selectedFlat=Object.entries(state.drinks).flatMap(([id,q])=>{const d=DRINKS.find(x=>x.id===id);return d?Array(q).fill({id,price:d.price}):[];}).sort((a,b)=>a.price-b.price);
+  const freeIds=new Map();
+  selectedFlat.slice(0,freeCount).forEach(x=>{freeIds.set(x.id,(freeIds.get(x.id)||0)+1);});
+  g.innerHTML=DRINKS.filter(d=>productosActivos[d.id]!==false).map(d=>{
+    const freeQty=freeIds.get(d.id)||0;
+    const priceLabel=freeQty>0?`<span style="color:#27AE60;font-weight:900">🎁 GRATIS</span>`:fmt(d.price);
+    return `<div class="dorder-card ${state.drinks[d.id]?'in-cart':''}" id="dcard_${d.id}">
       <div class="do-img"><div class="do-img-bg" style="background-image:url('${d.img}');background-size:${d.bgSize||'cover'};background-position:${d.bgPos||'center center'}"></div></div>
       <div class="do-body">
         <div class="do-name">${d.name}</div>
-        <div class="do-price">${fmt(d.price)}</div>
+        <div class="do-price">${priceLabel}</div>
         <div class="qty-ctrl" style="justify-content:center;margin-top:auto">
           <button class="qty-btn" onclick="changeDrink('${d.id}',-1)">−</button>
           <span class="qty-val" id="dqty_${d.id}">${state.drinks[d.id]||0}</span>
           <button class="qty-btn" onclick="changeDrink('${d.id}',1)">+</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function changeDrink(id,delta){
   const cur=state.drinks[id]||0;
   const nv=Math.max(0,cur+delta);
   if(nv===0) delete state.drinks[id]; else state.drinks[id]=nv;
-  const el=document.getElementById('dqty_'+id);
-  const card=document.getElementById('dcard_'+id);
-  if(el) el.textContent=nv||0;
-  if(card) card.classList.toggle('in-cart',nv>0);
+  buildDrinkGrid();
   updateTotalDisplay();
 }
 
@@ -1286,6 +1306,8 @@ function buildSummary(){
       });
     });
   }
+  const descBebida=freeDrinkAmt();
+  if(descBebida>0) html+=`<div class="summary-row"><span>🎁 Bebida gratis (combo)</span><span style="color:#27AE60">-${fmt(descBebida)}</span></div>`;
   if(state.entrega==='domicilio') html+=`<div class="summary-row"><span>🛵 Domicilio</span><span>${fmt(DELIVERY_FEE)}</span></div>`;
   html+=`<div class="summary-total"><span>TOTAL A PAGAR</span><span class="summary-total-price">${fmt(grandTotal())}</span></div>`;
   document.getElementById('orderSummary').innerHTML=html;
