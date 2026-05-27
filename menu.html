@@ -596,8 +596,8 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
       <!-- STEP 2: SAUCES -->
       <div class="step" id="step2">
         <div class="step-title">Elige tus <span>Salsas</span></div>
-        <p style="font-size:.85rem;color:var(--mt);margin-bottom:1.2rem">Selecciona todas las que quieras — incluidas gratis 🎉</p>
-        <div class="sauce-order-grid" id="sauceGrid"></div>
+        <p style="font-size:.85rem;color:var(--mt);margin-bottom:1.2rem">Máximo 2 salsas por producto — incluidas gratis 🎉</p>
+        <div id="sauceGrid"></div>
       </div>
 
       <!-- STEP 3: ADICIONES -->
@@ -973,7 +973,7 @@ let state = {
   step: 0,
   food: {},
   drinks: {},
-  sauces: [],
+  sauces: {},
   additions: {},
   vegetales: {},
   payment: null,
@@ -1146,21 +1146,43 @@ function changeDrink(id,delta){
   updateTotalDisplay();
 }
 
-// Build sauce grid
+// Build sauce grid — por producto, máx 2
 function buildSauceGrid(){
   const g=document.getElementById('sauceGrid');
-  g.innerHTML=SAUCES.filter(s=>productosActivos[s.id]!==false).map(s=>`
-    <div class="socard ${state.sauces.includes(s.id)?'selected':''}" onclick="toggleSauce('${s.id}',this)">
-      <div class="so-dot" style="background:${s.color}"></div>
-      <div class="so-name">${s.name}</div>
-      <div class="so-check">✓</div>
-    </div>`).join('');
+  const foods=Object.keys(state.food);
+  if(!foods.length){g.innerHTML='<div style="color:var(--mt);font-size:.85rem;text-align:center;padding:.5rem">Selecciona un producto primero 👆</div>';return;}
+  foods.forEach(fid=>{if(!state.sauces[fid])state.sauces[fid]=[];});
+  Object.keys(state.sauces).forEach(fid=>{if(!state.food[fid])delete state.sauces[fid];});
+  const saucesActivas=SAUCES.filter(s=>productosActivos[s.id]!==false);
+  g.innerHTML=foods.map(fid=>{
+    const food=MENU_ITEMS.find(m=>m.id===fid);
+    const sel=state.sauces[fid]||[];
+    return `<div class="add-food-block" style="margin-bottom:1rem">
+      <div class="add-food-title">🍔 ${food.name} ×${state.food[fid]}
+        <span style="margin-left:auto;font-size:.78rem;color:${sel.length>=2?'#27AE60':'var(--mt)'}">${sel.length}/2</span>
+      </div>
+      <div class="sauce-order-grid">
+        ${saucesActivas.map(s=>{
+          const isSelected=sel.includes(s.id);
+          const disabled=!isSelected&&sel.length>=2;
+          return `<div class="socard ${isSelected?'selected':''} ${disabled?'disabled':''}" onclick="toggleSauce('${fid}','${s.id}',this)" style="${disabled?'opacity:.4;cursor:not-allowed':''}">
+            <div class="so-dot" style="background:${s.color}"></div>
+            <div class="so-name">${s.name}</div>
+            <div class="so-check">✓</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
 }
 
-function toggleSauce(id,el){
-  const i=state.sauces.indexOf(id);
-  if(i>-1) state.sauces.splice(i,1); else state.sauces.push(id);
-  el.classList.toggle('selected',state.sauces.includes(id));
+function toggleSauce(foodId,sauceId,el){
+  if(!state.sauces[foodId]) state.sauces[foodId]=[];
+  const arr=state.sauces[foodId];
+  const i=arr.indexOf(sauceId);
+  if(i>-1){arr.splice(i,1);}
+  else if(arr.length<2){arr.push(sauceId);}
+  buildSauceGrid();
 }
 
 function filterOrderCat(btn){
@@ -1184,8 +1206,6 @@ function buildSummary(){
     const d=DRINKS.find(x=>x.id===id);
     return d?{name:d.name,price:d.price,qty:q}:null;
   }).filter(Boolean);
-  const sauces=state.sauces.map(id=>SAUCES.find(s=>s.id===id)).filter(Boolean);
-
   let html=`<div class="summary-title">Resumen de tu Orden</div>`;
   if(items.length){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.3rem">Comida</div>`;
@@ -1199,9 +1219,14 @@ function buildSummary(){
       html+=`<div class="summary-row"><span>${d.qty}x ${d.name}</span><span>${fmt(d.price*d.qty)}</span></div>`;
     });
   }
-  if(sauces.length){
+  const sauceEntries=Object.entries(state.sauces).filter(([,arr])=>arr.length>0);
+  if(sauceEntries.length){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Salsas</div>`;
-    html+=`<div class="summary-row"><span>${sauces.map(s=>s.name).join(', ')}</span><span style="color:var(--ef)">Gratis ✓</span></div>`;
+    sauceEntries.forEach(([fid,arr])=>{
+      const food=MENU_ITEMS.find(m=>m.id===fid);
+      const names=arr.map(id=>SAUCES.find(s=>s.id===id)?.name).filter(Boolean).join(', ');
+      html+=`<div class="summary-row"><span style="font-size:.8rem">→ ${food?.name||fid}: ${names}</span><span style="color:var(--ef)">Gratis ✓</span></div>`;
+    });
   }
   const vegEntries=Object.entries(state.vegetales);
   if(vegEntries.length){
@@ -1481,10 +1506,10 @@ async function placeOrder(){
       const d=DRINKS.find(x=>x.id===id);
       return d?{id:d.id,name:d.name,price:d.price,qty:q}:null;
     }).filter(Boolean),
-    salsas: state.sauces.map(id=>{
-      const s=SAUCES.find(x=>x.id===id);
-      return s?{id:s.id,name:s.name}:null;
-    }).filter(Boolean),
+    salsas: Object.entries(state.sauces).flatMap(([fid,arr])=>{
+      const food=MENU_ITEMS.find(m=>m.id===fid);
+      return arr.map(id=>{const s=SAUCES.find(x=>x.id===id);return s?{foodId:fid,foodName:food?.name||fid,id:s.id,name:s.name}:null;}).filter(Boolean);
+    }),
     adiciones: Object.entries(state.additions).flatMap(([fid,adds])=>{
       const food=MENU_ITEMS.find(m=>m.id===fid);
       return Object.entries(adds).map(([adId,q])=>{
@@ -1554,7 +1579,7 @@ function buildConfirmation(){
     const rows=Object.entries(adds).map(([adId,q])=>{const a=ADDITIONS.find(x=>x.id===adId);return a?`<div class="receipt-item"><span>${q}x ${a.name} (${food?.name||fid})</span><span>${fmt(a.price*q)}</span></div>`:''});
     return rows;
   }).join('');
-  const sauceList=state.sauces.map(id=>SAUCES.find(s=>s.id===id)?.name).filter(Boolean).join(', ');
+  const sauceList=Object.entries(state.sauces).filter(([,arr])=>arr.length>0).map(([fid,arr])=>{const food=MENU_ITEMS.find(m=>m.id===fid);return `${food?.name||fid}: ${arr.map(id=>SAUCES.find(s=>s.id===id)?.name).join(', ')}`;}).join(' | ');
   const vegList=Object.entries(state.vegetales).map(([id,vegs])=>{
     const item=MENU_ITEMS.find(m=>m.id===id);
     const si=VEGETALES.filter(v=>vegs[v]===true).join(', ');
@@ -1586,7 +1611,7 @@ function printReceipt(){
   const dt=ts.toLocaleDateString('es-CO')+' '+ts.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
   const foodRows=Object.entries(state.food).map(([id,q])=>{const m=MENU_ITEMS.find(x=>x.id===id);return m?`<tr><td>${q}x ${m.name}</td><td style="text-align:right">${fmt(m.price*q)}</td></tr>`:''}).join('');
   const drinkRows=Object.entries(state.drinks).map(([id,q])=>{const d=DRINKS.find(x=>x.id===id);return d?`<tr><td>${q}x ${d.name}</td><td style="text-align:right">${fmt(d.price*q)}</td></tr>`:''}).join('');
-  const sauceList=state.sauces.map(id=>SAUCES.find(s=>s.id===id)?.name).filter(Boolean).join(', ');
+  const sauceList=Object.entries(state.sauces).filter(([,arr])=>arr.length>0).map(([fid,arr])=>{const food=MENU_ITEMS.find(m=>m.id===fid);return `${food?.name||fid}: ${arr.map(id=>SAUCES.find(s=>s.id===id)?.name).join(', ')}`;}).join(' | ');
   const payLabel={nequi:'Nequi',daviplata:'Daviplata',llave:'Llave B-reve',efectivo:'Efectivo'}[state.payment];
 
   const w=window.open('','_blank','width=400,height=700');
