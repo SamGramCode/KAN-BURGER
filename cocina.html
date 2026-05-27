@@ -1202,8 +1202,10 @@ function imprimirCierre() {
   </div>
   <script>
     window.onafterprint=function(){
-      window.close();
-      if(window.opener&&window.opener.doLogout) window.opener.doLogout();
+      if(confirm('¿Cerrar sesión del panel de cocina?')){
+        window.close();
+        if(window.opener&&window.opener.doLogout) window.opener.doLogout();
+      }
     };
   <\/script>
   <style>.no-print{} @media print{.no-print{display:none!important}}<\/style>
