@@ -669,12 +669,12 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           <div class="upload-ok" id="uploadOk" style="display:none">✅ Foto lista — ya puedes confirmar tu pedido</div>
         </div>
         <textarea class="notes-field" id="orderNotes" placeholder="Nota especial para tu pedido (alergias, indicaciones, etc.)"></textarea>
+        <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📱 Teléfono de contacto</p>
+        <input type="tel" id="orderTelefono" placeholder="Número para llamar y avisar" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.8rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
         <div id="domicilioFields" style="display:none">
           <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📍 Dirección de entrega</p>
           <input type="text" id="orderTorre" placeholder="Torre / Edificio / Conjunto" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.6rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
           <input type="text" id="orderApto" placeholder="Apartamento / Casa #" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.8rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
-          <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📱 Teléfono de contacto</p>
-          <input type="tel" id="orderTelefono" placeholder="Número para llamar y avisar" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:1rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
         </div>
       </div>
 
@@ -1511,9 +1511,9 @@ function nextStep(){
   if(state.step===4){
     if(!state.entrega){alert('Selecciona cómo recibes tu pedido 🏪🛵');return;}
     if(!state.payment){alert('Selecciona un método de pago 💳');return;}
+    if(!document.getElementById('orderTelefono').value.trim()){alert('Ingresa tu número de teléfono 📱');return;}
     if(state.entrega==='domicilio'){
       if(!document.getElementById('orderTorre').value.trim()){alert('Ingresa tu dirección de entrega 📍');return;}
-      if(!document.getElementById('orderTelefono').value.trim()){alert('Ingresa tu número de teléfono 📱');return;}
     }
     placeOrder();return;
   }
@@ -1526,11 +1526,10 @@ function updateNextBtn(){
   if(!btn) return;
   if(state.step===4){
     btn.textContent='✅ Confirmar Pedido';
-    const needsAddress=state.entrega==='domicilio';
-    const torre=needsAddress?(document.getElementById('orderTorre')?.value||'').trim():'ok';
-    const tel=needsAddress?(document.getElementById('orderTelefono')?.value||'').trim():'ok';
+    const tel=(document.getElementById('orderTelefono')?.value||'').trim();
+    const torre=state.entrega==='domicilio'?(document.getElementById('orderTorre')?.value||'').trim():'ok';
     const needsComprobante=state.payment&&state.payment!=='efectivo'&&!state.comprobanteFile;
-    btn.disabled=!state.entrega||!state.payment||needsComprobante||!torre||!tel;
+    btn.disabled=!state.entrega||!state.payment||needsComprobante||!tel||!torre;
   } else if(state.step===0){
     btn.textContent='Siguiente →';
     const sinComida=Object.keys(state.food).length===0;
