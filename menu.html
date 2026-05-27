@@ -680,7 +680,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
         <div class="step-title">Método de <span>Pago</span></div>
         <div class="order-summary" id="orderSummary"></div>
         <p style="font-size:.82rem;font-weight:700;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">¿Cómo recibes tu pedido?</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1.2rem">
+        <div id="entregaGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1.2rem">
           <div class="entrega-btn" id="ebtn-tienda" onclick="selectEntrega('tienda',this)">
             <div style="font-size:1.6rem">🏪</div>
             <div style="font-weight:800;font-size:.9rem">Recoger en tienda</div>
@@ -691,6 +691,12 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
             <div style="font-weight:800;font-size:.9rem">Domicilio</div>
             <div style="font-size:.75rem;color:var(--mt)" id="domicilioSubtxt">+ $2.500</div>
           </div>
+        </div>
+        <div id="entregaCerradaMsg" style="display:none;background:rgba(232,100,26,.08);border:1.5px solid rgba(232,100,26,.3);border-radius:14px;padding:1rem 1.2rem;margin-bottom:1.2rem;text-align:center">
+          <div style="font-size:1.4rem;margin-bottom:.3rem">🌙</div>
+          <div style="font-weight:800;font-size:.92rem;margin-bottom:.25rem">Servicios cerrados por el momento</div>
+          <div style="font-size:.8rem;color:var(--mt);margin-bottom:.7rem">Para confirmar disponibilidad a esta hora, llámanos directamente</div>
+          <a href="tel:+573117580802" style="display:inline-flex;align-items:center;gap:.4rem;background:var(--or);color:#fff;font-weight:800;font-size:.88rem;padding:.5rem 1.2rem;border-radius:8px;text-decoration:none">📞 311 758 0802</a>
         </div>
         <p style="font-size:.82rem;font-weight:700;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">Forma de pago</p>
         <div class="pay-methods">
@@ -1408,27 +1414,49 @@ function isDomicilioDisponible(){
 }
 
 function aplicarEstadoDomicilio(){
-  const btn=document.getElementById('ebtn-domicilio');
+  const grid=document.getElementById('entregaGrid');
+  const cerradoMsg=document.getElementById('entregaCerradaMsg');
+  const btnDom=document.getElementById('ebtn-domicilio');
+  const btnTienda=document.getElementById('ebtn-tienda');
   const sub=document.getElementById('domicilioSubtxt');
-  if(!btn) return;
-  const disponible=isDomicilioDisponible();
+  if(!btnDom) return;
+
   const now=new Date();
   const dia=now.getDay();
+  const mins=now.getHours()*60+now.getMinutes();
   const esDomOrFeriado=dia===0||esFeriado(now);
   const cierreHora=esDomOrFeriado?'10:00 PM':'11:00 PM';
-  if(disponible){
-    btn.classList.remove('closed');
-    if(sub) sub.textContent='+ $2.500';
-  } else {
-    btn.classList.add('closed');
-    if(sub) sub.textContent=`Cerrado · hasta las ${cierreHora}`;
-    // Si ya tenía domicilio seleccionado, cancelarlo
-    if(state.entrega==='domicilio'){
+
+  const domDisponible=isDomicilioDisponible();
+  // Tienda cierra a medianoche — consideramos cerrado de 00:00 a 05:59
+  const tiendaCerrada=now.getHours()<6;
+
+  if(tiendaCerrada){
+    // Ambos cerrados — ocultar grid y mostrar mensaje
+    if(grid) grid.style.display='none';
+    if(cerradoMsg) cerradoMsg.style.display='block';
+    if(state.entrega){
       state.entrega=null;
-      document.querySelectorAll('.entrega-btn').forEach(b=>b.classList.remove('selected'));
       const domFields=document.getElementById('domicilioFields');
       if(domFields) domFields.style.display='none';
       buildSummary();updateTotalDisplay();updateNextBtn();
+    }
+  } else {
+    if(grid) grid.style.display='grid';
+    if(cerradoMsg) cerradoMsg.style.display='none';
+    if(domDisponible){
+      btnDom.classList.remove('closed');
+      if(sub) sub.textContent='+ $2.500';
+    } else {
+      btnDom.classList.add('closed');
+      if(sub) sub.textContent=`Cerrado · hasta las ${cierreHora}`;
+      if(state.entrega==='domicilio'){
+        state.entrega=null;
+        document.querySelectorAll('.entrega-btn').forEach(b=>b.classList.remove('selected'));
+        const domFields=document.getElementById('domicilioFields');
+        if(domFields) domFields.style.display='none';
+        buildSummary();updateTotalDisplay();updateNextBtn();
+      }
     }
   }
 }
