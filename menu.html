@@ -739,7 +739,10 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
     <!-- Modal Footer -->
     <div class="modal-foot" id="modalFoot">
       <div class="modal-total">
-        Total<strong id="modalTotal">$0</strong>
+        <div style="display:flex;flex-direction:column;gap:.1rem">
+          Total<strong id="modalTotal">$0</strong>
+          <span style="font-size:.7rem;color:var(--mt);font-weight:400">Incluye $3.000 domicilio</span>
+        </div>
       </div>
       <div style="display:flex;gap:.6rem">
         <button class="btn-back" id="btnBack" onclick="prevStep()" style="display:none">← Atrás</button>
