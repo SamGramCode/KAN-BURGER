@@ -576,7 +576,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   <div class="ob-inner">
     <span class="ob-icon" id="obIcon">🔥</span>
     <div class="ob-info">
-      <div class="ob-num" id="obNum">#KB-0000</div>
+      <div class="ob-num" id="obNum">#KN-00000</div>
       <div class="ob-status" id="obStatus">En preparación...</div>
     </div>
     <div class="ob-timer" id="obTimer">40:00</div>
@@ -751,7 +751,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
       <div class="step" id="step5">
         <div class="confirm-wrap">
           <div class="confirm-icon">🎉</div>
-          <div class="confirm-order-num" id="confirmNum">#KB-0000</div>
+          <div class="confirm-order-num" id="confirmNum">#KN-00000</div>
           <div class="confirm-status">¡Tu orden está en preparación! 🔥</div>
           <div class="confirm-sub">Te avisamos cuando esté lista. ¡Gracias por preferir KAN BURGER!</div>
           <!-- TIMER -->
@@ -1079,7 +1079,7 @@ let state = {
   vegetales: {},
   payment: null,
   entrega: null,
-  comprobanteFile: null,
+  comprobanteFile: null, comprobanteUrl: null,
   notes: '',
   direccion: '',
   telefono: '',
@@ -1717,6 +1717,15 @@ function updateTotalDisplay(){
   updateFloatCart();
 }
 
+async function generarNumPedido(){
+  try{
+    const {count}=await sb.from('ordenes').select('*',{count:'exact',head:true});
+    return 'KN-'+String((count||0)+1).padStart(5,'0');
+  }catch(e){
+    return 'KN-'+String(Date.now()).slice(-5);
+  }
+}
+
 // ══════════════════════════════════════════════
 // PLACE ORDER
 // ══════════════════════════════════════════════
@@ -1727,7 +1736,7 @@ async function placeOrder(){
   state.direccion=[torre,apto].filter(Boolean).join(', Apto ');
   state.telefono=document.getElementById('orderTelefono').value.trim();
   state.orderFechaHora=new Date().toISOString();
-  state.orderNum='KB-'+Date.now().toString(36).toUpperCase().slice(-4)+Math.floor(10+Math.random()*90);
+  state.orderNum=await generarNumPedido();
 
   // Disable next button while sending
   const btn=document.getElementById('btnNext');
@@ -1786,6 +1795,7 @@ async function placeOrder(){
       if(!upErr){
         const {data:urlData}=sb.storage.from('COMPROBANTES').getPublicUrl(fileName);
         order.comprobante_url=urlData.publicUrl;
+        state.comprobanteUrl=urlData.publicUrl;
       }
     }catch(e){console.error('Error subiendo comprobante:',e);}
   }
@@ -1851,7 +1861,8 @@ function buildConfirmation(){
     ${state.entrega==='domicilio'&&state.direccion?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.3rem">📍 ${state.direccion}</div>`:''}
     ${state.entrega==='domicilio'&&state.telefono?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.5rem">📱 ${state.telefono}</div>`:''}
     <div class="receipt-total"><span>TOTAL</span><span class="receipt-total-price">${fmt(grandTotal())}</span></div>
-    <div class="receipt-payment">Método de pago: ${payLabel}</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:.5rem;background:rgba(232,100,26,.08);border:1px solid rgba(232,100,26,.25);border-radius:10px;padding:.55rem .9rem;margin-top:.7rem;font-weight:800;font-size:.85rem">💳 ${payLabel}</div>
+    ${state.comprobanteUrl?`<div style="margin-top:.8rem;text-align:center"><div style="font-size:.72rem;color:var(--mt);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:1px">✅ Comprobante guardado</div><img src="${state.comprobanteUrl}" style="max-width:100%;max-height:160px;border-radius:10px;border:1px solid var(--bd);object-fit:cover"></div>`:(state.comprobanteFile?`<div style="margin-top:.8rem;text-align:center"><div style="font-size:.72rem;color:var(--mt);margin-bottom:.4rem;text-transform:uppercase;letter-spacing:1px">✅ Comprobante guardado</div><img src="${URL.createObjectURL(state.comprobanteFile)}" style="max-width:100%;max-height:160px;border-radius:10px;border:1px solid var(--bd);object-fit:cover"></div>`:'')}
     <div class="receipt-status">${state.entrega==='domicilio'?'🛵 Tu pedido va en camino':'🏪 Listo para recoger en tienda'}</div>`;
 }
 
