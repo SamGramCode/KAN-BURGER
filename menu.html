@@ -1327,18 +1327,28 @@ function filterOrderCat(){}
 
 // Build order summary
 function buildSummary(){
-  const items=Object.entries(state.food).map(([id,q])=>{
+  const allItems=Object.entries(state.food).map(([id,q])=>{
     const m=MENU_ITEMS.find(x=>x.id===id);
-    return m?{name:m.name,price:m.price,qty:q}:null;
+    return m?{name:m.name,price:m.price,qty:q,cat:m.cat}:null;
   }).filter(Boolean);
+  // Hamburguesas primero, combos (burgerfries) abajo
+  const burgers=allItems.filter(i=>i.cat==='burger');
+  const combos=allItems.filter(i=>i.cat==='burgerfries');
+  const items=[...burgers,...combos];
   const drinks=Object.entries(state.drinks).map(([id,q])=>{
     const d=DRINKS.find(x=>x.id===id);
     return d?{name:d.name,price:d.price,qty:q}:null;
   }).filter(Boolean);
   let html=`<div class="summary-title">Resumen de tu Orden</div>`;
-  if(items.length){
-    html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.3rem">Comida</div>`;
-    items.forEach(it=>{
+  if(burgers.length){
+    html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.3rem">Hamburguesas</div>`;
+    burgers.forEach(it=>{
+      html+=`<div class="summary-row"><span>${it.qty}x ${it.name}</span><span>${fmt(it.price*it.qty)}</span></div>`;
+    });
+  }
+  if(combos.length){
+    html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Combos</div>`;
+    combos.forEach(it=>{
       html+=`<div class="summary-row"><span>${it.qty}x ${it.name}</span><span>${fmt(it.price*it.qty)}</span></div>`;
     });
   }
