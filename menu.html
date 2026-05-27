@@ -1997,6 +1997,7 @@ window.addEventListener('hashchange',handleHash);
 (async function(){
   await cargarProductosActivos();
   buildShowcase();
+  filterMenu(document.querySelector('.menu-filter .fbtn.active'));
   initReveal();
   handleHash();
 })();
