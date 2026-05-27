@@ -1581,6 +1581,7 @@ async function placeOrder(){
       return {itemId:id,itemName:item?.name||id,si:iv.filter(v=>vegs[v]===true),no:iv.filter(v=>vegs[v]===false)};
     }),
     metodo_pago: state.payment,
+    tipo_entrega: state.entrega,
     notas: state.notes,
     direccion: state.entrega==='domicilio'?state.direccion:null,
     telefono: state.entrega==='domicilio'?state.telefono:null,
