@@ -538,12 +538,12 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   <button class="mob-close" onclick="closeMob()">✕</button>
   <a href="#inicio" onclick="closeMob()">Inicio</a>
   <a href="#menu" onclick="closeMob()">Menú</a>
+  <a href="#" onclick="closeMob();abrirHistorial();return false" id="mobHistLink" style="color:var(--or);position:relative">Mis Pedidos<span class="nav-ham-dot" id="mobHistDot" style="top:-4px;right:-14px"></span></a>
   <a href="#bebidas" onclick="closeMob()">Bebidas</a>
   <a href="#salsas" onclick="closeMob()">Salsas</a>
   <a href="#galeria" onclick="closeMob()">Galería</a>
   <a href="#contacto" onclick="closeMob()">Contacto</a>
   <button class="btn-p" onclick="closeMob();openModal()" style="margin-top:.5rem">🍔 Ordenar Ahora</button>
-  <button class="btn-o" onclick="closeMob();abrirHistorial()" style="margin-top:.5rem;font-size:.95rem">📋 Mis pedidos</button>
 </div>
 
 <!-- Navbar -->
@@ -2064,16 +2064,14 @@ function showOrderBar(num, entrega){
   document.getElementById('obStatus').textContent=(entrega==='domicilio'?'🛵 Domicilio':'🏪 Tienda')+' · En preparación...';
   bar.classList.add('visible');
   document.getElementById('floatCart').classList.add('bar-up');
-  const dot=document.getElementById('hamDot');
-  if(dot) dot.classList.add('visible');
+  ['hamDot','mobHistDot'].forEach(id=>{const d=document.getElementById(id);if(d)d.classList.add('visible');});
 }
 function hideOrderBar(){
   const bar=document.getElementById('orderBar');
   if(!bar) return;
   bar.classList.remove('visible');
   document.getElementById('floatCart').classList.remove('bar-up');
-  const dot=document.getElementById('hamDot');
-  if(dot) dot.classList.remove('visible');
+  ['hamDot','mobHistDot'].forEach(id=>{const d=document.getElementById(id);if(d)d.classList.remove('visible');});
 }
 function updateOrderBarEstado(estado){
   const icon=document.getElementById('obIcon');
