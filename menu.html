@@ -182,6 +182,8 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .float-cart:hover{background:var(--orl);transform:scale(1.05)}
 .float-cart.hidden{transform:scale(0);pointer-events:none;opacity:0}
 .float-cart.empty{background:#FF8C3A;box-shadow:0 4px 20px rgba(255,140,58,.4);opacity:.9}
+.float-cart.tracking{background:var(--or);animation:cartPulse 1.8s ease-in-out infinite;}
+@keyframes cartPulse{0%,100%{opacity:1}50%{opacity:.75}}
 .cart-badge{background:#fff;color:var(--or);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:900}
 
 /* ── ORDER MODAL ── */
@@ -1863,10 +1865,18 @@ function updateFloatCart(){
   const total=totalItems();
   const btn=document.getElementById('floatCart');
   const isStep5=state.step===5;
-  btn.classList.toggle('hidden',isStep5);
-  btn.classList.toggle('empty',total===0&&!isStep5);
-  document.getElementById('cartBadge').textContent=total;
-  document.getElementById('cartTotalFloat').textContent=total>0?fmt(grandTotal()):'Mi pedido';
+  btn.classList.remove('hidden','empty','tracking');
+  if(isStep5){
+    btn.classList.add('tracking');
+    btn.onclick=()=>openModal();
+    document.getElementById('cartBadge').textContent='🔥';
+    document.getElementById('cartTotalFloat').textContent='Ver mi pedido';
+  } else {
+    if(total===0) btn.classList.add('empty');
+    document.getElementById('cartBadge').textContent=total||'';
+    document.getElementById('cartTotalFloat').textContent=total>0?fmt(grandTotal()):'Mi pedido';
+    btn.onclick=()=>openModal();
+  }
 }
 
 // ══════════════════════════════════════════════
