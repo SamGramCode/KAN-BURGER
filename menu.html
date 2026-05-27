@@ -264,6 +264,9 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .socard.selected .so-check{opacity:1}
 
 /* payment step */
+.entrega-btn{background:var(--dkc);border:2px solid var(--bd);border-radius:14px;padding:1rem;cursor:pointer;transition:all .3s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.3rem}
+.entrega-btn:hover{border-color:rgba(232,100,26,.4);transform:translateY(-2px)}
+.entrega-btn.selected{border-color:var(--or);background:rgba(232,100,26,.1);transform:translateY(-2px);box-shadow:0 8px 24px rgba(232,100,26,.2)}
 .pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-bottom:1.5rem}
 .pay-card{background:var(--dkc);border:2px solid var(--bd);border-radius:14px;padding:1.3rem;cursor:pointer;transition:all .3s;text-align:center}
 .pay-card:hover{border-color:rgba(232,100,26,.4);transform:translateY(-3px)}
@@ -610,6 +613,19 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
       <div class="step" id="step4">
         <div class="step-title">Método de <span>Pago</span></div>
         <div class="order-summary" id="orderSummary"></div>
+        <p style="font-size:.82rem;font-weight:700;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">¿Cómo recibes tu pedido?</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1.2rem">
+          <div class="entrega-btn" id="ebtn-tienda" onclick="selectEntrega('tienda',this)">
+            <div style="font-size:1.6rem">🏪</div>
+            <div style="font-weight:800;font-size:.9rem">Recoger en tienda</div>
+            <div style="font-size:.75rem;color:var(--mt)">Sin costo adicional</div>
+          </div>
+          <div class="entrega-btn" id="ebtn-domicilio" onclick="selectEntrega('domicilio',this)">
+            <div style="font-size:1.6rem">🛵</div>
+            <div style="font-weight:800;font-size:.9rem">Domicilio</div>
+            <div style="font-size:.75rem;color:var(--mt)">+ $2.500</div>
+          </div>
+        </div>
         <p style="font-size:.82rem;font-weight:700;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">Forma de pago</p>
         <div class="pay-methods">
           <div class="pay-card nequi" onclick="selectPayment('nequi',this)">
@@ -650,11 +666,13 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           <div class="upload-ok" id="uploadOk" style="display:none">✅ Foto lista — ya puedes confirmar tu pedido</div>
         </div>
         <textarea class="notes-field" id="orderNotes" placeholder="Nota especial para tu pedido (alergias, indicaciones, etc.)"></textarea>
-        <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📍 Dirección de entrega</p>
-        <input type="text" id="orderTorre" placeholder="Torre / Edificio / Conjunto" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.6rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
-        <input type="text" id="orderApto" placeholder="Apartamento / Casa #" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.8rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
-        <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📱 Teléfono de contacto</p>
-        <input type="tel" id="orderTelefono" placeholder="Número para llamar y avisar" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:1rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
+        <div id="domicilioFields" style="display:none">
+          <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📍 Dirección de entrega</p>
+          <input type="text" id="orderTorre" placeholder="Torre / Edificio / Conjunto" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.6rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
+          <input type="text" id="orderApto" placeholder="Apartamento / Casa #" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.8rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
+          <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📱 Teléfono de contacto</p>
+          <input type="tel" id="orderTelefono" placeholder="Número para llamar y avisar" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:1rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
+        </div>
       </div>
 
       <!-- STEP 5: CONFIRMATION -->
@@ -745,7 +763,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
       <div class="modal-total">
         <div style="display:flex;flex-direction:column;gap:.1rem">
           Total<strong id="modalTotal">$0</strong>
-          <span style="font-size:.7rem;color:var(--mt);font-weight:400">Incluye $2.500 domicilio</span>
+          <span style="font-size:.7rem;color:var(--mt);font-weight:400" id="domicilioLabel" style="display:none"></span>
         </div>
       </div>
       <div style="display:flex;gap:.6rem">
@@ -979,6 +997,7 @@ let state = {
   additions: {},
   vegetales: {},
   payment: null,
+  entrega: null,
   comprobanteFile: null,
   notes: '',
   direccion: '',
@@ -998,7 +1017,7 @@ function additionTotal(){
   });
   return t;
 }
-function grandTotal(){return foodTotal()+drinkTotal()+additionTotal()+DELIVERY_FEE}
+function grandTotal(){return foodTotal()+drinkTotal()+additionTotal()+(state.entrega==='domicilio'?DELIVERY_FEE:0)}
 
 function totalItems(){
   return Object.values(state.food).reduce((a,b)=>a+b,0)+Object.values(state.drinks).reduce((a,b)=>a+b,0);
@@ -1264,9 +1283,20 @@ function buildSummary(){
       });
     });
   }
-  html+=`<div class="summary-row"><span>🛵 Domicilio</span><span>${fmt(DELIVERY_FEE)}</span></div>`;
+  if(state.entrega==='domicilio') html+=`<div class="summary-row"><span>🛵 Domicilio</span><span>${fmt(DELIVERY_FEE)}</span></div>`;
   html+=`<div class="summary-total"><span>TOTAL A PAGAR</span><span class="summary-total-price">${fmt(grandTotal())}</span></div>`;
   document.getElementById('orderSummary').innerHTML=html;
+}
+
+function selectEntrega(tipo,el){
+  state.entrega=tipo;
+  document.querySelectorAll('.entrega-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  const domFields=document.getElementById('domicilioFields');
+  if(domFields) domFields.style.display=tipo==='domicilio'?'block':'none';
+  buildSummary();
+  updateTotalDisplay();
+  updateNextBtn();
 }
 
 function selectPayment(method,card){
@@ -1452,9 +1482,12 @@ function nextStep(){
     if(sinConfirmar){alert('Selecciona Sí o No para todos los vegetales de cada producto 🥬');return;}
   }
   if(state.step===4){
+    if(!state.entrega){alert('Selecciona cómo recibes tu pedido 🏪🛵');return;}
     if(!state.payment){alert('Selecciona un método de pago 💳');return;}
-    if(!document.getElementById('orderTorre').value.trim()){alert('Ingresa tu dirección de entrega 📍');return;}
-    if(!document.getElementById('orderTelefono').value.trim()){alert('Ingresa tu número de teléfono 📱');return;}
+    if(state.entrega==='domicilio'){
+      if(!document.getElementById('orderTorre').value.trim()){alert('Ingresa tu dirección de entrega 📍');return;}
+      if(!document.getElementById('orderTelefono').value.trim()){alert('Ingresa tu número de teléfono 📱');return;}
+    }
     placeOrder();return;
   }
   renderStep(state.step+1);
@@ -1466,10 +1499,11 @@ function updateNextBtn(){
   if(!btn) return;
   if(state.step===4){
     btn.textContent='✅ Confirmar Pedido';
-    const torre=(document.getElementById('orderTorre')?.value||'').trim();
-    const tel=(document.getElementById('orderTelefono')?.value||'').trim();
+    const needsAddress=state.entrega==='domicilio';
+    const torre=needsAddress?(document.getElementById('orderTorre')?.value||'').trim():'ok';
+    const tel=needsAddress?(document.getElementById('orderTelefono')?.value||'').trim():'ok';
     const needsComprobante=state.payment&&state.payment!=='efectivo'&&!state.comprobanteFile;
-    btn.disabled=!state.payment||needsComprobante||!torre||!tel;
+    btn.disabled=!state.entrega||!state.payment||needsComprobante||!torre||!tel;
   } else if(state.step===0){
     btn.textContent='Siguiente →';
     const sinComida=Object.keys(state.food).length===0;
@@ -1490,6 +1524,8 @@ function updateNextBtn(){
 function updateTotalDisplay(){
   const t=grandTotal();
   document.getElementById('modalTotal').textContent=fmt(t);
+  const lbl=document.getElementById('domicilioLabel');
+  if(lbl) lbl.textContent=state.entrega==='domicilio'?'Incluye $2.500 domicilio':'';
   updateFloatCart();
 }
 
@@ -1542,9 +1578,10 @@ async function placeOrder(){
       return {itemId:id,itemName:item?.name||id,si:iv.filter(v=>vegs[v]===true),no:iv.filter(v=>vegs[v]===false)};
     }),
     metodo_pago: state.payment,
+    tipo_entrega: state.entrega,
     notas: state.notes,
-    direccion: state.direccion,
-    telefono: state.telefono,
+    direccion: state.entrega==='domicilio'?state.direccion:null,
+    telefono: state.entrega==='domicilio'?state.telefono:null,
     total: grandTotal(),
     estado: 'pendiente',
     verificaciones: {},
@@ -1615,14 +1652,14 @@ function buildConfirmation(){
     <div class="receipt-items">${foodItems}${drinkItems}${addItems}
       ${vegList?`<div class="receipt-item"><span>🥬 Vegetales: ${vegList}</span><span style="color:var(--ef)">Gratis</span></div>`:''}
       ${sauceList?`<div class="receipt-item"><span>Salsas: ${sauceList}</span><span style="color:var(--ef)">Gratis</span></div>`:''}
-      <div class="receipt-item"><span>🛵 Domicilio</span><span>${fmt(DELIVERY_FEE)}</span></div>
+      ${state.entrega==='domicilio'?`<div class="receipt-item"><span>🛵 Domicilio</span><span>${fmt(DELIVERY_FEE)}</span></div>`:''}
     </div>
     ${state.notes?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.3rem">📝 ${state.notes}</div>`:''}
-    ${state.direccion?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.3rem">📍 ${state.direccion}</div>`:''}
-    ${state.telefono?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.5rem">📱 ${state.telefono}</div>`:''}
+    ${state.entrega==='domicilio'&&state.direccion?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.3rem">📍 ${state.direccion}</div>`:''}
+    ${state.entrega==='domicilio'&&state.telefono?`<div style="font-size:.78rem;color:var(--mt);margin-bottom:.5rem">📱 ${state.telefono}</div>`:''}
     <div class="receipt-total"><span>TOTAL</span><span class="receipt-total-price">${fmt(grandTotal())}</span></div>
     <div class="receipt-payment">Método de pago: ${payLabel}</div>
-    <div class="receipt-status">🔥 Tu orden está en preparación</div>`;
+    <div class="receipt-status">${state.entrega==='domicilio'?'🛵 Tu pedido va en camino':'🏪 Listo para recoger en tienda'}</div>`;
 }
 
 function printReceipt(){
@@ -1792,7 +1829,7 @@ function actualizarTimeline(estado) {
 function resetOrder(){
   if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  state={step:0,food:{},drinks:{},sauces:[],additions:{},vegetales:{},payment:null,comprobanteFile:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
+  state={step:0,food:{},drinks:{},sauces:[],additions:{},vegetales:{},payment:null,entrega:null,comprobanteFile:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
   renderStep(0);
   updateFloatCart();
 }
