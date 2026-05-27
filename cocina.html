@@ -278,6 +278,11 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 </div>
 
 <div id="dashboard">
+  <div id="notifBanner" style="display:none;align-items:center;gap:.8rem;background:#E8641A;color:#fff;padding:.7rem 1.2rem;font-size:.85rem;font-weight:700;position:sticky;top:0;z-index:200">
+    <span>🔔 Activa las notificaciones para recibir alertas aunque cambies de app</span>
+    <button onclick="activarNotificaciones()" style="background:#fff;color:#E8641A;border:none;border-radius:8px;padding:.35rem .9rem;font-weight:900;font-size:.82rem;cursor:pointer;white-space:nowrap">Activar ahora</button>
+    <button onclick="this.parentElement.style.display='none'" style="background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer;margin-left:auto">✕</button>
+  </div>
   <div class="new-alert" id="newAlert">
     <span class="new-alert-ic">🔔</span>
     <span>¡Nuevo pedido llegó!</span>
@@ -398,6 +403,7 @@ let ordersCache = [];
 let primeraVez = true;
 let completedOpen = false;
 let audioCtx = null;
+let swReg = null;
 
 // ── AUTH ──────────────────────────────────────────────────────────────
 function doLogin() {
@@ -427,11 +433,49 @@ function mostrarDashboard() {
   iniciarPanel();
 }
 
+// ── NOTIFICACIONES / SERVICE WORKER ──────────────────────────────────
+async function registrarSW() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    swReg = await navigator.serviceWorker.register('/sw.js');
+  } catch(e) { console.warn('SW no registrado:', e); }
+}
+
+async function pedirPermisoNotificacion() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') return;
+  const banner = document.getElementById('notifBanner');
+  if (banner) banner.style.display = 'flex';
+}
+
+async function activarNotificaciones() {
+  const banner = document.getElementById('notifBanner');
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted' && banner) banner.style.display = 'none';
+  else if (banner) {
+    banner.innerHTML = '<span style="color:#E74C3C;font-size:.85rem">❌ Permiso denegado. Actívalo en ajustes del navegador.</span>';
+    setTimeout(() => { banner.style.display='none'; }, 4000);
+  }
+}
+
+async function mostrarNotificacion(titulo, cuerpo) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    if (swReg) {
+      await swReg.showNotification(titulo, {
+        body: cuerpo, icon: '/img/logo.jpg', badge: '/img/logo.jpg',
+        tag: 'kan-nuevo-pedido', renotify: true, requireInteraction: true
+      });
+    } else {
+      new Notification(titulo, { body: cuerpo, icon: '/img/logo.jpg' });
+    }
+  } catch(e) { console.warn('Notificación fallida:', e); }
+}
+
 // ── PANEL ─────────────────────────────────────────────────────────────
 async function iniciarPanel() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
+  await registrarSW();
+  await pedirPermisoNotificacion();
 
   await cargarMenuConfig();
   setInterval(actualizarReloj, 1000);
@@ -813,16 +857,10 @@ function alertarNueva(order) {
   a.classList.add('show');
   setTimeout(() => a.classList.remove('show'), 4000);
   playSound();
-  if ('Notification' in window && Notification.permission === 'granted') {
-    try {
-      new Notification('🔔 KAN BURGER — Nuevo Pedido', {
-        body: `Pedido #${order.id} · ${fmt(order.total)} · ${order.metodo_pago || ''}`,
-        icon: 'img/logo.jpg',
-        tag: 'orden-' + order.id,
-        requireInteraction: true
-      });
-    } catch(e) {}
-  }
+  mostrarNotificacion(
+    '🔔 KAN BURGER — Nuevo Pedido',
+    `Pedido #${order.id} · ${fmt(order.total)} · ${order.metodo_pago || ''}`
+  );
 }
 
 function playSound() {
