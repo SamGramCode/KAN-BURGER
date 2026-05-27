@@ -719,7 +719,7 @@ function buildCard(order, posIdx = 0) {
     ${order.comprobante_url ? `
     <div class="oc-comprobante">
       <div class="oc-sec-label">💳 COMPROBANTE DE PAGO</div>
-      <img src="${order.comprobante_url}" class="comprobante-img" onclick="verComprobante('${order.comprobante_url}')" title="Click para ampliar">
+      <img src="${safeUrl(order.comprobante_url)}" class="comprobante-img" onclick="verComprobante('${esc(order.comprobante_url)}')" title="Click para ampliar">
       ${order.pago_verificado
         ? '<div class="pago-verificado-badge">✅ Pago verificado</div>'
         : `<button class="btn-pago-ok" onclick="verificarPago('${order.id}')">✅ Confirmar pago recibido</button>`
@@ -1011,6 +1011,12 @@ async function toggleProducto(id, activo) {
 
 function fmt(n) { return '$' + (n || 0).toLocaleString('es-CO'); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function safeUrl(url) {
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'https:' && u.hostname.endsWith('.supabase.co')) ? url : '';
+  } catch { return ''; }
+}
 
 async function verificarPago(orderId) {
   const order = ordersCache.find(o => o.id === orderId);

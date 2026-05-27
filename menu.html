@@ -742,13 +742,13 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           <img id="uploadPreview" class="upload-preview">
           <div class="upload-ok" id="uploadOk" style="display:none">✅ Foto lista — ya puedes confirmar tu pedido</div>
         </div>
-        <textarea class="notes-field" id="orderNotes" placeholder="Nota especial para tu pedido (alergias, indicaciones, etc.)"></textarea>
+        <textarea class="notes-field" id="orderNotes" placeholder="Nota especial para tu pedido (alergias, indicaciones, etc.)" maxlength="300"></textarea>
         <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📱 Teléfono de contacto</p>
-        <input type="tel" id="orderTelefono" placeholder="Número para llamar y avisar" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.8rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
+        <input type="tel" id="orderTelefono" placeholder="Número para llamar y avisar" maxlength="15" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.8rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
         <div id="domicilioFields" style="display:none">
           <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📍 Dirección de entrega</p>
-          <input type="text" id="orderTorre" placeholder="Torre / Edificio / Conjunto" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.6rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
-          <input type="text" id="orderApto" placeholder="Apartamento / Casa #" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.8rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
+          <input type="text" id="orderTorre" placeholder="Torre / Edificio / Conjunto" maxlength="100" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.6rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
+          <input type="text" id="orderApto" placeholder="Apartamento / Casa #" maxlength="50" style="width:100%;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;padding:.8rem 1rem;color:var(--cr);font-family:'Nunito',sans-serif;font-size:.88rem;margin-bottom:.8rem;outline:none;transition:border-color .3s" onfocus="this.style.borderColor='rgba(232,100,26,.5)'" onblur="this.style.borderColor='var(--bd)'">
         </div>
       </div>
 
