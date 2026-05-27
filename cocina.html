@@ -402,7 +402,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 <script>
 const SUPABASE_URL = 'https://enjlbusizeospzadndwj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sUXpKKZgEDbE7r77VRjFpQ_z815AhOd';
-const PASS = 'KAN2025';
+// contraseña gestionada en servidor — no se guarda aquí
 
 let sb = null;
 let ordersCache = [];
@@ -412,17 +412,34 @@ let audioCtx = null;
 let swReg = null;
 
 // ── AUTH ──────────────────────────────────────────────────────────────
-function doLogin() {
+async function doLogin() {
   const val = document.getElementById('passInput').value.trim();
-  if (val !== PASS) {
-    const err = document.getElementById('loginErr');
+  const err = document.getElementById('loginErr');
+  const btn = document.querySelector('.login-btn');
+  if (!val) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Verificando...';
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: val })
+    });
+    if (res.ok) {
+      localStorage.setItem('kb_sesion', '1');
+      mostrarDashboard();
+    } else {
+      err.style.display = 'block';
+      document.getElementById('passInput').value = '';
+      setTimeout(() => err.style.display = 'none', 2500);
+    }
+  } catch(e) {
+    err.textContent = 'Error de conexión. Intenta de nuevo.';
     err.style.display = 'block';
-    document.getElementById('passInput').value = '';
-    setTimeout(() => err.style.display = 'none', 2500);
-    return;
+    setTimeout(() => { err.style.display = 'none'; err.textContent = 'Contraseña incorrecta'; }, 3000);
   }
-  localStorage.setItem('kb_sesion', '1');
-  mostrarDashboard();
+  btn.disabled = false;
+  btn.textContent = '🔓 Entrar al Panel';
 }
 
 function confirmarCerrarSesion(){
