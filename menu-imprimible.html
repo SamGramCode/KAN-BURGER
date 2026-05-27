@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>KAN BURGER — Menú</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  @page{size:A4 landscape;margin:0;}
+
+  body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:#FDF6EE;
+    color:#1A0800;
+    width:297mm;
+    height:210mm;
+    overflow:hidden;
+    font-size:8pt;
+  }
+
+  /* ── HEADER ── */
+  .header{
+    background:#1A0800;
+    padding:3.5mm 10mm;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .header-logo{
+    display:flex;align-items:center;gap:3mm;
+  }
+  .logo-img{
+    width:13mm;height:13mm;border-radius:50%;object-fit:cover;border:2px solid #E8641A;
+  }
+  .logo-text{
+    font-family:Impact,'Arial Narrow',Arial,sans-serif;
+    font-size:19pt;
+    color:#fff;
+    letter-spacing:3px;
+    line-height:1;
+  }
+  .logo-text span{color:#E8641A;}
+  .header-tag{
+    font-family:Impact,'Arial Narrow',Arial,sans-serif;
+    font-size:9pt;
+    color:#E8641A;
+    letter-spacing:2px;
+    text-align:center;
+  }
+  .header-tag small{display:block;font-family:Arial,Helvetica,sans-serif;font-size:6.5pt;color:#9A7A6A;letter-spacing:1px;font-weight:600;}
+  .header-info{
+    text-align:right;
+    color:#9A7A6A;
+    font-size:7pt;
+    font-weight:600;
+    letter-spacing:.5px;
+  }
+  .header-info span{display:block;}
+
+  /* ── BODY GRID ── */
+  .body{
+    display:grid;
+    grid-template-columns:1fr 2px 1fr;
+    padding:3.5mm 8mm;
+    gap:0 6mm;
+    height:calc(210mm - 28mm - 9mm);
+    overflow:hidden;
+  }
+  .divider{background:linear-gradient(to bottom,transparent,#E8641A 20%,#E8641A 80%,transparent);width:2px;}
+
+  .col{display:flex;flex-direction:column;gap:4mm;}
+
+  /* ── SECTION ── */
+  .section{break-inside:avoid;}
+  .col{gap:2.5mm;}
+  .section-title{
+    font-family:Impact,'Arial Narrow',Arial,sans-serif;
+    font-size:11pt;
+    color:#E8641A;
+    letter-spacing:2px;
+    border-bottom:1.5px solid #E8641A;
+    padding-bottom:1mm;
+    margin-bottom:1.5mm;
+    display:flex;
+    align-items:center;
+    gap:2mm;
+  }
+
+  /* ── ITEM ── */
+  .item{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:3mm;
+    padding:.8mm 0;
+    border-bottom:1px dashed #EAD9C8;
+  }
+  .item:last-child{border-bottom:none;}
+  .item-info{flex:1;}
+  .item-name{
+    font-weight:900;
+    font-size:7.5pt;
+    color:#1A0800;
+    line-height:1.2;
+  }
+  .item-desc{
+    font-size:6pt;
+    color:#7A5A45;
+    line-height:1.25;
+    margin-top:.3mm;
+    font-style:italic;
+    font-weight:600;
+  }
+  .item-price{
+    font-family:Impact,'Arial Narrow',Arial,sans-serif;
+    font-size:11pt;
+    color:#E8641A;
+    white-space:nowrap;
+    line-height:1;
+    margin-top:.3mm;
+  }
+
+  /* ── COMBO NOTE ── */
+  .combo-note{
+    background:#E8641A;
+    color:#fff;
+    font-size:6pt;
+    font-weight:800;
+    padding:.6mm 2.5mm;
+    border-radius:4px;
+    margin-bottom:1.5mm;
+    letter-spacing:.5px;
+    display:inline-block;
+  }
+
+  /* ── BEBIDAS GRID ── */
+  .drinks-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5mm 4mm;}
+  .drink-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:.6mm 0;border-bottom:1px dashed #EAD9C8;
+  }
+  .drink-name{font-size:7pt;font-weight:700;color:#1A0800;}
+  .drink-price{font-family:Impact,'Arial Narrow',Arial,sans-serif;font-size:10pt;color:#E8641A;}
+
+  /* ── FOOTER ── */
+  .footer{
+    background:#1A0800;
+    padding:2mm 10mm;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .footer-left{color:#9A7A6A;font-size:6pt;font-weight:700;letter-spacing:.5px;}
+  .footer-center{
+    font-family:Impact,'Arial Narrow',Arial,sans-serif;
+    font-size:8.5pt;
+    color:#E8641A;
+    letter-spacing:2px;
+  }
+  .footer-right{color:#9A7A6A;font-size:6pt;font-weight:700;letter-spacing:.5px;text-align:right;}
+
+  /* ── PRINT ── */
+  @media print{
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+  .btn-print{
+    position:fixed;top:10px;right:10px;
+    background:#E8641A;color:#fff;border:none;
+    padding:10px 22px;border-radius:8px;font-family:Arial,Helvetica,sans-serif;
+    font-weight:800;font-size:14px;cursor:pointer;z-index:999;
+    box-shadow:0 4px 12px rgba(232,100,26,.4);
+    transition:opacity .2s;
+  }
+  .btn-print:disabled{opacity:.6;cursor:not-allowed;}
+  @media print{.btn-print{display:none;}}
+</style>
+</head>
+<body>
+
+<button class="btn-print" id="btnPDF" onclick="guardarPDF()">💾 Guardar como PDF</button>
+
+<script>
+async function guardarPDF(){
+  const btn = document.getElementById('btnPDF');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generando...';
+  btn.style.display = 'none';
+  try {
+    const canvas = await html2canvas(document.body, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#FDF6EE',
+      width: document.body.scrollWidth,
+      height: document.body.scrollHeight
+    });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+    const w = pdf.internal.pageSize.getWidth();
+    const h = pdf.internal.pageSize.getHeight();
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, h);
+    pdf.save('KAN-BURGER-Menu.pdf');
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+  btn.style.display = '';
+  btn.disabled = false;
+  btn.textContent = '💾 Guardar como PDF';
+}
+</script>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">
+    <img src="img/logo.jpg" alt="KAN BURGER" class="logo-img">
+    <div>
+      <div class="logo-text">KAN <span>BURGER</span></div>
+    </div>
+  </div>
+  <div class="header-tag">
+    🔥 MENÚ PRINCIPAL
+    <small>TODOS LOS PRODUCTOS ELABORADOS DESDE 0 HASTA TU BOCA</small>
+  </div>
+  <div class="header-info">
+    <span>📱 Pedidos en línea:</span>
+    <span style="color:#E8641A;font-size:8pt">kan-burger.vercel.app</span>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+
+  <!-- COLUMNA IZQUIERDA -->
+  <div class="col">
+
+    <!-- HAMBURGUESAS -->
+    <div class="section">
+      <div class="section-title">🍔 Hamburguesas</div>
+      <div class="item">
+        <div class="item-info">
+          <div class="item-name">Sencilla Res</div>
+          <div class="item-desc">Carne artesanal de res 130gr, queso cheddar, huevo, tocineta, tomate, lechuga, salsa de la casa, pan brioche artesanal</div>
+        </div>
+        <div class="item-price">$14.000</div>
+      </div>
+      <div class="item">
+        <div class="item-info">
+          <div class="item-name">Sencilla Pollo</div>
+          <div class="item-desc">Pechuga a la plancha 130gr, queso cheddar, huevo, tocineta, tomate, lechuga, salsa de la casa, pan brioche artesanal</div>
+        </div>
+        <div class="item-price">$14.000</div>
+      </div>
+      <div class="item">
+        <div class="item-info">
+          <div class="item-name">Especial Res</div>
+          <div class="item-desc">Doble carne artesanal 130gr c/u, doble queso cheddar, huevo, doble tocineta, tomate, lechuga, salsa de la casa, pan brioche artesanal</div>
+        </div>
+        <div class="item-price">$21.000</div>
+      </div>
+      <div class="item">
+        <div class="item-info">
+          <div class="item-name">Especial Pollo Crispy</div>
+          <div class="item-desc">Pollo crispy 130gr, bañado en salsa barbacoa, doble queso cheddar, doble topping de tocineta crocante, lechuga, salsa de la casa, pan brioche artesanal</div>
+        </div>
+        <div class="item-price">$17.000</div>
+      </div>
+      <div class="item">
+        <div class="item-info">
+          <div class="item-name">Mixta</div>
+          <div class="item-desc">Carne artesanal de res 130gr, pollo crispy 130gr, doble queso cheddar, huevo, doble tocineta, tomate, lechuga, salsa de la casa, pan brioche artesanal</div>
+        </div>
+        <div class="item-price">$21.000</div>
+      </div>
+    </div>
+
+    <!-- HAMBURGUESAS + FRANCESAS -->
+    <div class="section">
+      <div class="section-title">🍔🍟 Hamburguesas + Francesas</div>
+      <div class="item">
+        <div class="item-info"><div class="item-name">Sencilla Res + Francesas</div></div>
+        <div class="item-price">$17.000</div>
+      </div>
+      <div class="item">
+        <div class="item-info"><div class="item-name">Sencilla Pollo + Francesas</div></div>
+        <div class="item-price">$17.000</div>
+      </div>
+      <div class="item">
+        <div class="item-info"><div class="item-name">Especial Res + Francesas</div></div>
+        <div class="item-price">$24.500</div>
+      </div>
+      <div class="item">
+        <div class="item-info"><div class="item-name">Especial Pollo Crispy + Francesas</div></div>
+        <div class="item-price">$20.000</div>
+      </div>
+      <div class="item">
+        <div class="item-info"><div class="item-name">Mixta + Francesas</div></div>
+        <div class="item-price">$26.000</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SEPARADOR -->
+  <div class="divider"></div>
+
+  <!-- COLUMNA DERECHA -->
+  <div class="col">
+
+    <!-- VENEZOLANOS -->
+    <div class="section">
+      <div class="section-title">🌭 Venezolanos</div>
+      <div class="item">
+        <div class="item-info">
+          <div class="item-name">Perro Caliente Sencillo</div>
+          <div class="item-desc">Pan brioche artesanal, salchicha americana, cebolla, papas ripio, queso rallado "Costeño", salsa de la casa</div>
+        </div>
+        <div class="item-price">$9.500</div>
+      </div>
+      <div class="item">
+        <div class="item-info">
+          <div class="item-name">Perro Caliente Especial</div>
+          <div class="item-desc">Pan brioche artesanal, salchicha americana, cebolla, papas ripio, queso rallado "Costeño", tocineta, huevo, queso cheddar y salsas de la casa</div>
+        </div>
+        <div class="item-price">$13.500</div>
+      </div>
+      <div class="item">
+        <div class="item-info">
+          <div class="item-name">Arepa Cabimera Volcán</div>
+          <div class="item-desc">Arepa frita, carne mechada, ensalada de repollo y zanahoria con "Yogurt Griego" de la casa, aguacate, tocineta, queso cheddar, queso rallado "Costeño", huevo y salsas de la casa</div>
+        </div>
+        <div class="item-price">$21.000</div>
+      </div>
+      <div class="item">
+        <div class="item-info">
+          <div class="item-name">Patacón</div>
+          <div class="item-desc">Patacón frito "Semi-Maduro", carne mechada, ensalada de repollo y zanahoria con "Yogurt Griego" de la casa, tocineta, queso cheddar, queso rallado "Costeño", aguacate y salsas de la casa</div>
+        </div>
+        <div class="item-price">$22.000</div>
+      </div>
+    </div>
+
+    <!-- PLATOS -->
+    <div class="section">
+      <div class="section-title">🍟 Platos</div>
+      <div class="item">
+        <div class="item-info">
+          <div class="item-name">Salchipapa</div>
+          <div class="item-desc">Papas francesas 250gr, salchicha americana, chorizo, maíz, queso rallado "Costeño" y salsa de la casa</div>
+        </div>
+        <div class="item-price">$14.000</div>
+      </div>
+      <div class="item">
+        <div class="item-info">
+          <div class="item-name">Papa al Queso Cheddar</div>
+          <div class="item-desc">Papas francesas 250gr, aderezo de queso cheddar y topping de tocineta crocante</div>
+        </div>
+        <div class="item-price">$14.000</div>
+      </div>
+    </div>
+
+    <!-- COMBOS -->
+    <div class="section">
+      <div class="section-title">💥 Combos</div>
+      <div class="combo-note">🍔 Hamburguesa + 140gr Papas Francesas + 🥤 Bebida a tu elección</div>
+      <div class="item">
+        <div class="item-info"><div class="item-name">Combo Sencilla Res</div></div>
+        <div class="item-price">$21.000</div>
+      </div>
+      <div class="item">
+        <div class="item-info"><div class="item-name">Combo Sencilla Pollo</div></div>
+        <div class="item-price">$21.000</div>
+      </div>
+      <div class="item">
+        <div class="item-info"><div class="item-name">Combo Especial Res</div></div>
+        <div class="item-price">$27.500</div>
+      </div>
+      <div class="item">
+        <div class="item-info"><div class="item-name">Combo Especial Pollo Crispy</div></div>
+        <div class="item-price">$23.000</div>
+      </div>
+      <div class="item">
+        <div class="item-info"><div class="item-name">Combo Mixta</div></div>
+        <div class="item-price">$29.500</div>
+      </div>
+    </div>
+
+    <!-- BEBIDAS -->
+    <div class="section">
+      <div class="section-title">🥤 Bebidas</div>
+      <div class="drinks-grid">
+        <div class="drink-item"><span class="drink-name">Coca-Cola 400ml</span><span class="drink-price">$3.500</span></div>
+        <div class="drink-item"><span class="drink-name">Sprite 400ml</span><span class="drink-price">$3.500</span></div>
+        <div class="drink-item"><span class="drink-name">Jugo HIT 500ml</span><span class="drink-price">$3.500</span></div>
+        <div class="drink-item"><span class="drink-name">Agua sin Gas 600ml</span><span class="drink-price">$3.000</span></div>
+        <div class="drink-item"><span class="drink-name">Agua con Gas 600ml</span><span class="drink-price">$3.000</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-left">🏪 Todos los precios incluyen IVA<br>Precios sujetos a cambios sin previo aviso</div>
+  <div class="footer-center">KAN BURGER · 100% ARTESANAL</div>
+  <div class="footer-right">📱 Pide en línea: kan-burger.vercel.app<br>🛵 Domicilio disponible · $2.500</div>
+</div>
+
+</body>
+</html>

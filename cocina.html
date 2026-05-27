@@ -92,6 +92,11 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 .order-card{background:var(--dk3);border-radius:18px;overflow:hidden;border-left:5px solid var(--pen);box-shadow:0 8px 30px rgba(0,0,0,.4)}
 .order-card.inprog{border-left-color:var(--prep)}
 
+/* Banda de color superior para diferenciar pedidos */
+.oc-color-band{height:6px;width:100%;flex-shrink:0}
+/* Badge de posición en cola */
+.oc-pos-badge{display:inline-flex;align-items:center;gap:.3rem;font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:1.5px;padding:.2rem .7rem;border-radius:50px;color:#fff;margin-bottom:.3rem}
+
 .oc-head{background:var(--dkc);padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--bd)}
 .oc-num{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--or);letter-spacing:2px;line-height:1}
 .oc-timestamp{font-size:.72rem;color:var(--mt);margin-top:.2rem}
@@ -527,14 +532,29 @@ function renderizar() {
   if (active.length === 0) {
     grid.innerHTML = `<div class="empty-state"><div class="empty-ic">✅</div><div class="empty-txt">Sin órdenes activas · Todo tranquilo</div></div>`;
   } else {
-    grid.innerHTML = active.map(o => buildCard(o)).join('');
+    grid.innerHTML = active.map((o, idx) => buildCard(o, idx)).join('');
   }
 
   renderCompletadas(done);
 }
 
+// Paleta de colores para diferenciar pedidos visualmente
+const CARD_COLORS = [
+  '#E8641A', // naranja KAN
+  '#3498DB', // azul
+  '#27AE60', // verde
+  '#9B59B6', // púrpura
+  '#E74C3C', // rojo
+  '#F39C12', // dorado
+  '#1ABC9C', // teal
+  '#E91E8C', // rosa
+  '#2ECC71', // verde claro
+  '#5B8DEF', // azul claro
+];
+const POS_LABELS = ['1°','2°','3°','4°','5°','6°','7°','8°','9°','10°'];
+
 // ── TARJETA ───────────────────────────────────────────────────────────
-function buildCard(order) {
+function buildCard(order, posIdx = 0) {
   const ts      = new Date(order.fecha_hora);
   const hora    = ts.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   const urgente = (Date.now() - ts.getTime()) > 15 * 60 * 1000;
@@ -564,7 +584,16 @@ function buildCard(order) {
     </div>`;
   };
 
-  const foodHTML    = comida.map((item, i)  => mkItem('f'  + i, '🍔', item.name, 'x' + item.qty)).join('');
+  const foodHTML = comida.map((item, i) => {
+    const isCombo = /combo/i.test(item.name || '');
+    const isChecked = !!checks['f' + i];
+    const note = isCombo ? '<div style="font-size:.71rem;color:#E8641A;font-weight:800;margin-top:.1rem">🍟 140gr papas francesas · 🥤 Bebida incluida</div>' : '';
+    return `<div class="check-item ${isChecked ? 'checked' : ''}" onclick="toggleCheck('${order.id}','f${i}')">
+      <div class="check-box">${isChecked ? '✓' : ''}</div>
+      <div style="flex:1"><div class="check-item-name">🍔 ${esc(item.name)}</div>${note}</div>
+      <span class="check-item-qty">x${item.qty}</span>
+    </div>`;
+  }).join('');
   const drinkHTML   = bebidas.map((d, i)    => mkItem('dk' + i, '🥤', d.name,    'x' + d.qty)).join('');
   const sauceHTML   = salsas.map((s, i)     => mkItem('sa' + i, '🥫', s.name,    '')).join('');
   const adicionHTML = adiciones.map((a, i)  => mkItem('ad' + i, '➕', a.foodName?`${a.name} → ${a.foodName}`:a.name, 'x' + a.qty)).join('');
@@ -819,7 +848,19 @@ const TODOS_PRODUCTOS = [
   {id:'sa5',name:'Salsa de Piña',price:0,cat:'🥫 Salsas'},
   {id:'sa6',name:'Salsa de Tomate',price:0,cat:'🥫 Salsas'},
   {id:'sa7',name:'Salsa de Jalapeño',price:0,cat:'🥫 Salsas'},
-  {id:'sa8',name:'Salsa de Pepinillo',price:0,cat:'🥫 Salsas'}
+  {id:'sa8',name:'Salsa de Pepinillo',price:0,cat:'🥫 Salsas'},
+  {id:'ad1', name:'Adición de carne',price:7500,cat:'➕ Adiciones'},
+  {id:'ad2', name:'Adición de tocineta',price:1500,cat:'➕ Adiciones'},
+  {id:'ad3', name:'Adición de huevo',price:1000,cat:'➕ Adiciones'},
+  {id:'ad4', name:'Queso cheddar tajado',price:1000,cat:'➕ Adiciones'},
+  {id:'ad10',name:'Queso cheddar fundido',price:2000,cat:'➕ Adiciones'},
+  {id:'ad5', name:'Adición de pollo',price:5500,cat:'➕ Adiciones'},
+  {id:'ad6', name:'Adición de pollo crispy',price:6500,cat:'➕ Adiciones'},
+  {id:'ad7', name:'Papas francesas',price:4500,cat:'➕ Adiciones'},
+  {id:'ad8', name:'Adición de maíz',price:1500,cat:'➕ Adiciones'},
+  {id:'ad9', name:'Adición de pepinillo',price:1500,cat:'➕ Adiciones'},
+  {id:'ad11',name:'Adición de cebolla caramelizada',price:2000,cat:'➕ Adiciones'},
+  {id:'ad12',name:'Adición de carne mechada',price:7500,cat:'➕ Adiciones'}
 ];
 
 let menuConfig = {};
@@ -1104,7 +1145,15 @@ function verDetalleOrden(orderId){
   const drinkHTML=(order.bebidas||[]).map(d=>mkRow(`🥤 ${d.qty}x ${esc(d.name)}`,fmt(d.price*d.qty))).join('');
   const adicionHTML=(order.adiciones||[]).map(a=>mkRow(`➕ ${a.qty}x ${esc(a.name)}${a.foodName?' → '+esc(a.foodName):''}`,fmt(a.price*a.qty))).join('');
   const sauces=(order.salsas||[]).map(s=>s.name).join(', ');
-  const vegetales=(order.vegetales||[]).join(', ');
+  const vegetales=(order.vegetales||[]).map(v=>{
+    if(typeof v==='object'){
+      let s=v.itemName||'';
+      if(v.si?.length) s+=': ✓ '+v.si.join(', ');
+      if(v.no?.length) s+=' ✗ '+v.no.join(', ');
+      return s;
+    }
+    return String(v);
+  }).join(' | ');
   document.getElementById('detTitle').textContent=`Pedido #${order.id}`;
   document.getElementById('detBody').innerHTML=`
     <div style="font-size:.78rem;color:var(--mt);margin-bottom:1rem">${ts.toLocaleDateString('es-CO')} · ${hora} · <span class="oc-pay ${payCls[order.metodo_pago]||''}">${payLbls[order.metodo_pago]||order.metodo_pago||''}</span></div>

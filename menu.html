@@ -185,6 +185,32 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .float-cart.tracking{background:var(--or);animation:cartPulse 1.8s ease-in-out infinite;}
 @keyframes cartPulse{0%,100%{opacity:1}50%{opacity:.75}}
 .cart-badge{background:#fff;color:var(--or);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:900}
+.float-cart.bar-up{bottom:5.5rem!important}
+
+/* ── ORDER BAR ── */
+.order-bar{position:fixed;bottom:0;left:0;right:0;z-index:790;background:var(--dk2);border-top:2px solid var(--or);transform:translateY(100%);transition:transform .4s cubic-bezier(.4,0,.2,1);padding:.8rem 1.5rem;box-shadow:0 -8px 30px rgba(0,0,0,.6)}
+.order-bar.visible{transform:translateY(0)}
+.ob-inner{display:flex;align-items:center;gap:.9rem;max-width:640px;margin:0 auto}
+.ob-icon{font-size:1.4rem;flex-shrink:0;animation:obPulse 2s ease-in-out infinite}
+@keyframes obPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.ob-info{flex:1;min-width:0}
+.ob-num{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;color:var(--or);line-height:1}
+.ob-status{font-size:.76rem;font-weight:700;color:var(--mt)}
+.ob-timer{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--or);letter-spacing:2px;flex-shrink:0}
+.ob-btn{background:var(--or);color:#fff;border-radius:10px;padding:.5rem 1rem;font-weight:800;font-size:.82rem;flex-shrink:0}
+
+/* ── HISTORY BTN ── */
+.hist-btn{position:fixed;bottom:2rem;right:12rem;z-index:800;background:var(--dk3);color:var(--mt);border-radius:50px;padding:.7rem 1.1rem;display:flex;align-items:center;gap:.4rem;font-weight:800;font-size:.78rem;border:1px solid var(--bd);transition:all .3s;box-shadow:0 4px 15px rgba(0,0,0,.4);cursor:pointer}
+.hist-btn:hover{border-color:var(--or);color:var(--or)}
+.hist-btn.bar-up{bottom:6rem!important}
+
+/* ── HISTORY PANEL ── */
+.hist-panel-wrap{position:fixed;inset:0;z-index:850;display:flex;align-items:flex-end;pointer-events:none;opacity:0;transition:opacity .3s}
+.hist-panel-wrap.open{pointer-events:all;opacity:1}
+.hist-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
+.hist-panel{background:var(--dk2);border-top:2px solid var(--or);border-radius:20px 20px 0 0;padding:1.2rem 1.5rem 2rem;width:100%;max-height:65vh;overflow-y:auto;transform:translateY(100%);transition:transform .4s cubic-bezier(.4,0,.2,1);position:relative;z-index:1}
+.hist-panel-wrap.open .hist-panel{transform:translateY(0)}
+.hist-close{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:var(--cr);border-radius:8px;width:32px;height:32px;font-size:1rem;cursor:pointer}
 
 /* ── ORDER MODAL ── */
 .modal-wrap{position:fixed;inset:0;z-index:1000;display:flex;align-items:stretch;justify-content:center;background:rgba(5,2,0,.85);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .35s}
@@ -532,6 +558,36 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   🛒 <span class="cart-badge" id="cartBadge">0</span>
   <span id="cartTotalFloat">Mi pedido</span>
 </button>
+
+<!-- History Button -->
+<button class="hist-btn" id="histBtn" onclick="abrirHistorial()" style="display:none">
+  📋 <span>Mis pedidos</span>
+</button>
+
+<!-- Order Status Bar -->
+<div class="order-bar" id="orderBar">
+  <div class="ob-inner">
+    <span class="ob-icon" id="obIcon">🔥</span>
+    <div class="ob-info">
+      <div class="ob-num" id="obNum">#KB-0000</div>
+      <div class="ob-status" id="obStatus">En preparación...</div>
+    </div>
+    <div class="ob-timer" id="obTimer">40:00</div>
+    <button class="ob-btn" onclick="openModal()">Ver ›</button>
+  </div>
+</div>
+
+<!-- History Panel -->
+<div class="hist-panel-wrap" id="histPanelWrap">
+  <div class="hist-overlay" onclick="cerrarHistorial()"></div>
+  <div class="hist-panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;color:var(--or)">📋 Mis Pedidos</div>
+      <button class="hist-close" onclick="cerrarHistorial()">✕</button>
+    </div>
+    <div id="histPanelBody"></div>
+  </div>
+</div>
 
 <!-- ════════ ORDER MODAL ════════ -->
 <div class="modal-wrap" id="orderModal">
@@ -1436,7 +1492,7 @@ function buildAdditionsGrid(){
     return `<div class="add-food-block">
       <div class="add-food-title">🍔 ${food.name} ×${state.food[fid]}</div>
       <div class="add-food-grid">
-        ${ADDITIONS.map(a=>`
+        ${ADDITIONS.filter(a=>productosActivos[a.id]!==false).map(a=>`
           <div class="dorder-card ${foodAdds[a.id]?'in-cart':''}" id="adcard_${fid}_${a.id}">
             <div class="do-ic">${a.icon}</div>
             <div class="do-name">${a.name}</div>
@@ -1651,6 +1707,8 @@ async function placeOrder(){
   }
 
   saveActiveOrder();
+  checkHistBtn();
+  showOrderBar(state.orderNum, state.entrega);
   renderStep(5);
   iniciarTracking(state.orderNum);
 }
@@ -1796,12 +1854,20 @@ function iniciarTimer(){
   clearInterval(timerInterval);
   let seg=40*60;
   const el=document.getElementById('timerDisplay');
-  if(!el) return;
   function tick(){
-    if(seg<0){clearInterval(timerInterval);if(el)el.textContent='¡En camino! 🛵';return;}
+    if(seg<0){
+      clearInterval(timerInterval);
+      if(el)el.textContent='¡En camino! 🛵';
+      const obTimer=document.getElementById('obTimer');
+      if(obTimer) obTimer.textContent='';
+      return;
+    }
     const m=Math.floor(seg/60);
     const s=seg%60;
-    if(el) el.textContent=m+':'+(s<10?'0':'')+s;
+    const t=m+':'+(s<10?'0':'')+s;
+    if(el) el.textContent=t;
+    const obTimer=document.getElementById('obTimer');
+    if(obTimer) obTimer.textContent=t;
     seg--;
   }
   tick();
@@ -1877,15 +1943,88 @@ function actualizarTimeline(estado) {
     const lbl = document.getElementById('tl1');
     if (lbl) lbl.querySelector('.tl-label').textContent = '❌ Pedido cancelado';
   }
+  updateOrderBarEstado(estado);
 }
 
 function resetOrder(){
   if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   localStorage.removeItem('kan_active_order');
+  hideOrderBar();
   state={step:0,food:{},drinks:{},sauces:{},additions:{},vegetales:{},payment:null,entrega:null,comprobanteFile:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
   renderStep(0);
   updateFloatCart();
+}
+
+// ── ORDER BAR ──────────────────────────────────────────────────────────
+function showOrderBar(num, entrega){
+  const bar=document.getElementById('orderBar');
+  if(!bar) return;
+  document.getElementById('obNum').textContent='#'+num;
+  document.getElementById('obStatus').textContent=(entrega==='domicilio'?'🛵 Domicilio':'🏪 Tienda')+' · En preparación...';
+  bar.classList.add('visible');
+  document.getElementById('floatCart').classList.add('bar-up');
+  const hb=document.getElementById('histBtn');
+  if(hb) hb.classList.add('bar-up');
+}
+function hideOrderBar(){
+  const bar=document.getElementById('orderBar');
+  if(!bar) return;
+  bar.classList.remove('visible');
+  document.getElementById('floatCart').classList.remove('bar-up');
+  const hb=document.getElementById('histBtn');
+  if(hb) hb.classList.remove('bar-up');
+}
+function updateOrderBarEstado(estado){
+  const icon=document.getElementById('obIcon');
+  const status=document.getElementById('obStatus');
+  const timer=document.getElementById('obTimer');
+  if(estado==='en_preparacion'){
+    if(icon) icon.textContent='🔥';
+    if(status) status.textContent='¡Cocinando tu pedido! 🔥';
+  } else if(estado==='listo'){
+    if(icon){icon.textContent='✅';icon.style.animation='none';}
+    if(status) status.textContent='¡Tu pedido está listo! 🎉';
+    if(timer) timer.textContent='';
+  } else if(estado==='rechazado'){
+    if(icon){icon.textContent='❌';icon.style.animation='none';}
+    if(status) status.textContent='Pedido cancelado';
+    if(timer) timer.textContent='';
+  }
+}
+
+// ── HISTORIAL PANEL ────────────────────────────────────────────────────
+function checkHistBtn(){
+  const hist=JSON.parse(localStorage.getItem('kan_order_history')||'[]');
+  const hb=document.getElementById('histBtn');
+  if(hb) hb.style.display=hist.length?'flex':'none';
+}
+function abrirHistorial(){
+  const hist=JSON.parse(localStorage.getItem('kan_order_history')||'[]');
+  const estadoLabel={pendiente:'⏳ Pendiente',en_preparacion:'🔥 En preparación',listo:'✅ Listo',rechazado:'❌ Cancelado'};
+  const body=document.getElementById('histPanelBody');
+  if(!hist.length){
+    body.innerHTML='<p style="text-align:center;color:var(--mt);padding:2rem 1rem">Sin pedidos anteriores</p>';
+  } else {
+    body.innerHTML=hist.map(o=>{
+      const d=new Date(o.fecha);
+      const dt=d.toLocaleDateString('es-CO')+' · '+d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+      const entLabel=o.entrega==='domicilio'?'🛵 Domicilio':'🏪 Tienda';
+      const clr=o.estado==='listo'?'var(--ef)':o.estado==='rechazado'?'#E74C3C':'var(--or)';
+      return `<div style="background:var(--dk3);border-radius:12px;padding:.9rem 1rem;margin-bottom:.6rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem;border:1px solid var(--bd)">
+        <div>
+          <div style="font-weight:900;font-size:.92rem">#${o.num}</div>
+          <div style="font-size:.74rem;color:var(--mt);margin-top:.1rem">${dt} · ${entLabel}</div>
+          <div style="font-size:.75rem;font-weight:800;margin-top:.2rem;color:${clr}">${estadoLabel[o.estado]||o.estado}</div>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--or)">${fmt(o.total)}</div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('histPanelWrap').classList.add('open');
+}
+function cerrarHistorial(){
+  document.getElementById('histPanelWrap').classList.remove('open');
 }
 
 // ── PERSISTENCIA LOCAL ─────────────────────────────────────────────────
@@ -1915,6 +2054,7 @@ function checkActiveOrder(){
   state.entrega=active.entrega||null;
   state.orderFechaHora=active.fecha;
   updateFloatCart();
+  showOrderBar(active.num, active.entrega);
   iniciarTracking(active.num);
 }
 
@@ -2195,6 +2335,7 @@ window.addEventListener('hashchange',handleHash);
   initReveal();
   handleHash();
   checkActiveOrder();
+  checkHistBtn();
 })();
 
 // Realtime — actualiza vitrina al instante cuando cocina activa/desactiva productos
