@@ -64,8 +64,8 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 .tb-clock{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--or);background:rgba(232,100,26,.08);padding:.3rem .9rem;border-radius:8px;border:1px solid var(--bd)}
 .tb-date{font-size:.72rem;color:var(--mt);line-height:1.4;text-align:right}
 .theme-btn{background:rgba(255,255,255,.1);border:1px solid var(--bd);color:var(--cr);border-radius:50px;width:38px;height:38px;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.tb-logout{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--mt);padding:.55rem 1rem;border-radius:10px;font-size:.8rem;font-weight:700}
-.tb-logout:hover{border-color:var(--rej);color:var(--rej)}
+.tb-logout{background:var(--or);border:1px solid var(--or);color:#fff;padding:.55rem 1rem;border-radius:10px;font-size:.8rem;font-weight:700}
+.tb-logout:hover{background:var(--orl);border-color:var(--orl)}
 
 .new-alert{position:fixed;top:1rem;right:1rem;z-index:999;background:var(--or);color:#fff;padding:1rem 1.5rem;border-radius:14px;font-weight:800;font-size:1rem;display:flex;align-items:center;gap:.7rem;box-shadow:0 8px 30px rgba(232,100,26,.5);transform:translateX(150%);transition:transform .4s;pointer-events:none}
 .new-alert.show{transform:translateX(0)}
@@ -305,7 +305,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
     <button class="tb-menu-btn" onclick="abrirCierre()" title="Cierre de caja" style="font-size:1rem">📊</button>
     <button class="tb-menu-btn" onclick="abrirMenuPanel()" title="Gestión de menú">☰</button>
-    <button class="tb-logout" onclick="doLogout()">Salir</button>
+    <button class="tb-logout" onclick="confirmarCerrarSesion()">Cerrar Sesión</button>
   </div>
 
   <!-- CIERRE DE CAJA -->
@@ -425,6 +425,9 @@ function doLogin() {
   mostrarDashboard();
 }
 
+function confirmarCerrarSesion(){
+  if(confirm('¿Seguro que quieres cerrar sesión del panel de cocina?')) doLogout();
+}
 function doLogout() {
   localStorage.removeItem('kb_sesion');
   location.reload();
@@ -1193,13 +1196,17 @@ function imprimirCierre() {
     ${orderRows || '<tr><td colspan="5">Sin órdenes</td></tr>'}
   </table>
   <div class="ft">KAN BURGER · Hecho con ❤ en Venezuela<br>Gracias por tu trabajo hoy 🙌</div>
+  <div class="no-print" style="text-align:center;margin-top:20px">
+    <button onclick="window.print()" style="background:#E8641A;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;letter-spacing:1px">🖨️ IMPRIMIR</button>
+    <button onclick="window.close()" style="background:#eee;color:#333;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-left:10px">Cerrar</button>
+  </div>
   <script>
-    setTimeout(()=>{window.print();},300);
     window.onafterprint=function(){
       window.close();
       if(window.opener&&window.opener.doLogout) window.opener.doLogout();
     };
   <\/script>
+  <style>.no-print{} @media print{.no-print{display:none!important}}<\/style>
   </body></html>`);
   w.document.close();
 }

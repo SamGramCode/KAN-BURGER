@@ -1725,10 +1725,17 @@ function updateTotalDisplay(){
   updateFloatCart();
 }
 
+function formatNumPedido(n){
+  if(n<=9999) return 'KN-'+String(n).padStart(4,'0');
+  // KN-A0001 … KN-Z9999, luego KN-AA0001, etc.
+  const letra=String.fromCharCode(65+Math.floor((n-10000)/9999));
+  const resto=(n-10000)%9999+1;
+  return 'KN-'+letra+String(resto).padStart(4,'0');
+}
 async function generarNumPedido(){
   try{
     const {count}=await sb.from('ordenes').select('*',{count:'exact',head:true});
-    return 'KN-'+String((count||0)+1).padStart(4,'0');
+    return formatNumPedido((count||0)+1);
   }catch(e){
     return 'KN-'+String(Date.now()).slice(-4);
   }
