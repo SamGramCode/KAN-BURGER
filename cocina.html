@@ -861,30 +861,30 @@ function imprimirTicket(orderId) {
     if(esCombo(i)){
       const burger=nombreBurger(i);
       return `<tr><td>${i.qty}x ${burger}</td><td style="text-align:right">${fmt(i.price * i.qty)}</td></tr>`
-        + `<tr><td style="padding-left:12px;font-size:11px">🍟 Papas 140gr x${i.qty}</td><td style="text-align:right;font-size:11px;color:#888">Incl.</td></tr>`
-        + `<tr><td style="padding-left:12px;font-size:11px">🥤 Bebida x${i.qty}</td><td style="text-align:right;font-size:11px;color:#888">Incl.</td></tr>`;
+        + `<tr><td style="padding-left:10px;font-size:11px">- Papas 140gr x${i.qty}</td><td style="text-align:right;font-size:11px">Incl.</td></tr>`
+        + `<tr><td style="padding-left:10px;font-size:11px">- Bebida x${i.qty}</td><td style="text-align:right;font-size:11px">Incl.</td></tr>`;
     }
     return `<tr><td>${i.qty}x ${i.name}</td><td style="text-align:right">${fmt(i.price * i.qty)}</td></tr>`;
   }).join('');
   const drinkR   = (order.bebidas   || []).map(d => `<tr><td>${d.qty}x ${d.name}</td><td style="text-align:right">${fmt(d.price * d.qty)}</td></tr>`).join('');
-  const adicionR = (order.adiciones || []).map(a => `<tr><td>➕ ${a.qty}x ${a.name}</td><td style="text-align:right">${fmt(a.price * a.qty)}</td></tr>`).join('');
+  const adicionR = (order.adiciones || []).map(a => `<tr><td>+ ${a.qty}x ${a.name}</td><td style="text-align:right">${fmt(a.price * a.qty)}</td></tr>`).join('');
   const sauceL   = (order.salsas    || []).map(s => s.name).join(', ');
   const vegL     = (order.vegetales || []).join(', ');
   const w = window.open('', '_blank', 'width=360,height=640');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket #${order.id}</title>
-  <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;padding:16px;max-width:300px;margin:0 auto}.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:10px}.logo{font-size:20px;font-weight:bold;letter-spacing:3px}.num{text-align:center;font-size:18px;font-weight:bold;margin:8px 0}table{width:100%}td{padding:3px 0}.tot td{font-weight:bold;font-size:15px;border-top:2px solid #000;padding-top:6px}.ft{text-align:center;font-size:10px;color:#555;margin-top:10px}</style>
+  <style>@page{size:58mm auto;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;padding:8px;max-width:300px;margin:0 auto}.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:10px}.logo{font-size:20px;font-weight:bold;letter-spacing:3px}.num{text-align:center;font-size:18px;font-weight:bold;margin:8px 0}table{width:100%}td{padding:3px 0}.tot td{font-weight:bold;font-size:15px;border-top:2px solid #000;padding-top:6px}.ft{text-align:center;font-size:10px;margin-top:10px}</style>
   </head><body>
-  <div class="hdr"><div class="logo">KAN BURGER</div><div style="font-size:10px;color:#555">100% Artesanal</div></div>
+  <div class="hdr"><div class="logo">KAN BURGER</div><div style="font-size:10px">100% Artesanal</div></div>
   <div class="num">Pedido #${order.id}</div>
-  <div style="text-align:center;font-size:10px;color:#555;margin-bottom:8px">${dt}</div>
+  <div style="text-align:center;font-size:10px;margin-bottom:8px">${dt}</div>
   <table>${foodR}${drinkR}${adicionR}
-  ${vegL   ? `<tr><td colspan="2" style="font-size:11px;border-top:1px dashed #000;padding-top:4px">🥬 Vegetales: ${vegL}</td></tr>`   : ''}
+  ${vegL   ? `<tr><td colspan="2" style="font-size:11px;border-top:1px dashed #000;padding-top:4px">Vegetales: ${vegL}</td></tr>`   : ''}
   ${sauceL ? `<tr><td colspan="2" style="font-size:11px;border-top:1px dashed #000;padding-top:4px">Salsas: ${sauceL}</td></tr>` : ''}
   <tr class="tot"><td>TOTAL</td><td style="text-align:right">${fmt(order.total)}</td></tr></table>
   <div style="text-align:center;font-size:10px;margin-top:4px">Pago: ${payLbl[order.metodo_pago] || order.metodo_pago || ''}</div>
-  ${order.notas ? `<div style="font-size:10px;border-top:1px dashed #000;margin-top:6px;padding-top:6px">📝 ${order.notas}</div>` : ''}
-  <div class="ft">KAN BURGER · Hecho con ❤ en Venezuela</div>
-  <script>setTimeout(()=>{window.print()},300)<\/script></body></html>`);
+  ${order.notas ? `<div style="font-size:10px;border-top:1px dashed #000;margin-top:6px;padding-top:6px">Nota: ${order.notas}</div>` : ''}
+  <div class="ft">KAN BURGER - Hecho con amor en Venezuela</div>
+  <script>setTimeout(()=>{window.print()},500)<\/script></body></html>`);
   w.document.close();
 }
 
@@ -1184,18 +1184,19 @@ function imprimirCierre() {
   const orderRows = [...done].reverse().map((o,idx) => {
     const hora = new Date(o.fecha_hora).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
     const items = [...(o.comida||[]).map(i=>`${i.qty}x ${i.name}`),...(o.bebidas||[]).map(d=>`${d.qty}x ${d.name}`)].join(', ');
-    return `<tr><td>${idx+1}</td><td style="font-size:10px">${o.id}</td><td style="font-size:10px">${items}</td><td>${hora}</td><td style="text-align:right">${fmt(o.total)}</td></tr>`;
+    return `<tr><td style="font-size:10px">${idx+1}. ${o.id}</td><td style="font-size:10px">${hora}</td><td style="text-align:right;font-size:10px">${fmt(o.total)}</td></tr>`
+      + (items ? `<tr><td colspan="3" style="font-size:9px;padding-left:8px;padding-bottom:3px">${items}</td></tr>` : '');
   }).join('');
 
   const w = window.open('', '_blank', 'width=400,height=700');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cierre de Caja</title>
-  <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;padding:16px;max-width:340px;margin:0 auto}
+  <style>@page{size:58mm auto;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;padding:8px;max-width:300px;margin:0 auto}
   .hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:12px}
-  .logo{font-size:22px;font-weight:bold;letter-spacing:4px}.sub{font-size:10px;color:#555}
+  .logo{font-size:22px;font-weight:bold;letter-spacing:4px}.sub{font-size:10px}
   h3{font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:12px 0 6px;border-bottom:1px dashed #000;padding-bottom:4px}
   table{width:100%;border-collapse:collapse}td{padding:3px 2px;font-size:11px}
   .tot td{font-weight:bold;font-size:14px;border-top:2px solid #000;padding-top:8px;margin-top:4px}
-  .ft{text-align:center;font-size:10px;color:#555;margin-top:14px;border-top:1px dashed #000;padding-top:8px}
+  .ft{text-align:center;font-size:10px;margin-top:14px;border-top:1px dashed #000;padding-top:8px}
   </style></head><body>
   <div class="hdr">
     <div class="logo">KAN BURGER</div>
@@ -1205,20 +1206,20 @@ function imprimirCierre() {
   </div>
   <h3>Resumen</h3>
   <table>
-    <tr><td>Órdenes completadas</td><td style="text-align:right">${done.length}</td></tr>
-    <tr><td>Órdenes canceladas</td><td style="text-align:right">${canceladas.length}</td></tr>
+    <tr><td>Ordenes completadas</td><td style="text-align:right">${done.length}</td></tr>
+    <tr><td>Ordenes canceladas</td><td style="text-align:right">${canceladas.length}</td></tr>
   </table>
-  <h3>Por método de pago</h3>
+  <h3>Por metodo de pago</h3>
   <table>${payRows || '<tr><td colspan="3">Sin ventas</td></tr>'}</table>
-  <table style="margin-top:8px"><tr class="tot"><td colspan="2">TOTAL DEL DÍA</td><td style="text-align:right">${fmt(totalVentas)}</td></tr></table>
+  <table style="margin-top:8px"><tr class="tot"><td colspan="2">TOTAL DEL DIA</td><td style="text-align:right">${fmt(totalVentas)}</td></tr></table>
   <h3>Productos vendidos</h3>
   <table>${productosRows || '<tr><td colspan="2">Sin productos</td></tr>'}</table>
-  <h3>Detalle de órdenes</h3>
+  <h3>Detalle de ordenes</h3>
   <table>
-    <tr style="font-weight:bold;border-bottom:1px solid #000"><td>#</td><td>Orden</td><td>Ítems</td><td>Hora</td><td>Total</td></tr>
-    ${orderRows || '<tr><td colspan="5">Sin órdenes</td></tr>'}
+    <tr style="font-weight:bold;border-bottom:1px solid #000"><td>Orden</td><td>Hora</td><td style="text-align:right">Total</td></tr>
+    ${orderRows || '<tr><td colspan="3">Sin ordenes</td></tr>'}
   </table>
-  <div class="ft">KAN BURGER · Hecho con ❤ en Venezuela<br>Gracias por tu trabajo hoy 🙌</div>
+  <div class="ft">KAN BURGER - Hecho con amor en Venezuela</div>
   <div class="no-print" style="text-align:center;margin-top:20px">
     <button onclick="window.print()" style="background:#E8641A;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;letter-spacing:1px">🖨️ IMPRIMIR</button>
     <button onclick="window.close()" style="background:#eee;color:#333;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-left:10px">Cerrar</button>
