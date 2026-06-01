@@ -268,6 +268,24 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
   #printCierre{position:fixed!important;inset:0!important;background:#fff!important;color:#000!important;padding:1.5rem!important;font-family:'Courier New',monospace!important;font-size:12px!important;overflow:visible!important;z-index:99999!important}
 }
 </style>
+<meta name="robots" content="noindex, nofollow">
+<script>
+(function(){
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='F12'||(e.ctrlKey&&(e.key==='u'||e.key==='U'||e.key==='s'||e.key==='S'))||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j'||e.key==='C'||e.key==='c'))){
+      e.preventDefault();return false;
+    }
+  });
+  document.addEventListener('dragstart',function(e){if(e.target.tagName==='IMG')e.preventDefault();});
+  setTimeout(function(){
+    console.clear();
+    console.log('%c⛔ ZONA PRIVADA','color:#E8641A;font-size:28px;font-weight:900');
+    console.log('%cEste sistema es propiedad exclusiva de KAN BURGER.','color:#333;font-size:13px;font-weight:600');
+    console.log('%cEl acceso no autorizado está prohibido y será reportado.','color:#888;font-size:12px');
+  },200);
+})();
+</script>
 </head>
 <body>
 
@@ -308,7 +326,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
     <button class="tb-logout" onclick="confirmarCerrarSesion()">Cerrar Sesión</button>
   </div>
 
-  <!-- CIERRE DE CAJA -->
+
   <div class="cierre-overlay" id="cierreOverlay" onclick="cerrarCierre()"></div>
   <div class="cierre-panel" id="cierrePanel">
     <div class="cp-head">
@@ -330,7 +348,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
   </div>
   <div id="printCierre" style="display:none"></div>
 
-<!-- MODAL DETALLE ORDEN -->
+
 <div class="det-overlay" id="detOverlay" onclick="cerrarDetalle()">
   <div class="det-panel" onclick="event.stopPropagation()">
     <div class="det-head">
@@ -341,7 +359,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
   </div>
 </div>
 
-<!-- MODAL CAMBIO PAGO -->
+
 <div class="pago-overlay" id="pagoOverlay" onclick="cerrarCambioPago()">
   <div class="pago-modal" onclick="event.stopPropagation()">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;color:var(--or);margin-bottom:.3rem">💳 Cambiar Método de Pago</div>
@@ -356,7 +374,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
   </div>
 </div>
 
-  <!-- PANEL GESTIÓN DE MENÚ -->
+
   <div class="menu-overlay" id="menuOverlay" onclick="cerrarMenuPanel()"></div>
   <div class="menu-panel" id="menuPanel">
     <div class="mp-head">

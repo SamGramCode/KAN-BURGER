@@ -493,14 +493,31 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   .order-grid{grid-template-columns:1fr 1fr}
 }
 </style>
+<meta name="robots" content="noindex, nofollow">
+<script>
+(function(){
+  document.addEventListener('contextmenu',function(e){e.preventDefault();});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='F12'||(e.ctrlKey&&(e.key==='u'||e.key==='U'||e.key==='s'||e.key==='S'))||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='i'||e.key==='J'||e.key==='j'||e.key==='C'||e.key==='c'))){
+      e.preventDefault();return false;
+    }
+  });
+  document.addEventListener('dragstart',function(e){if(e.target.tagName==='IMG')e.preventDefault();});
+  setTimeout(function(){
+    console.clear();
+    console.log('%c⛔ ZONA PRIVADA','color:#E8641A;font-size:28px;font-weight:900;text-shadow:0 0 10px rgba(232,100,26,.4)');
+    console.log('%cEste sistema es propiedad exclusiva de KAN BURGER.','color:#333;font-size:13px;font-weight:600');
+    console.log('%cEl acceso no autorizado está prohibido y será reportado.','color:#888;font-size:12px');
+  },200);
+})();
+</script>
 </head>
 <body class="light">
 
-<!-- ████████ KITCHEN PANEL ████████ -->
 <div id="kitchenPanel">
   <div class="new-order-toast" id="newOrderToast">🔔 ¡Nuevo pedido!</div>
 
-  <!-- Login -->
+
   <div class="kitchen-login" id="kitchenLogin">
     <div class="kitchen-login-box">
       <div class="kitchen-login-logo">KAN <span style="color:#EEE">COCINA</span></div>
@@ -512,7 +529,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
     </div>
   </div>
 
-  <!-- Dashboard -->
+
   <div class="kitchen-dash" id="kitchenDash">
     <div class="kitchen-nav">
       <div>
@@ -536,10 +553,10 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   </div>
 </div>
 
-<!-- ████████ CUSTOMER SITE ████████ -->
+
 <div id="customerSite">
 
-<!-- Mobile Nav -->
+
 <div class="mob-nav" id="mobNav">
   <button class="mob-close" onclick="closeMob()">✕</button>
   <a href="#inicio" onclick="closeMob()">Inicio</a>
@@ -552,7 +569,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   <button class="btn-p" onclick="closeMob();openModal()" style="margin-top:.5rem">🍔 Ordenar Ahora</button>
 </div>
 
-<!-- Navbar -->
+
 <nav id="navbar">
   <img src="img/logo.jpg" alt="KAN BURGER" class="nav-logo">
   <ul class="nav-links">
@@ -570,13 +587,13 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   </button>
 </nav>
 
-<!-- Floating Cart -->
+
 <button class="float-cart empty" id="floatCart" onclick="openModal()">
   🛒 <span class="cart-badge" id="cartBadge">0</span>
   <span id="cartTotalFloat">Mi pedido</span>
 </button>
 
-<!-- Order Status Bar -->
+
 <div class="order-bar" id="orderBar">
   <div class="ob-inner">
     <span class="ob-icon" id="obIcon">🔥</span>
@@ -589,7 +606,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   </div>
 </div>
 
-<!-- History Panel -->
+
 <div class="hist-panel-wrap" id="histPanelWrap">
   <div class="hist-overlay" onclick="cerrarHistorial()"></div>
   <div class="hist-panel">
@@ -601,18 +618,18 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   </div>
 </div>
 
-<!-- ════════ ORDER MODAL ════════ -->
+
 <div class="modal-wrap" id="orderModal">
   <div class="modal-box">
 
-    <!-- Modal Header -->
+
     <div class="modal-head">
       <img src="img/logo.jpg" alt="KAN BURGER" class="modal-head-logo">
       <span style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;color:var(--mt)">TU PEDIDO</span>
       <button class="modal-close" onclick="closeModal()">← Menú principal</button>
     </div>
 
-    <!-- Progress Bar -->
+
     <div class="progress-bar" id="progressBar">
       <div class="pb-step">
         <div class="pb-dot active" id="pb0">1</div>
@@ -645,12 +662,12 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
       </div>
     </div>
 
-    <!-- STEP 0: FOOD -->
+
     <div class="modal-body">
       <div class="step active" id="step0">
         <div class="step-title">Elige tu <span>Comida</span></div>
         <div id="foodGrid"></div>
-        <!-- Vegetales por producto -->
+
         <div style="margin-top:1.4rem" id="vegSection">
           <div class="step-title" style="font-size:1.2rem;margin-bottom:.3rem">¿Con qué <span>vegetales</span>?</div>
           <p style="font-size:.82rem;color:var(--mt);margin-bottom:.8rem">Elige Sí o No para cada vegetal — obligatorio antes de continuar 🥬</p>
@@ -658,7 +675,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
         </div>
       </div>
 
-      <!-- STEP 1: DRINKS -->
+
       <div class="step" id="step1">
         <div class="step-title">Elige tu <span>Bebida</span></div>
         <p style="font-size:.85rem;color:var(--mt);margin-bottom:.8rem">Selecciona la cantidad de cada bebida</p>
@@ -666,21 +683,21 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
         <div class="drink-order-grid" id="drinkGrid"></div>
       </div>
 
-      <!-- STEP 2: SAUCES -->
+
       <div class="step" id="step2">
         <div class="step-title">Elige tus <span>Salsas</span></div>
         <p style="font-size:.85rem;color:var(--mt);margin-bottom:1.2rem">Máximo 2 salsas por producto — incluidas gratis 🎉</p>
         <div id="sauceGrid"></div>
       </div>
 
-      <!-- STEP 3: ADICIONES -->
+
       <div class="step" id="step3">
         <div class="step-title">¿Alguna <span>Adición</span>?</div>
         <p style="font-size:.85rem;color:var(--mt);margin-bottom:1.2rem">Selecciona a cuál hamburguesa le quieres agregar adiciones</p>
         <div id="additionsGrid"></div>
       </div>
 
-      <!-- STEP 4: PAYMENT -->
+
       <div class="step" id="step4">
         <div class="step-title">Método de <span>Pago</span></div>
         <div class="order-summary" id="orderSummary"></div>
@@ -731,7 +748,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           <div class="pay-info-num" id="payInfoNum"></div>
           <div class="pay-info-note" id="payInfoNote"></div>
         </div>
-        <!-- COMPROBANTE DE PAGO -->
+
         <div class="upload-section" id="uploadSection" style="display:none">
           <div class="upload-title">📸 Sube tu comprobante de pago</div>
           <div class="upload-sub">Toma foto o captura del comprobante de Nequi / Daviplata / Llave — <strong style="color:var(--or)">obligatorio para confirmar el pedido</strong></div>
@@ -752,26 +769,26 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
         </div>
       </div>
 
-      <!-- STEP 5: CONFIRMATION -->
+
       <div class="step" id="step5">
         <div class="confirm-wrap">
           <div class="confirm-icon">🎉</div>
           <div class="confirm-order-num" id="confirmNum">#KN-0000</div>
           <div class="confirm-status">¡Tu orden está en preparación! 🔥</div>
           <div class="confirm-sub">Te avisamos cuando esté lista. ¡Gracias por preferir KAN BURGER!</div>
-          <!-- TIMER -->
+
           <div style="background:rgba(232,100,26,.1);border:1px solid rgba(232,100,26,.3);border-radius:16px;padding:1.2rem;margin-bottom:1rem;text-align:center">
             <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--mt);margin-bottom:.3rem">⏱ Tiempo estimado de entrega</div>
             <div id="timerDisplay" style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;color:var(--or);letter-spacing:3px;line-height:1">40:00</div>
             <div style="font-size:.75rem;color:var(--mt);margin-top:.2rem">Minutos aproximados de espera</div>
           </div>
-          <!-- POSICIÓN EN FILA -->
+
           <div id="queueWrap" style="background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:12px;padding:.8rem 1.2rem;margin-bottom:1rem;text-align:center;font-size:.85rem;font-weight:700">
             <span id="queuePos">⏳ Calculando posición...</span>
           </div>
           <div class="confirm-receipt" id="confirmReceipt"></div>
 
-          <!-- TIMELINE DE SEGUIMIENTO -->
+
           <div class="order-timeline">
             <div class="tl-title">📍 ESTADO DE TU PEDIDO</div>
 
@@ -827,21 +844,21 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
             <button class="btn-p" onclick="closeModal()">← Volver al menú</button>
             <button class="btn-p" style="background:var(--dk3);color:var(--cr);border:1px solid var(--bd)" onclick="resetOrder();openModal()">🍔 Nuevo pedido</button>
           </div>
-          <!-- HISTORIAL -->
+
           <div style="margin-top:1.5rem">
             <div style="font-weight:900;font-size:.9rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt);margin-bottom:.8rem;cursor:pointer" onclick="const h=document.getElementById('historialWrap');h.style.display=h.style.display==='none'?'block':'none'">📋 Mis pedidos anteriores ▾</div>
             <div id="historialWrap" style="display:none" id="historialWrap"></div>
           </div>
         </div>
       </div>
-      <!-- Scroll hint arrow -->
+
       <div class="scroll-hint hidden" id="scrollHint">
         <div class="scroll-hint-arrow">▼</div>
         <span class="scroll-hint-txt">Desliza para ver más</span>
       </div>
     </div>
 
-    <!-- Modal Footer -->
+
     <div class="modal-foot" id="modalFoot">
       <div class="modal-total">
         <div style="display:flex;flex-direction:column;gap:.1rem">
@@ -857,7 +874,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   </div>
 </div>
 
-<!-- ════ HERO ════ -->
+
 <div id="heroWrapper">
 <section id="inicio" class="hero">
   <video class="hero-video" muted playsinline autoplay preload="auto" id="heroVideo">
@@ -891,7 +908,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 </section>
 </div>
 
-<!-- ════ STRIP ════ -->
+
 <div class="strip">
   <div class="strip-item"><div class="strip-ic">🍔</div><div><div class="strip-t">Artesanal</div><div class="strip-s">Hecho con amor</div></div></div>
   <div class="strip-item"><div class="strip-ic">🍞</div><div><div class="strip-t">Pan Artesanal</div><div class="strip-s">Hecho desde cero</div></div></div>
@@ -899,7 +916,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   <div class="strip-item"><div class="strip-ic">⚡</div><div><div class="strip-t">Rápido</div><div class="strip-s">Al momento</div></div></div>
 </div>
 
-<!-- ════ MENU ════ -->
+
 <section id="menu">
   <div class="sec-hdr reveal">
     <span class="sec-tag">Lo que nos hace únicos</span>
@@ -916,7 +933,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   <div class="menu-grid" id="menuShowcase"></div>
 </section>
 
-<!-- ════ BEBIDAS ════ -->
+
 <section id="bebidas" style="background:var(--dk)">
   <div class="sec-hdr reveal">
     <span class="sec-tag">Para acompañar</span>
@@ -926,7 +943,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   <div class="beb-grid" id="bebidasShowcase"></div>
 </section>
 
-<!-- ════ SALSAS ════ -->
+
 <section id="salsas">
   <div class="sec-hdr reveal">
     <span class="sec-tag">El secreto está aquí</span>
@@ -937,7 +954,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   <div class="sal-grid" id="salsasShowcase"></div>
 </section>
 
-<!-- ════ GALERIA ════ -->
+
 <section id="galeria" style="background:var(--dk)">
   <div class="sec-hdr reveal">
     <span class="sec-tag">Antójate</span>
@@ -960,7 +977,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   </div>
 </section>
 
-<!-- ════ CONTACTO ════ -->
+
 <section id="contacto">
   <div class="con-inner">
     <div class="sec-hdr reveal" style="margin-bottom:1rem">
@@ -987,7 +1004,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
   </p>
 </footer>
 
-</div><!-- end customerSite -->
+</div>
 
 <script>
 // ══════════════════════════════════════════════
