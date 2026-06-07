@@ -321,6 +321,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
       <div class="tb-date" id="tbDate"></div>
     </div>
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+    <button class="tb-menu-btn" id="btnCambiarImpresora" onclick="cambiarImpresora()" title="Seleccionar impresora" style="font-size:.75rem;font-weight:900">🖨️?</button>
     <button class="tb-menu-btn" onclick="abrirCierre()" title="Cierre de caja" style="font-size:1rem">📊</button>
     <button class="tb-menu-btn" onclick="abrirMenuPanel()" title="Gestión de menú">☰</button>
     <button class="tb-logout" onclick="confirmarCerrarSesion()">Cerrar Sesión</button>
@@ -870,11 +871,52 @@ function toggleCompleted() {
 
 // ── SELECTOR DE IMPRESORA ─────────────────────────────────────────────
 function mostrarSelectorImpresora(callback) {
+  const saved = localStorage.getItem('kb_printer_type');
+  if (saved) { callback(saved); return; }
   const m = document.getElementById('printModal');
-  document.getElementById('btnPrintTermica').onclick = () => { m.style.display = 'none'; callback('termica'); };
-  document.getElementById('btnPrintNormal').onclick  = () => { m.style.display = 'none'; callback('normal'); };
+  document.getElementById('btnPrintTermica').onclick = () => {
+    localStorage.setItem('kb_printer_type', 'termica');
+    _actualizarBtnImpresora();
+    m.style.display = 'none';
+    callback('termica');
+  };
+  document.getElementById('btnPrintNormal').onclick = () => {
+    localStorage.setItem('kb_printer_type', 'normal');
+    _actualizarBtnImpresora();
+    m.style.display = 'none';
+    callback('normal');
+  };
   document.getElementById('btnPrintCancelar').onclick = () => { m.style.display = 'none'; };
   m.style.display = 'flex';
+}
+
+function cambiarImpresora() {
+  localStorage.removeItem('kb_printer_type');
+  _actualizarBtnImpresora();
+  document.getElementById('printModal').style.display = 'flex';
+  document.getElementById('btnPrintTermica').onclick = () => {
+    localStorage.setItem('kb_printer_type', 'termica');
+    _actualizarBtnImpresora();
+    document.getElementById('printModal').style.display = 'none';
+  };
+  document.getElementById('btnPrintNormal').onclick = () => {
+    localStorage.setItem('kb_printer_type', 'normal');
+    _actualizarBtnImpresora();
+    document.getElementById('printModal').style.display = 'none';
+  };
+  document.getElementById('btnPrintCancelar').onclick = () => {
+    document.getElementById('printModal').style.display = 'none';
+  };
+}
+
+function _actualizarBtnImpresora() {
+  const saved = localStorage.getItem('kb_printer_type');
+  const btn = document.getElementById('btnCambiarImpresora');
+  if (!btn) return;
+  btn.title = saved === 'termica' ? 'Impresora: Térmica 58mm — Click para cambiar'
+            : saved === 'normal'  ? 'Impresora: Normal A4 — Click para cambiar'
+            : 'Seleccionar impresora';
+  btn.textContent = saved === 'termica' ? '🖨️T' : saved === 'normal' ? '🖨️A' : '🖨️?';
 }
 
 // ── TICKET ────────────────────────────────────────────────────────────
@@ -1573,6 +1615,7 @@ if (localStorage.getItem('kb_cocina_theme') === 'light') {
 }
 
 // ── AUTO-LOGIN ────────────────────────────────────────────────────────
+_actualizarBtnImpresora();
 if (localStorage.getItem('kb_sesion') === '1' ) {
   mostrarDashboard();
 } else {
