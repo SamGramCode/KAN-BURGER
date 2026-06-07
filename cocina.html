@@ -868,16 +868,32 @@ function toggleCompleted() {
   document.getElementById('completedList').classList.toggle('open', completedOpen);
 }
 
+// ── SELECTOR DE IMPRESORA ─────────────────────────────────────────────
+function mostrarSelectorImpresora(callback) {
+  const m = document.getElementById('printModal');
+  document.getElementById('btnPrintTermica').onclick = () => { m.style.display = 'none'; callback('termica'); };
+  document.getElementById('btnPrintNormal').onclick  = () => { m.style.display = 'none'; callback('normal'); };
+  document.getElementById('btnPrintCancelar').onclick = () => { m.style.display = 'none'; };
+  m.style.display = 'flex';
+}
+
 // ── TICKET ────────────────────────────────────────────────────────────
 function imprimirTicket(orderId) {
   const order = ordersCache.find(o => o.id === orderId);
   if (!order) return;
+  mostrarSelectorImpresora(tipo => _generarTicket(order, tipo));
+}
+
+function _generarTicket(order, tipo) {
   const ts     = new Date(order.fecha_hora);
   const dt     = ts.toLocaleDateString('es-CO') + ' ' + ts.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   const payLbl = { nequi: 'Nequi', daviplata: 'Daviplata', llave: 'Llave', efectivo: 'Efectivo' };
-  const foodR    = (order.comida    || []).map(i => {
-    if(esCombo(i)){
-      const burger=nombreBurger(i);
+  const esDOM  = order.tipo_entrega === 'domicilio';
+  const entregaTxt = esDOM ? 'DOMICILIO' : 'RECOGER EN TIENDA';
+
+  const foodR = (order.comida || []).map(i => {
+    if (esCombo(i)) {
+      const burger = nombreBurger(i);
       return `<tr><td>${i.qty}x ${burger}</td><td style="text-align:right">${fmt(i.price * i.qty)}</td></tr>`
         + `<tr><td style="padding-left:10px;font-size:11px">- Papas 140gr x${i.qty}</td><td style="text-align:right;font-size:11px">Incl.</td></tr>`
         + `<tr><td style="padding-left:10px;font-size:11px">- Bebida x${i.qty}</td><td style="text-align:right;font-size:11px">Incl.</td></tr>`;
@@ -888,21 +904,114 @@ function imprimirTicket(orderId) {
   const adicionR = (order.adiciones || []).map(a => `<tr><td>+ ${a.qty}x ${a.name}</td><td style="text-align:right">${fmt(a.price * a.qty)}</td></tr>`).join('');
   const sauceL   = (order.salsas    || []).map(s => s.name).join(', ');
   const vegL     = (order.vegetales || []).join(', ');
-  const w = window.open('', '_blank', 'width=360,height=640');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket #${order.id}</title>
-  <style>@page{size:58mm auto;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;padding:8px;max-width:300px;margin:0 auto}.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:10px}.logo{font-size:20px;font-weight:bold;letter-spacing:3px}.num{text-align:center;font-size:18px;font-weight:bold;margin:8px 0}table{width:100%}td{padding:3px 0}.tot td{font-weight:bold;font-size:15px;border-top:2px solid #000;padding-top:6px}.ft{text-align:center;font-size:10px;margin-top:10px}</style>
-  </head><body>
-  <div class="hdr"><div class="logo">KAN BURGER</div><div style="font-size:10px">100% Artesanal</div></div>
-  <div class="num">Pedido #${order.id}</div>
-  <div style="text-align:center;font-size:10px;margin-bottom:8px">${dt}</div>
-  <table>${foodR}${drinkR}${adicionR}
-  ${vegL   ? `<tr><td colspan="2" style="font-size:11px;border-top:1px dashed #000;padding-top:4px">Vegetales: ${vegL}</td></tr>`   : ''}
-  ${sauceL ? `<tr><td colspan="2" style="font-size:11px;border-top:1px dashed #000;padding-top:4px">Salsas: ${sauceL}</td></tr>` : ''}
-  <tr class="tot"><td>TOTAL</td><td style="text-align:right">${fmt(order.total)}</td></tr></table>
-  <div style="text-align:center;font-size:10px;margin-top:4px">Pago: ${payLbl[order.metodo_pago] || order.metodo_pago || ''}</div>
-  ${order.notas ? `<div style="font-size:10px;border-top:1px dashed #000;margin-top:6px;padding-top:6px">Nota: ${order.notas}</div>` : ''}
-  <div class="ft">KAN BURGER - Hecho con amor en Venezuela</div>
-  <script>setTimeout(()=>{window.print()},500)<\/script></body></html>`);
+
+  if (tipo === 'termica') {
+    _ticketTermico(order, { dt, payLbl, esDOM, entregaTxt, foodR, drinkR, adicionR, sauceL, vegL });
+  } else {
+    _ticketNormal(order, { dt, payLbl, esDOM, entregaTxt, foodR, drinkR, adicionR, sauceL, vegL });
+  }
+}
+
+function _abrirVentana(w) {
+  if (!w) { alert('El navegador bloqueó la ventana emergente.\nPermite las ventanas emergentes para este sitio e intenta de nuevo.'); return false; }
+  return true;
+}
+
+function _ticketTermico(order, { dt, payLbl, esDOM, entregaTxt, foodR, drinkR, adicionR, sauceL, vegL }) {
+  const w = window.open('', '_blank', 'width=320,height=620');
+  if (!_abrirVentana(w)) return;
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket ${order.id}</title>
+<style>
+@page{size:58mm auto;margin:0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Courier New',monospace;font-size:12px;padding:8px;max-width:280px;margin:0 auto}
+.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:8px;margin-bottom:8px}
+.logo{font-size:18px;font-weight:bold;letter-spacing:3px}
+.num{text-align:center;font-size:16px;font-weight:bold;margin:6px 0;padding-bottom:6px;border-bottom:1px dashed #000}
+.entrega{text-align:center;font-weight:bold;font-size:12px;border:1px solid #000;padding:3px 0;margin-bottom:6px;letter-spacing:1px}
+.info{font-size:10px;margin-bottom:4px}
+table{width:100%}
+td{padding:2px 0;font-size:12px}
+.sep td{border-top:1px dashed #000;padding-top:3px;font-size:11px}
+.tot td{font-weight:bold;font-size:14px;border-top:2px solid #000;padding-top:5px}
+.ft{text-align:center;font-size:10px;margin-top:8px;border-top:1px dashed #000;padding-top:6px}
+.no-print{}
+@media print{.no-print{display:none!important}}
+</style></head><body>
+<div class="hdr"><div class="logo">KAN BURGER</div><div style="font-size:10px">100% Artesanal</div></div>
+<div class="num">Pedido ${order.id}</div>
+<div style="text-align:center;font-size:10px;margin:4px 0">${dt}</div>
+<div class="entrega">${entregaTxt}</div>
+${esDOM && order.direccion ? `<div class="info">Dir: ${order.direccion}</div>` : ''}
+${order.telefono           ? `<div class="info">Tel: ${order.telefono}</div>`  : ''}
+<table>
+${foodR}${drinkR}${adicionR}
+${vegL   ? `<tr class="sep"><td colspan="2">Vegetales: ${vegL}</td></tr>`   : ''}
+${sauceL ? `<tr class="sep"><td colspan="2">Salsas: ${sauceL}</td></tr>`   : ''}
+<tr class="tot"><td>TOTAL</td><td style="text-align:right">${fmt(order.total)}</td></tr>
+</table>
+<div style="text-align:center;font-size:10px;margin-top:4px">Pago: ${payLbl[order.metodo_pago] || order.metodo_pago || ''}</div>
+${order.notas ? `<div style="font-size:10px;border-top:1px dashed #000;margin-top:5px;padding-top:5px">Nota: ${order.notas}</div>` : ''}
+<div class="ft">KAN BURGER - Hecho con amor en Venezuela</div>
+<div class="no-print" style="text-align:center;margin-top:16px">
+  <button onclick="window.print()" style="background:#E8641A;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:900;cursor:pointer">Imprimir</button>
+  <button onclick="window.close()" style="background:#eee;color:#333;border:none;padding:10px 18px;border-radius:8px;font-size:13px;cursor:pointer;margin-left:8px">Cerrar</button>
+</div>
+<script>setTimeout(()=>{window.print()},500)<\/script>
+</body></html>`);
+  w.document.close();
+}
+
+function _ticketNormal(order, { dt, payLbl, esDOM, entregaTxt, foodR, drinkR, adicionR, sauceL, vegL }) {
+  const w = window.open('', '_blank', 'width=680,height=820');
+  if (!_abrirVentana(w)) return;
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket ${order.id}</title>
+<style>
+@page{size:A4;margin:15mm 20mm}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;max-width:560px;margin:0 auto}
+.hdr{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #E8641A;padding-bottom:12px;margin-bottom:14px}
+.logo{font-size:26px;font-weight:900;letter-spacing:3px;color:#E8641A}
+.hdr-right{text-align:right;font-size:11px;color:#666}
+.num{font-size:20px;font-weight:bold;margin:10px 0 4px}
+.badge{display:inline-block;background:#E8641A;color:#fff;font-size:11px;font-weight:bold;padding:3px 12px;border-radius:20px;margin-bottom:10px;letter-spacing:.5px}
+.info-box{background:#f7f7f7;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;line-height:1.8}
+table{width:100%;border-collapse:collapse;margin-bottom:6px}
+th{text-align:left;font-size:11px;text-transform:uppercase;color:#999;border-bottom:2px solid #eee;padding:6px 0}
+th:last-child{text-align:right}
+td{padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+td:last-child{text-align:right}
+.tot td{font-weight:bold;font-size:17px;border-top:2px solid #111;border-bottom:none;padding-top:10px}
+.nota{background:#fff8f0;border:1px solid #E8641A;border-radius:8px;padding:8px 12px;font-size:13px;margin-top:8px}
+.ft{text-align:center;font-size:11px;color:#aaa;margin-top:18px;border-top:1px solid #eee;padding-top:12px}
+.no-print{}
+@media print{.no-print{display:none!important}}
+</style></head><body>
+<div class="hdr">
+  <div><div class="logo">KAN BURGER</div><div style="font-size:11px;color:#888;margin-top:2px">100% Artesanal</div></div>
+  <div class="hdr-right">Pedido<br><b style="font-size:18px;color:#111">${order.id}</b><br>${dt}</div>
+</div>
+<span class="badge">${entregaTxt}</span>
+<div class="info-box">
+  ${esDOM && order.direccion ? `<div><b>Dirección:</b> ${order.direccion}</div>` : ''}
+  ${order.telefono ? `<div><b>Teléfono:</b> ${order.telefono}</div>` : ''}
+  <div><b>Método de pago:</b> ${payLbl[order.metodo_pago] || order.metodo_pago || ''}</div>
+</div>
+<table>
+  <tr><th>Producto</th><th style="text-align:right">Valor</th></tr>
+  ${foodR}${drinkR}${adicionR}
+  ${vegL   ? `<tr><td colspan="2" style="font-size:12px;color:#666;padding-top:6px">Vegetales: ${vegL}</td></tr>` : ''}
+  ${sauceL ? `<tr><td colspan="2" style="font-size:12px;color:#666">Salsas: ${sauceL}</td></tr>`               : ''}
+  <tr class="tot"><td>TOTAL</td><td>${fmt(order.total)}</td></tr>
+</table>
+${order.notas ? `<div class="nota"><b>Nota:</b> ${order.notas}</div>` : ''}
+<div class="ft">KAN BURGER · kan-burger.vercel.app</div>
+<div class="no-print" style="text-align:center;margin-top:24px">
+  <button onclick="window.print()" style="background:#E8641A;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer">Imprimir</button>
+  <button onclick="window.close()" style="background:#eee;color:#333;border:none;padding:12px 24px;border-radius:10px;font-size:14px;cursor:pointer;margin-left:10px">Cerrar</button>
+</div>
+<script>setTimeout(()=>{window.print()},500)<\/script>
+</body></html>`);
   w.document.close();
 }
 
@@ -1175,9 +1284,13 @@ function renderCierre() {
 }
 
 function imprimirCierre() {
+  mostrarSelectorImpresora(tipo => _generarCierre(tipo));
+}
+
+function _generarCierre(tipo) {
   const fechaStr = document.getElementById('cierreFecha').value;
   const fecha = new Date(fechaStr + 'T12:00:00').toLocaleDateString('es-CO', { weekday:'long', day:'2-digit', month:'long', year:'numeric' });
-  const done = cierreData.filter(o => o.estado === 'listo');
+  const done      = cierreData.filter(o => o.estado === 'listo');
   const canceladas = cierreData.filter(o => o.estado === 'rechazado');
   const totalVentas = done.reduce((s, o) => s + (o.total || 0), 0);
   const payMethods = { efectivo:'Efectivo', nequi:'Nequi', daviplata:'Daviplata', llave:'Llave' };
@@ -1188,70 +1301,182 @@ function imprimirCierre() {
     payStats[m].count++;
     payStats[m].total += (o.total || 0);
   });
+  const productosImpr = contarProductos(done);
 
+  if (tipo === 'termica') {
+    _cierreTermico({ fecha, done, canceladas, totalVentas, payMethods, payStats, productosImpr });
+  } else {
+    _cierreNormal({ fecha, done, canceladas, totalVentas, payMethods, payStats, productosImpr });
+  }
+}
+
+function _cierreTermico({ fecha, done, canceladas, totalVentas, payMethods, payStats, productosImpr }) {
   const payRows = Object.entries(payMethods).map(([k,l]) => {
     const s = payStats[k];
-    return s ? `<tr><td>${l}</td><td>${s.count} órdenes</td><td style="text-align:right">${fmt(s.total)}</td></tr>` : '';
+    return s ? `<tr><td>${l}</td><td>${s.count}x</td><td style="text-align:right">${fmt(s.total)}</td></tr>` : '';
   }).join('');
-
-  const productosImpr = contarProductos(done);
-  const productosRows = productosImpr.map(([name,qty])=>
-    `<tr><td>${name}</td><td style="text-align:right;font-weight:bold">${qty} uds</td></tr>`
+  const productosRows = productosImpr.map(([name,qty]) =>
+    `<tr><td>${name}</td><td style="text-align:right;font-weight:bold">${qty}</td></tr>`
   ).join('');
-
   const orderRows = [...done].reverse().map((o,idx) => {
-    const hora = new Date(o.fecha_hora).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+    const hora  = new Date(o.fecha_hora).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
     const items = [...(o.comida||[]).map(i=>`${i.qty}x ${i.name}`),...(o.bebidas||[]).map(d=>`${d.qty}x ${d.name}`)].join(', ');
     return `<tr><td style="font-size:10px">${idx+1}. ${o.id}</td><td style="font-size:10px">${hora}</td><td style="text-align:right;font-size:10px">${fmt(o.total)}</td></tr>`
-      + (items ? `<tr><td colspan="3" style="font-size:9px;padding-left:8px;padding-bottom:3px">${items}</td></tr>` : '');
+      + (items ? `<tr><td colspan="3" style="font-size:9px;padding-left:8px;padding-bottom:2px">${items}</td></tr>` : '');
   }).join('');
 
-  const w = window.open('', '_blank', 'width=400,height=700');
+  const w = window.open('', '_blank', 'width=360,height=700');
+  if (!_abrirVentana(w)) return;
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cierre de Caja</title>
-  <style>@page{size:58mm auto;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Courier New',monospace;font-size:12px;padding:8px;max-width:300px;margin:0 auto}
-  .hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:10px;margin-bottom:12px}
-  .logo{font-size:22px;font-weight:bold;letter-spacing:4px}.sub{font-size:10px}
-  h3{font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:12px 0 6px;border-bottom:1px dashed #000;padding-bottom:4px}
-  table{width:100%;border-collapse:collapse}td{padding:3px 2px;font-size:11px}
-  .tot td{font-weight:bold;font-size:14px;border-top:2px solid #000;padding-top:8px;margin-top:4px}
-  .ft{text-align:center;font-size:10px;margin-top:14px;border-top:1px dashed #000;padding-top:8px}
-  </style></head><body>
-  <div class="hdr">
+<style>
+@page{size:58mm auto;margin:0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Courier New',monospace;font-size:12px;padding:8px;max-width:280px;margin:0 auto}
+.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:8px;margin-bottom:10px}
+.logo{font-size:20px;font-weight:bold;letter-spacing:3px}
+.sub{font-size:10px}
+h3{font-size:10px;text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px;border-bottom:1px dashed #000;padding-bottom:3px}
+table{width:100%;border-collapse:collapse}
+td{padding:2px 1px;font-size:11px}
+.tot td{font-weight:bold;font-size:13px;border-top:2px solid #000;padding-top:6px}
+.ft{text-align:center;font-size:10px;margin-top:12px;border-top:1px dashed #000;padding-top:6px}
+.no-print{}
+@media print{.no-print{display:none!important}}
+</style></head><body>
+<div class="hdr">
+  <div class="logo">KAN BURGER</div>
+  <div class="sub">CIERRE DE CAJA DIARIO</div>
+  <div class="sub" style="margin-top:3px;text-transform:capitalize">${fecha}</div>
+  <div class="sub">Impreso: ${new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}</div>
+</div>
+<h3>Resumen</h3>
+<table>
+  <tr><td>Ordenes completadas</td><td style="text-align:right">${done.length}</td></tr>
+  <tr><td>Ordenes canceladas</td><td style="text-align:right">${canceladas.length}</td></tr>
+</table>
+<h3>Por metodo de pago</h3>
+<table>${payRows || '<tr><td colspan="3">Sin ventas</td></tr>'}</table>
+<table style="margin-top:6px"><tr class="tot"><td colspan="2">TOTAL DEL DIA</td><td style="text-align:right">${fmt(totalVentas)}</td></tr></table>
+<h3>Productos vendidos</h3>
+<table>${productosRows || '<tr><td colspan="2">Sin productos</td></tr>'}</table>
+<h3>Detalle de ordenes</h3>
+<table>
+  <tr style="font-weight:bold;border-bottom:1px solid #000"><td>Orden</td><td>Hora</td><td style="text-align:right">Total</td></tr>
+  ${orderRows || '<tr><td colspan="3">Sin ordenes</td></tr>'}
+</table>
+<div class="ft">KAN BURGER - Hecho con amor en Venezuela</div>
+<div class="no-print" style="text-align:center;margin-top:18px">
+  <button onclick="window.print()" style="background:#E8641A;color:#fff;border:none;padding:10px 28px;border-radius:8px;font-size:13px;font-weight:900;cursor:pointer">Imprimir</button>
+  <button onclick="window.close()" style="background:#eee;color:#333;border:none;padding:10px 20px;border-radius:8px;font-size:13px;cursor:pointer;margin-left:8px">Cerrar</button>
+</div>
+<script>
+window.onafterprint=function(){
+  if(confirm('Cerrar sesion del panel de cocina?')){
+    window.close();
+    if(window.opener&&window.opener.doLogout) window.opener.doLogout();
+  }
+};
+<\/script>
+</body></html>`);
+  w.document.close();
+}
+
+function _cierreNormal({ fecha, done, canceladas, totalVentas, payMethods, payStats, productosImpr }) {
+  const payRows = Object.entries(payMethods).map(([k,l]) => {
+    const s = payStats[k];
+    return s ? `<tr><td>${l}</td><td style="text-align:center">${s.count} órdenes</td><td style="text-align:right">${fmt(s.total)}</td></tr>` : '';
+  }).join('');
+  const productosRows = productosImpr.map(([name,qty]) =>
+    `<tr><td>${name}</td><td style="text-align:right"><b>${qty} uds</b></td></tr>`
+  ).join('');
+  const orderRows = [...done].reverse().map((o,idx) => {
+    const hora  = new Date(o.fecha_hora).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+    const items = [...(o.comida||[]).map(i=>`${i.qty}x ${i.name}`),...(o.bebidas||[]).map(d=>`${d.qty}x ${d.name}`)].join(', ');
+    const entLbl = o.tipo_entrega === 'domicilio' ? 'Dom.' : 'Tda.';
+    return `<tr>
+      <td style="font-size:12px">${idx+1}</td>
+      <td style="font-size:12px;font-weight:bold">${o.id}</td>
+      <td style="font-size:12px">${hora}</td>
+      <td style="font-size:11px">${entLbl}</td>
+      <td style="text-align:right;font-size:12px">${fmt(o.total)}</td>
+    </tr>
+    ${items ? `<tr><td></td><td colspan="4" style="font-size:10px;color:#888;padding-bottom:4px">${items}</td></tr>` : ''}`;
+  }).join('');
+
+  const w = window.open('', '_blank', 'width=780,height=900');
+  if (!_abrirVentana(w)) return;
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cierre de Caja</title>
+<style>
+@page{size:A4;margin:15mm 18mm}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#111;max-width:700px;margin:0 auto}
+.hdr{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:3px solid #E8641A;padding-bottom:12px;margin-bottom:16px}
+.logo{font-size:28px;font-weight:900;letter-spacing:3px;color:#E8641A}
+.hdr-sub{font-size:11px;color:#888;margin-top:2px}
+.hdr-right{text-align:right;font-size:12px;color:#555;line-height:1.6}
+h3{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#E8641A;margin:16px 0 8px;border-bottom:2px solid #f0f0f0;padding-bottom:5px}
+table{width:100%;border-collapse:collapse;margin-bottom:6px}
+th{text-align:left;font-size:11px;text-transform:uppercase;color:#999;border-bottom:2px solid #eee;padding:6px 4px}
+td{padding:5px 4px;border-bottom:1px solid #f5f5f5;font-size:12px}
+.tot-row{background:#f9f9f9}
+.tot-row td{font-weight:bold;font-size:16px;border-top:2px solid #E8641A;border-bottom:none;padding-top:10px}
+.grand{font-size:22px;color:#E8641A}
+.ft{text-align:center;font-size:11px;color:#aaa;margin-top:20px;border-top:1px solid #eee;padding-top:12px}
+.no-print{}
+@media print{.no-print{display:none!important}}
+</style></head><body>
+<div class="hdr">
+  <div>
     <div class="logo">KAN BURGER</div>
-    <div class="sub">CIERRE DE CAJA DIARIO</div>
-    <div class="sub" style="margin-top:4px;text-transform:capitalize">${fecha}</div>
-    <div class="sub">Impreso: ${new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}</div>
+    <div class="hdr-sub">100% Artesanal · Hecho con amor en Venezuela</div>
   </div>
-  <h3>Resumen</h3>
-  <table>
-    <tr><td>Ordenes completadas</td><td style="text-align:right">${done.length}</td></tr>
-    <tr><td>Ordenes canceladas</td><td style="text-align:right">${canceladas.length}</td></tr>
-  </table>
-  <h3>Por metodo de pago</h3>
-  <table>${payRows || '<tr><td colspan="3">Sin ventas</td></tr>'}</table>
-  <table style="margin-top:8px"><tr class="tot"><td colspan="2">TOTAL DEL DIA</td><td style="text-align:right">${fmt(totalVentas)}</td></tr></table>
-  <h3>Productos vendidos</h3>
-  <table>${productosRows || '<tr><td colspan="2">Sin productos</td></tr>'}</table>
-  <h3>Detalle de ordenes</h3>
-  <table>
-    <tr style="font-weight:bold;border-bottom:1px solid #000"><td>Orden</td><td>Hora</td><td style="text-align:right">Total</td></tr>
-    ${orderRows || '<tr><td colspan="3">Sin ordenes</td></tr>'}
-  </table>
-  <div class="ft">KAN BURGER - Hecho con amor en Venezuela</div>
-  <div class="no-print" style="text-align:center;margin-top:20px">
-    <button onclick="window.print()" style="background:#E8641A;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;letter-spacing:1px">🖨️ IMPRIMIR</button>
-    <button onclick="window.close()" style="background:#eee;color:#333;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-left:10px">Cerrar</button>
+  <div class="hdr-right">
+    <b>CIERRE DE CAJA DIARIO</b><br>
+    <span style="text-transform:capitalize">${fecha}</span><br>
+    Impreso: ${new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}
   </div>
-  <script>
-    window.onafterprint=function(){
-      if(confirm('¿Cerrar sesión del panel de cocina?')){
-        window.close();
-        if(window.opener&&window.opener.doLogout) window.opener.doLogout();
-      }
-    };
-  <\/script>
-  <style>.no-print{} @media print{.no-print{display:none!important}}<\/style>
-  </body></html>`);
+</div>
+
+<h3>Resumen general</h3>
+<table>
+  <tr><th>Concepto</th><th style="text-align:right">Cantidad</th></tr>
+  <tr><td>Órdenes completadas</td><td style="text-align:right">${done.length}</td></tr>
+  <tr><td>Órdenes canceladas</td><td style="text-align:right">${canceladas.length}</td></tr>
+</table>
+
+<h3>Por método de pago</h3>
+<table>
+  <tr><th>Método</th><th style="text-align:center">Órdenes</th><th style="text-align:right">Total</th></tr>
+  ${payRows || '<tr><td colspan="3">Sin ventas registradas</td></tr>'}
+</table>
+<table><tr class="tot-row"><td colspan="2">TOTAL DEL DÍA</td><td style="text-align:right" class="grand">${fmt(totalVentas)}</td></tr></table>
+
+<h3>Productos vendidos</h3>
+<table>
+  <tr><th>Producto</th><th style="text-align:right">Uds.</th></tr>
+  ${productosRows || '<tr><td colspan="2">Sin productos</td></tr>'}
+</table>
+
+<h3>Detalle de órdenes completadas</h3>
+<table>
+  <tr><th>#</th><th>Orden</th><th>Hora</th><th>Entrega</th><th style="text-align:right">Total</th></tr>
+  ${orderRows || '<tr><td colspan="5">Sin órdenes completadas</td></tr>'}
+</table>
+
+<div class="ft">KAN BURGER · kan-burger.vercel.app</div>
+<div class="no-print" style="text-align:center;margin-top:24px">
+  <button onclick="window.print()" style="background:#E8641A;color:#fff;border:none;padding:12px 36px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer">Imprimir</button>
+  <button onclick="window.close()" style="background:#eee;color:#333;border:none;padding:12px 24px;border-radius:10px;font-size:14px;cursor:pointer;margin-left:10px">Cerrar</button>
+</div>
+<script>
+window.onafterprint=function(){
+  if(confirm('¿Cerrar sesión del panel de cocina?')){
+    window.close();
+    if(window.opener&&window.opener.doLogout) window.opener.doLogout();
+  }
+};
+<\/script>
+</body></html>`);
   w.document.close();
 }
 
@@ -1348,11 +1573,26 @@ if (localStorage.getItem('kb_cocina_theme') === 'light') {
 }
 
 // ── AUTO-LOGIN ────────────────────────────────────────────────────────
-if (localStorage.getItem('kb_sesion') === '1') {
+if (localStorage.getItem('kb_sesion') === '1' ) {
   mostrarDashboard();
 } else {
   document.getElementById('passInput').focus();
 }
 </script>
+
+<!-- Modal selector de impresora -->
+<div id="printModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;align-items:center;justify-content:center">
+  <div style="background:#1a0c00;border:1.5px solid rgba(232,100,26,.4);border-radius:18px;padding:1.6rem 1.4rem;width:290px;text-align:center">
+    <div style="font-size:1rem;font-weight:800;color:#fff;margin-bottom:.3rem">¿Tipo de impresora?</div>
+    <div style="font-size:.78rem;color:#aaa;margin-bottom:1.2rem">Selecciona según tu impresora</div>
+    <button type="button" id="btnPrintTermica" style="width:100%;background:rgba(232,100,26,.12);border:1.5px solid rgba(232,100,26,.5);color:#E8641A;border-radius:12px;padding:.85rem 1rem;font-weight:800;cursor:pointer;margin-bottom:.6rem;font-size:.9rem;letter-spacing:.3px">
+      Térmica Bluetooth (58mm)
+    </button>
+    <button type="button" id="btnPrintNormal" style="width:100%;background:rgba(232,100,26,.12);border:1.5px solid rgba(232,100,26,.5);color:#E8641A;border-radius:12px;padding:.85rem 1rem;font-weight:800;cursor:pointer;font-size:.9rem;letter-spacing:.3px">
+      Impresora Normal (A4 / Carta)
+    </button>
+    <button type="button" id="btnPrintCancelar" style="width:100%;background:none;border:none;color:#666;cursor:pointer;margin-top:.9rem;font-size:.85rem">Cancelar</button>
+  </div>
+</div>
 </body>
 </html>
