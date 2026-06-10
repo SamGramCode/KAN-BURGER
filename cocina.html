@@ -322,6 +322,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
     </div>
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
     <button class="tb-menu-btn" id="btnCambiarImpresora" onclick="cambiarImpresora()" title="Seleccionar impresora" style="font-size:.75rem;font-weight:900">🖨️?</button>
+    <button class="tb-menu-btn" onclick="imprimirQRMesas()" title="Imprimir QR de mesas" style="font-size:1rem">🪑</button>
     <button class="tb-menu-btn" onclick="abrirCierre()" title="Cierre de caja" style="font-size:1rem">📊</button>
     <button class="tb-menu-btn" onclick="abrirMenuPanel()" title="Gestión de menú">☰</button>
     <button class="tb-logout" onclick="confirmarCerrarSesion()">Cerrar Sesión</button>
@@ -711,7 +712,7 @@ function buildCard(order, posIdx = 0) {
         <div class="oc-timestamp">Recibido: ${hora}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-weight:900;font-size:.85rem;margin-bottom:.2rem">${order.tipo_entrega==='domicilio'?'🛵 Domicilio':'🏪 Recoger en tienda'}</div>
+        <div style="font-weight:900;font-size:${order.mesa?'1.3rem':'.85rem'};margin-bottom:.2rem;color:${order.mesa?'var(--or)':'inherit'}">${order.mesa?`🪑 MESA ${order.mesa}`:order.tipo_entrega==='domicilio'?'🛵 Domicilio':'🏪 Recoger en tienda'}</div>
         <div class="oc-pay ${payCls[order.metodo_pago] || ''}">${payLbls[order.metodo_pago] || order.metodo_pago || ''}</div>
         <div class="oc-total">${fmt(order.total)}</div>
       </div>
@@ -909,6 +910,59 @@ function cambiarImpresora() {
   };
 }
 
+function imprimirQRMesas() {
+  const base = location.origin + '/mesa.html?mesa=';
+  const mesas = [1,2,3,4];
+  const qrCards = mesas.map(n => `
+    <div class="qr-card">
+      <div class="qr-label">MESA ${n}</div>
+      <div id="qr${n}"></div>
+      <div class="qr-url">${base}${n}</div>
+    </div>`).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head>
+<meta charset="UTF-8">
+<title>KAN BURGER — QR Mesas</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Arial,sans-serif;background:#fff;display:flex;flex-direction:column;align-items:center;padding:20px}
+  h1{font-size:1.8rem;letter-spacing:4px;margin-bottom:4px;color:#E8641A}
+  .sub{font-size:.85rem;color:#888;margin-bottom:24px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;width:100%;max-width:520px}
+  .qr-card{border:2px solid #E8641A;border-radius:16px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;break-inside:avoid}
+  .qr-label{font-size:1.6rem;font-weight:900;letter-spacing:2px;color:#E8641A}
+  .qr-url{font-size:.6rem;color:#aaa;word-break:break-all;text-align:center}
+  @media print{
+    @page{size:A4;margin:15mm}
+    body{padding:0}
+    .no-print{display:none}
+  }
+</style>
+</head><body>
+<h1>KAN BURGER</h1>
+<div class="sub">Escanea el QR de tu mesa para hacer tu pedido</div>
+<div class="grid">${qrCards}</div>
+<br>
+<button class="no-print" onclick="window.print()" style="margin-top:16px;padding:10px 28px;background:#E8641A;color:#fff;border:none;border-radius:10px;font-size:1rem;cursor:pointer;font-weight:700">Imprimir</button>
+<script>
+  [1,2,3,4].forEach(n=>{
+    new QRCode(document.getElementById('qr'+n),{
+      text:'${base}'+n,
+      width:160,height:160,
+      colorDark:'#000',colorLight:'#fff',
+      correctLevel:QRCode.CorrectLevel.H
+    });
+  });
+<\/script>
+</body></html>`;
+
+  const w = window.open('','_blank','width=620,height=800');
+  if (!w) { alert('Permite ventanas emergentes para ver los QR.'); return; }
+  w.document.write(html);
+  w.document.close();
+}
+
 function _actualizarBtnImpresora() {
   const saved = localStorage.getItem('kb_printer_type');
   const btn = document.getElementById('btnCambiarImpresora');
@@ -931,7 +985,8 @@ function _generarTicket(order, tipo) {
   const dt     = ts.toLocaleDateString('es-CO') + ' ' + ts.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   const payLbl = { nequi: 'Nequi', daviplata: 'Daviplata', llave: 'Llave', efectivo: 'Efectivo' };
   const esDOM  = order.tipo_entrega === 'domicilio';
-  const entregaTxt = esDOM ? 'DOMICILIO' : 'RECOGER EN TIENDA';
+  const esMesa = !!order.mesa;
+  const entregaTxt = esMesa ? `MESA ${order.mesa}` : esDOM ? 'DOMICILIO' : 'RECOGER EN TIENDA';
 
   const foodR = (order.comida || []).map(i => {
     if (esCombo(i)) {
@@ -1434,7 +1489,7 @@ function _cierreNormal({ fecha, done, canceladas, totalVentas, payMethods, paySt
   const orderRows = [...done].reverse().map((o,idx) => {
     const hora  = new Date(o.fecha_hora).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
     const items = [...(o.comida||[]).map(i=>`${i.qty}x ${i.name}`),...(o.bebidas||[]).map(d=>`${d.qty}x ${d.name}`)].join(', ');
-    const entLbl = o.tipo_entrega === 'domicilio' ? 'Dom.' : 'Tda.';
+    const entLbl = o.mesa ? `Mesa ${o.mesa}` : o.tipo_entrega === 'domicilio' ? 'Dom.' : 'Tda.';
     return `<tr>
       <td style="font-size:12px">${idx+1}</td>
       <td style="font-size:12px;font-weight:bold">${o.id}</td>
