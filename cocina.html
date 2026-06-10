@@ -712,7 +712,7 @@ function buildCard(order, posIdx = 0) {
         <div class="oc-timestamp">Recibido: ${hora}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-weight:900;font-size:${order.mesa?'1.3rem':'.85rem'};margin-bottom:.2rem;color:${order.mesa?'var(--or)':'inherit'}">${order.mesa?`🪑 MESA ${order.mesa}`:order.tipo_entrega==='domicilio'?'🛵 Domicilio':'🏪 Recoger en tienda'}</div>
+        <div style="font-weight:900;font-size:1.15rem;margin-bottom:.2rem;color:${order.mesa?'var(--or)':order.tipo_entrega==='domicilio'?'#3498DB':'#27AE60'}">${order.mesa?`🪑 MESA ${order.mesa}`:order.tipo_entrega==='domicilio'?'🛵 DOMICILIO':'🏪 TIENDA'}</div>
         <div class="oc-pay ${payCls[order.metodo_pago] || ''}">${payLbls[order.metodo_pago] || order.metodo_pago || ''}</div>
         <div class="oc-total">${fmt(order.total)}</div>
       </div>
