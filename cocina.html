@@ -1834,10 +1834,13 @@ async function cargarGanancias() {
     const lbl = monday.toLocaleDateString('es-CO',{day:'2-digit',month:'short'}) + ' – ' +
                 sunday.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});
     document.getElementById('ganNavLbl').textContent = lbl;
+    // Ampliar rango ±1 día para cubrir diferencia UTC/local y filtrar por hora local en render
+    const rangoInicio = new Date(monday); rangoInicio.setDate(monday.getDate() - 1);
+    const rangoFin    = new Date(sunday);  rangoFin.setDate(sunday.getDate() + 1);
     try {
       const { data } = await sb.from('ordenes').select('fecha_hora,total,estado')
-        .gte('fecha_hora', monday.toISOString())
-        .lte('fecha_hora', sunday.toISOString())
+        .gte('fecha_hora', rangoInicio.toISOString())
+        .lte('fecha_hora', rangoFin.toISOString())
         .eq('estado', 'listo');
       renderGanSemana(data || [], monday);
     } catch(e) { renderGanSemana([], monday); }
@@ -1858,18 +1861,22 @@ async function cargarGanancias() {
   }
 }
 
+function localDateStr(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
 function renderGanSemana(orders, monday) {
   const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
-  const hoyStr = new Date().toISOString().slice(0, 10);
+  const hoyStr = localDateStr(new Date());
   let totalSemana = 0;
   let html = '';
   for (let i = 0; i < 7; i++) {
     const dia = new Date(monday);
     dia.setDate(monday.getDate() + i);
-    const diaStr = dia.toISOString().slice(0, 10);
+    const diaStr = localDateStr(dia);
     const esHoy = diaStr === hoyStr;
     const esFuturo = diaStr > hoyStr;
-    const dayOrders = orders.filter(o => o.fecha_hora.slice(0, 10) === diaStr);
+    const dayOrders = orders.filter(o => localDateStr(new Date(o.fecha_hora)) === diaStr);
     const dayTotal = dayOrders.reduce((s, o) => s + (o.total || 0), 0);
     totalSemana += dayTotal;
     html += `<div class="gan-day-row${esHoy ? ' hoy' : ''}">
