@@ -247,6 +247,30 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 .cr-total-label{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px}
 .cr-total-val{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--or);letter-spacing:1px}
 
+/* PANEL GANANCIAS */
+.gan-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;backdrop-filter:blur(4px)}
+.gan-overlay.open{display:block}
+.gan-panel{position:fixed;top:0;right:-520px;width:500px;max-width:97vw;height:100vh;background:var(--dk2);border-left:1px solid var(--bd);z-index:301;display:flex;flex-direction:column;transition:right .35s cubic-bezier(.4,0,.2,1);box-shadow:-10px 0 50px rgba(0,0,0,.6)}
+.gan-panel.open{right:0}
+.gan-tabs{display:flex;gap:.5rem;padding:.8rem 1.4rem;border-bottom:1px solid var(--bd);background:var(--dk3);flex-shrink:0}
+.gan-tab{flex:1;padding:.6rem;border-radius:10px;font-weight:800;font-size:.82rem;text-transform:uppercase;letter-spacing:1px;border:2px solid var(--bd);background:transparent;color:var(--mt);cursor:pointer;transition:all .2s}
+.gan-tab.active{border-color:var(--or);background:rgba(232,100,26,.12);color:var(--or)}
+.gan-nav{display:flex;align-items:center;gap:.6rem;padding:.8rem 1.4rem;border-bottom:1px solid var(--bd);flex-shrink:0}
+.gan-nav-lbl{flex:1;text-align:center;font-size:.82rem;font-weight:700;color:var(--cr)}
+.gan-body{flex:1;overflow-y:auto;padding:1.2rem}
+.gan-day-row{display:flex;align-items:center;justify-content:space-between;padding:.7rem .9rem;border-radius:10px;margin-bottom:.4rem;background:var(--dk3);border:1px solid var(--bd)}
+.gan-day-row.hoy{border-color:rgba(232,100,26,.4);background:rgba(232,100,26,.07)}
+.gan-day-name{font-size:.85rem;font-weight:700;color:var(--cr)}
+.gan-day-orders{font-size:.72rem;color:var(--mt);margin-top:.1rem}
+.gan-day-total{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;color:var(--or);letter-spacing:.5px}
+.gan-week-row{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;border-radius:12px;margin-bottom:.5rem;background:rgba(232,100,26,.06);border:1px solid rgba(232,100,26,.2)}
+.gan-week-lbl{font-size:.82rem;font-weight:700;color:var(--cr)}
+.gan-week-sub{font-size:.7rem;color:var(--mt);margin-top:.1rem}
+.gan-week-val{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;color:var(--or);letter-spacing:.5px}
+.gan-total-box{background:rgba(232,100,26,.12);border:2px solid rgba(232,100,26,.35);border-radius:16px;padding:1.4rem;text-align:center;margin-top:1.2rem}
+.gan-total-lbl{font-size:.65rem;font-weight:900;text-transform:uppercase;letter-spacing:3px;color:var(--mt);margin-bottom:.4rem}
+.gan-total-val{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;color:var(--or);letter-spacing:1px}
+
 /* MODAL DETALLE ORDEN */
 .det-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .det-overlay.open{display:flex}
@@ -323,6 +347,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
     <button class="tb-menu-btn" id="btnCambiarImpresora" onclick="cambiarImpresora()" title="Seleccionar impresora" style="font-size:.75rem;font-weight:900">🖨️?</button>
     <button class="tb-menu-btn" onclick="imprimirQRMesas()" title="Imprimir QR de mesas" style="font-size:1rem">🪑</button>
+    <button class="tb-menu-btn" onclick="abrirGanancias()" title="Ganancias" style="font-size:1rem">💰</button>
     <button class="tb-menu-btn" onclick="abrirCierre()" title="Cierre de caja" style="font-size:1rem">📊</button>
     <button class="tb-menu-btn" onclick="abrirMenuPanel()" title="Gestión de menú">☰</button>
     <button class="tb-logout" onclick="confirmarCerrarSesion()">Cerrar Sesión</button>
@@ -349,6 +374,27 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
     </div>
   </div>
   <div id="printCierre" style="display:none"></div>
+
+  <!-- PANEL GANANCIAS -->
+  <div class="gan-overlay" id="ganOverlay" onclick="cerrarGanancias()"></div>
+  <div class="gan-panel" id="ganPanel">
+    <div class="cp-head">
+      <div class="cp-title">💰 Ganancias</div>
+      <button class="cp-close" onclick="cerrarGanancias()">✕</button>
+    </div>
+    <div class="gan-tabs">
+      <button class="gan-tab active" id="ganTabSemana" onclick="switchGanTab('semana')">📅 Semana</button>
+      <button class="gan-tab" id="ganTabMes" onclick="switchGanTab('mes')">🗓️ Mes</button>
+    </div>
+    <div class="gan-nav">
+      <button class="cp-nav-btn" onclick="navGanancias(-1)">◀</button>
+      <div class="gan-nav-lbl" id="ganNavLbl">—</div>
+      <button class="cp-nav-btn" onclick="navGanancias(1)">▶</button>
+    </div>
+    <div class="gan-body" id="ganBody">
+      <div style="color:var(--mt);text-align:center;padding:2rem">Cargando...</div>
+    </div>
+  </div>
 
 
 <div class="det-overlay" id="detOverlay" onclick="cerrarDetalle()">
@@ -1675,6 +1721,167 @@ if (localStorage.getItem('kb_sesion') === '1' ) {
   mostrarDashboard();
 } else {
   document.getElementById('passInput').focus();
+}
+
+// ── GANANCIAS ─────────────────────────────────────────────────────────
+let ganTab = 'semana';
+let ganWeekOffset = 0;
+let ganMonthOffset = 0;
+
+function abrirGanancias() {
+  document.getElementById('ganOverlay').classList.add('open');
+  document.getElementById('ganPanel').classList.add('open');
+  ganWeekOffset = 0;
+  ganMonthOffset = 0;
+  ganTab = 'semana';
+  document.getElementById('ganTabSemana').classList.add('active');
+  document.getElementById('ganTabMes').classList.remove('active');
+  cargarGanancias();
+}
+
+function cerrarGanancias() {
+  document.getElementById('ganOverlay').classList.remove('open');
+  document.getElementById('ganPanel').classList.remove('open');
+}
+
+function switchGanTab(tab) {
+  ganTab = tab;
+  document.getElementById('ganTabSemana').classList.toggle('active', tab === 'semana');
+  document.getElementById('ganTabMes').classList.toggle('active', tab === 'mes');
+  cargarGanancias();
+}
+
+function navGanancias(delta) {
+  if (ganTab === 'semana') {
+    ganWeekOffset += delta;
+    if (ganWeekOffset > 0) ganWeekOffset = 0;
+  } else {
+    ganMonthOffset += delta;
+    if (ganMonthOffset > 0) ganMonthOffset = 0;
+  }
+  cargarGanancias();
+}
+
+function getLunesDeSemana(offset) {
+  const now = new Date();
+  const day = now.getDay();
+  const diffToMon = day === 0 ? -6 : 1 - day;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMon + offset * 7);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+
+async function cargarGanancias() {
+  document.getElementById('ganBody').innerHTML =
+    '<div style="color:var(--mt);text-align:center;padding:2rem">⏳ Cargando...</div>';
+
+  if (ganTab === 'semana') {
+    const monday = getLunesDeSemana(ganWeekOffset);
+    const saturday = new Date(monday);
+    saturday.setDate(monday.getDate() + 5);
+    saturday.setHours(23, 59, 59, 999);
+    const lbl = monday.toLocaleDateString('es-CO',{day:'2-digit',month:'short'}) + ' – ' +
+                saturday.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});
+    document.getElementById('ganNavLbl').textContent = lbl;
+    try {
+      const { data } = await sb.from('ordenes').select('fecha_hora,total,estado')
+        .gte('fecha_hora', monday.toISOString())
+        .lte('fecha_hora', saturday.toISOString())
+        .eq('estado', 'listo');
+      renderGanSemana(data || [], monday);
+    } catch(e) { renderGanSemana([], monday); }
+  } else {
+    const now = new Date();
+    const mesDate = new Date(now.getFullYear(), now.getMonth() + ganMonthOffset, 1);
+    const inicioMes = new Date(mesDate.getFullYear(), mesDate.getMonth(), 1);
+    const finMes = new Date(mesDate.getFullYear(), mesDate.getMonth() + 1, 0, 23, 59, 59);
+    const mesNombre = inicioMes.toLocaleDateString('es-CO',{month:'long',year:'numeric'});
+    document.getElementById('ganNavLbl').textContent = mesNombre.charAt(0).toUpperCase() + mesNombre.slice(1);
+    try {
+      const { data } = await sb.from('ordenes').select('fecha_hora,total,estado')
+        .gte('fecha_hora', inicioMes.toISOString())
+        .lte('fecha_hora', finMes.toISOString())
+        .eq('estado', 'listo');
+      renderGanMes(data || [], inicioMes);
+    } catch(e) { renderGanMes([], inicioMes); }
+  }
+}
+
+function renderGanSemana(orders, monday) {
+  const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const hoyStr = new Date().toISOString().slice(0, 10);
+  let totalSemana = 0;
+  let html = '';
+  for (let i = 0; i < 6; i++) {
+    const dia = new Date(monday);
+    dia.setDate(monday.getDate() + i);
+    const diaStr = dia.toISOString().slice(0, 10);
+    const esHoy = diaStr === hoyStr;
+    const esFuturo = diaStr > hoyStr;
+    const dayOrders = orders.filter(o => o.fecha_hora.slice(0, 10) === diaStr);
+    const dayTotal = dayOrders.reduce((s, o) => s + (o.total || 0), 0);
+    totalSemana += dayTotal;
+    html += `<div class="gan-day-row${esHoy ? ' hoy' : ''}">
+      <div>
+        <div class="gan-day-name">${dias[i]}${esHoy ? ' <span style="font-size:.65rem;color:var(--or);font-weight:900">HOY</span>' : ''}</div>
+        <div class="gan-day-orders">${esFuturo ? '—' : dayOrders.length + ' orden' + (dayOrders.length !== 1 ? 'es' : '')}</div>
+      </div>
+      <div class="gan-day-total">${esFuturo ? '—' : fmt(dayTotal)}</div>
+    </div>`;
+  }
+  html += `<div class="gan-total-box">
+    <div class="gan-total-lbl">Total Semana</div>
+    <div class="gan-total-val">${fmt(totalSemana)}</div>
+    <div style="font-size:.72rem;color:var(--mt);margin-top:.4rem">${orders.length} orden${orders.length !== 1 ? 'es' : ''} completada${orders.length !== 1 ? 's' : ''}</div>
+  </div>`;
+  document.getElementById('ganBody').innerHTML = html;
+}
+
+function renderGanMes(orders, inicioMes) {
+  const hoyDate = new Date();
+  const day = inicioMes.getDay();
+  const diffToMon = day === 0 ? -6 : 1 - day;
+  let weekStart = new Date(inicioMes);
+  weekStart.setDate(inicioMes.getDate() + diffToMon);
+  weekStart.setHours(0, 0, 0, 0);
+  const mesNum = inicioMes.getMonth();
+  const mesYear = inicioMes.getFullYear();
+  const finMes = new Date(mesYear, mesNum + 1, 0);
+  let html = '';
+  let totalMes = 0;
+  let semIdx = 1;
+  while (weekStart <= finMes) {
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 5);
+    weekEnd.setHours(23, 59, 59, 999);
+    const weekOrders = orders.filter(o => {
+      const d = new Date(o.fecha_hora);
+      return d >= weekStart && d <= weekEnd;
+    });
+    const weekTotal = weekOrders.reduce((s, o) => s + (o.total || 0), 0);
+    totalMes += weekTotal;
+    const esFutura = weekStart > hoyDate;
+    const lbl = weekStart.toLocaleDateString('es-CO',{day:'2-digit',month:'short'}) + ' – ' +
+                weekEnd.toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
+    html += `<div class="gan-week-row">
+      <div>
+        <div class="gan-week-lbl">Semana ${semIdx} · ${lbl}</div>
+        <div class="gan-week-sub">${esFutura ? '—' : weekOrders.length + ' orden' + (weekOrders.length !== 1 ? 'es' : '')}</div>
+      </div>
+      <div class="gan-week-val">${esFutura ? '—' : fmt(weekTotal)}</div>
+    </div>`;
+    weekStart = new Date(weekStart);
+    weekStart.setDate(weekStart.getDate() + 7);
+    semIdx++;
+    if (semIdx > 7) break;
+  }
+  html += `<div class="gan-total-box">
+    <div class="gan-total-lbl">Total del Mes</div>
+    <div class="gan-total-val">${fmt(totalMes)}</div>
+    <div style="font-size:.72rem;color:var(--mt);margin-top:.4rem">${orders.length} orden${orders.length !== 1 ? 'es' : ''} completada${orders.length !== 1 ? 's' : ''}</div>
+  </div>`;
+  document.getElementById('ganBody').innerHTML = html || '<div style="color:var(--mt);text-align:center;padding:2rem">Sin órdenes este mes</div>';
 }
 </script>
 
