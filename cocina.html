@@ -1069,8 +1069,22 @@ function _generarTicket(order, tipo) {
   }).join('');
   const drinkR   = (order.bebidas   || []).map(d => `<tr><td>${d.qty}x ${d.name}</td><td style="text-align:right">${fmt(d.price * d.qty)}</td></tr>`).join('');
   const adicionR = (order.adiciones || []).map(a => `<tr><td>+ ${a.qty}x ${a.name}</td><td style="text-align:right">${fmt(a.price * a.qty)}</td></tr>`).join('');
-  const sauceL   = (order.salsas    || []).map(s => s.name).join(', ');
-  const vegL     = (order.vegetales || []).join(', ');
+  const sauceL = (() => {
+    const byUnit = {};
+    (order.salsas || []).forEach(s => {
+      const k = (s.foodName||s.foodId||'') + (s.unit ? ` U${s.unit}` : '');
+      if (!byUnit[k]) byUnit[k] = [];
+      byUnit[k].push(s.name);
+    });
+    return Object.entries(byUnit).map(([k,v]) => `${k}: ${v.join(', ')}`).join(' | ');
+  })();
+  const vegL = (order.vegetales || []).map(v => {
+    const u = v.unit ? ` U${v.unit}` : '';
+    const parts = [];
+    if (v.si && v.si.length) parts.push('Con ' + v.si.join(', '));
+    if (v.no && v.no.length) parts.push('Sin ' + v.no.join(', '));
+    return `${v.itemName||''}${u}: ${parts.join(' / ')||'—'}`;
+  }).join(' | ');
 
   if (tipo === 'termica') {
     _ticketTermico(order, { dt, payLbl, esDOM, entregaTxt, foodR, drinkR, adicionR, sauceL, vegL });
@@ -1091,17 +1105,17 @@ function _ticketTermico(order, { dt, payLbl, esDOM, entregaTxt, foodR, drinkR, a
 <style>
 @page{size:58mm auto;margin:0}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Courier New',monospace;font-size:12px;padding:8px;max-width:280px;margin:0 auto}
+body{font-family:'Courier New',monospace;font-size:14px;padding:8px;max-width:280px;margin:0 auto}
 .hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:8px;margin-bottom:8px}
-.logo{font-size:18px;font-weight:bold;letter-spacing:3px}
-.num{text-align:center;font-size:16px;font-weight:bold;margin:6px 0;padding-bottom:6px;border-bottom:1px dashed #000}
-.entrega{text-align:center;font-weight:bold;font-size:12px;border:1px solid #000;padding:3px 0;margin-bottom:6px;letter-spacing:1px}
-.info{font-size:10px;margin-bottom:4px}
+.logo{font-size:22px;font-weight:bold;letter-spacing:3px}
+.num{text-align:center;font-size:20px;font-weight:bold;margin:6px 0;padding-bottom:6px;border-bottom:1px dashed #000}
+.entrega{text-align:center;font-weight:bold;font-size:15px;border:2px solid #000;padding:4px 0;margin-bottom:6px;letter-spacing:1px}
+.info{font-size:13px;margin-bottom:4px}
 table{width:100%}
-td{padding:2px 0;font-size:12px}
-.sep td{border-top:1px dashed #000;padding-top:3px;font-size:11px}
-.tot td{font-weight:bold;font-size:14px;border-top:2px solid #000;padding-top:5px}
-.ft{text-align:center;font-size:10px;margin-top:8px;border-top:1px dashed #000;padding-top:6px}
+td{padding:3px 0;font-size:14px}
+.sep td{border-top:1px dashed #000;padding-top:4px;font-size:13px}
+.tot td{font-weight:bold;font-size:17px;border-top:2px solid #000;padding-top:6px}
+.ft{text-align:center;font-size:12px;margin-top:8px;border-top:1px dashed #000;padding-top:6px}
 .no-print{}
 @media print{.no-print{display:none!important}}
 </style></head><body>
@@ -1117,7 +1131,11 @@ ${vegL   ? `<tr class="sep"><td colspan="2">Vegetales: ${vegL}</td></tr>`   : ''
 ${sauceL ? `<tr class="sep"><td colspan="2">Salsas: ${sauceL}</td></tr>`   : ''}
 <tr class="tot"><td>TOTAL</td><td style="text-align:right">${fmt(order.total)}</td></tr>
 </table>
-<div style="text-align:center;font-size:10px;margin-top:4px">Pago: ${payLbl[order.metodo_pago] || order.metodo_pago || ''}</div>
+<div style="text-align:center;font-size:13px;margin-top:4px">Pago: ${
+  order.pago_dividido
+    ? order.pago_dividido.map(p=>`${fmt(p.monto)} en ${payLbl[p.metodo]||p.metodo}`).join(' + ')
+    : (payLbl[order.metodo_pago]||order.metodo_pago||'')
+}</div>
 ${order.notas ? `<div style="font-size:10px;border-top:1px dashed #000;margin-top:5px;padding-top:5px">Nota: ${order.notas}</div>` : ''}
 <div class="ft">KAN BURGER - Hecho con amor en Venezuela</div>
 <div class="no-print" style="text-align:center;margin-top:16px">
