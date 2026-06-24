@@ -1892,23 +1892,15 @@ function renderGanMes(orders, inicioMes) {
   const hoyDate = new Date();
   const mesNum = inicioMes.getMonth();
   const mesYear = inicioMes.getFullYear();
-  const finMes = new Date(mesYear, mesNum + 1, 0, 23, 59, 59, 999);
+  const ultimoDia = new Date(mesYear, mesNum + 1, 0).getDate();
   let html = '';
   let totalMes = 0;
   let semIdx = 1;
-  // Avanzar día a día desde el 1 del mes agrupando en semanas de lunes a domingo
-  let cursor = new Date(inicioMes);
-  cursor.setHours(0, 0, 0, 0);
-  while (cursor <= finMes) {
-    // Inicio de semana = cursor (primer día del mes o siguiente lunes)
-    const segStart = new Date(cursor);
-    // Fin de semana = próximo domingo, pero no más allá del fin del mes
-    const dayOfWeek = cursor.getDay(); // 0=dom,1=lun...6=sab
-    const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-    const naturalSunday = new Date(cursor);
-    naturalSunday.setDate(cursor.getDate() + daysToSunday);
-    naturalSunday.setHours(23, 59, 59, 999);
-    const segEnd = naturalSunday <= finMes ? naturalSunday : new Date(finMes);
+  let diaInicio = 1;
+  while (diaInicio <= ultimoDia) {
+    const diaFin = Math.min(diaInicio + 6, ultimoDia);
+    const segStart = new Date(mesYear, mesNum, diaInicio, 0, 0, 0, 0);
+    const segEnd   = new Date(mesYear, mesNum, diaFin, 23, 59, 59, 999);
     const weekOrders = orders.filter(o => {
       const d = new Date(o.fecha_hora);
       return d >= segStart && d <= segEnd;
@@ -1925,12 +1917,8 @@ function renderGanMes(orders, inicioMes) {
       </div>
       <div class="gan-week-val">${esFutura ? '—' : fmt(weekTotal)}</div>
     </div>`;
-    // Avanzar al día siguiente del domingo (lunes de la próxima semana)
-    cursor = new Date(naturalSunday);
-    cursor.setDate(naturalSunday.getDate() + 1);
-    cursor.setHours(0, 0, 0, 0);
+    diaInicio += 7;
     semIdx++;
-    if (semIdx > 7) break;
   }
   html += `<div class="gan-total-box">
     <div class="gan-total-lbl">Total del Mes</div>
