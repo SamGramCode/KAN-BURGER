@@ -1696,8 +1696,10 @@ function nextStep(){
     if(sinConfirmar){alert('Selecciona Sí o No para todos los vegetales de cada producto 🥬');return;}
   }
   if(state.step===1){
-    if(countCombos()>0 && Object.values(state.drinks).reduce((a,b)=>a+b,0)===0){
-      alert('Tu combo incluye una bebida — selecciona al menos una 🥤');return;
+    const _combos=countCombos();
+    const _drinks=Object.values(state.drinks).reduce((a,b)=>a+b,0);
+    if(_combos>0 && _drinks<_combos){
+      alert(`Tienes ${_combos} combo${_combos>1?'s':''} — selecciona ${_combos} bebida${_combos>1?'s':''} 🥤`);return;
     }
   }
   if(state.step===4){
@@ -1735,9 +1737,9 @@ function updateNextBtn(){
     btn.disabled=sinComida||sinVeg;
   } else if(state.step===1){
     btn.textContent='Siguiente →';
-    const tieneCombos=countCombos()>0;
-    const sinBebida=Object.values(state.drinks).reduce((a,b)=>a+b,0)===0;
-    btn.disabled=tieneCombos&&sinBebida;
+    const _c=countCombos();
+    const _d=Object.values(state.drinks).reduce((a,b)=>a+b,0);
+    btn.disabled=_c>0 && _d<_c;
   } else {
     btn.textContent='Siguiente →';
     btn.disabled=false;
