@@ -1304,6 +1304,7 @@ function changeDrink(id,delta){
   if(nv===0) delete state.drinks[id]; else state.drinks[id]=nv;
   buildDrinkGrid();
   updateTotalDisplay();
+  updateNextBtn();
 }
 
 // Build sauce grid — por producto, máx 2
@@ -1694,6 +1695,11 @@ function nextStep(){
     });
     if(sinConfirmar){alert('Selecciona Sí o No para todos los vegetales de cada producto 🥬');return;}
   }
+  if(state.step===1){
+    if(countCombos()>0 && Object.values(state.drinks).reduce((a,b)=>a+b,0)===0){
+      alert('Tu combo incluye una bebida — selecciona al menos una 🥤');return;
+    }
+  }
   if(state.step===4){
     if(!state.entrega){alert('Selecciona cómo recibes tu pedido 🏪🛵');return;}
     if(!state.payment){alert('Selecciona un método de pago 💳');return;}
@@ -1727,6 +1733,11 @@ function updateNextBtn(){
       return !v||iv.some(n=>v[n]===null||v[n]===undefined);
     });
     btn.disabled=sinComida||sinVeg;
+  } else if(state.step===1){
+    btn.textContent='Siguiente →';
+    const tieneCombos=countCombos()>0;
+    const sinBebida=Object.values(state.drinks).reduce((a,b)=>a+b,0)===0;
+    btn.disabled=tieneCombos&&sinBebida;
   } else {
     btn.textContent='Siguiente →';
     btn.disabled=false;
