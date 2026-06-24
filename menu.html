@@ -322,6 +322,21 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .pay-info{background:var(--dk3);border:1px solid var(--bd);border-radius:12px;padding:1.2rem;margin-bottom:1.2rem;display:none}
 .pay-info.show{display:block}
 .pay-info-title{font-weight:800;margin-bottom:.5rem}
+.split-toggle{display:flex;gap:.5rem;margin-bottom:1.2rem}
+.split-toggle-btn{flex:1;padding:.55rem;border-radius:10px;font-weight:800;font-size:.8rem;border:2px solid var(--bd);background:transparent;color:var(--mt);cursor:pointer;transition:all .2s}
+.split-toggle-btn.active{border-color:var(--or);background:rgba(232,100,26,.1);color:var(--or)}
+.split-row{background:var(--dk3);border:1px solid var(--bd);border-radius:14px;padding:.9rem 1rem;margin-bottom:.8rem}
+.split-row-title{font-size:.7rem;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--mt);margin-bottom:.6rem}
+.split-methods-mini{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:.7rem}
+.split-m-btn{padding:.45rem .2rem;border-radius:8px;border:2px solid var(--bd);background:var(--dk2);cursor:pointer;text-align:center;font-size:.72rem;font-weight:800;color:var(--mt);transition:all .2s;line-height:1.3}
+.split-m-btn.sel{color:#fff}
+.split-m-btn.nequi.sel{border-color:var(--nq);background:rgba(233,30,140,.2);color:var(--nq)}
+.split-m-btn.daviplata.sel{border-color:var(--dv);background:rgba(229,43,32,.2);color:var(--dv)}
+.split-m-btn.llave.sel{border-color:var(--ll);background:rgba(255,195,0,.2);color:#b8920a}
+.split-m-btn.efectivo.sel{border-color:var(--ef);background:rgba(39,174,96,.2);color:var(--ef)}
+.split-amt{width:100%;background:var(--dk2);border:2px solid var(--bd);color:var(--cr);border-radius:10px;padding:.65rem .9rem;font-size:1rem;font-family:'Nunito',sans-serif;font-weight:800;outline:none;transition:border .2s}
+.split-amt:focus{border-color:rgba(232,100,26,.5)}
+.split-rem{font-size:.75rem;color:var(--mt);margin-top:.35rem;text-align:right}
 .pay-info-num{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--or);letter-spacing:2px;margin-bottom:.5rem}
 .pay-info-note{font-size:.82rem;color:var(--mt)}
 
@@ -721,32 +736,62 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
           <a href="tel:+573117580802" style="display:inline-flex;align-items:center;gap:.4rem;background:var(--or);color:#fff;font-weight:800;font-size:.88rem;padding:.5rem 1.2rem;border-radius:8px;text-decoration:none">📞 311 758 0802</a>
         </div>
         <p style="font-size:.82rem;font-weight:700;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">Forma de pago</p>
-        <div class="pay-methods">
-          <div class="pay-card nequi" onclick="selectPayment('nequi',this)">
-            <div class="pay-logo">💜</div>
-            <div class="pay-name" style="color:var(--nq)">Nequi</div>
-            <div class="pay-sub">Transferencia digital</div>
+        <div class="split-toggle">
+          <button class="split-toggle-btn active" id="btnSinglePay" onclick="setSplitMode(false)">💳 Un solo pago</button>
+          <button class="split-toggle-btn" id="btnSplitPay" onclick="setSplitMode(true)">✂️ Dividir pago</button>
+        </div>
+        <div id="singlePaySection">
+          <div class="pay-methods">
+            <div class="pay-card nequi" onclick="selectPayment('nequi',this)">
+              <div class="pay-logo">💜</div>
+              <div class="pay-name" style="color:var(--nq)">Nequi</div>
+              <div class="pay-sub">Transferencia digital</div>
+            </div>
+            <div class="pay-card daviplata" onclick="selectPayment('daviplata',this)">
+              <div class="pay-logo">❤️</div>
+              <div class="pay-name" style="color:var(--dv)">Daviplata</div>
+              <div class="pay-sub">Pago móvil</div>
+            </div>
+            <div class="pay-card llave" onclick="selectPayment('llave',this)">
+              <div class="pay-logo">🔑</div>
+              <div class="pay-name" style="color:var(--ll)">Llave B-reve</div>
+              <div class="pay-sub">Billetera digital</div>
+            </div>
+            <div class="pay-card efectivo" onclick="selectPayment('efectivo',this)">
+              <div class="pay-logo">💵</div>
+              <div class="pay-name" style="color:var(--ef)">Efectivo</div>
+              <div class="pay-sub">Pagar al recoger</div>
+            </div>
           </div>
-          <div class="pay-card daviplata" onclick="selectPayment('daviplata',this)">
-            <div class="pay-logo">❤️</div>
-            <div class="pay-name" style="color:var(--dv)">Daviplata</div>
-            <div class="pay-sub">Pago móvil</div>
-          </div>
-          <div class="pay-card llave" onclick="selectPayment('llave',this)">
-            <div class="pay-logo">🔑</div>
-            <div class="pay-name" style="color:var(--ll)">Llave B-reve</div>
-            <div class="pay-sub">Billetera digital</div>
-          </div>
-          <div class="pay-card efectivo" onclick="selectPayment('efectivo',this)">
-            <div class="pay-logo">💵</div>
-            <div class="pay-name" style="color:var(--ef)">Efectivo</div>
-            <div class="pay-sub">Pagar al recoger</div>
+          <div class="pay-info" id="payInfo">
+            <div class="pay-info-title" id="payInfoTitle"></div>
+            <div class="pay-info-num" id="payInfoNum"></div>
+            <div class="pay-info-note" id="payInfoNote"></div>
           </div>
         </div>
-        <div class="pay-info" id="payInfo">
-          <div class="pay-info-title" id="payInfoTitle"></div>
-          <div class="pay-info-num" id="payInfoNum"></div>
-          <div class="pay-info-note" id="payInfoNote"></div>
+        <div id="splitPaySection" style="display:none">
+          <div class="split-row">
+            <div class="split-row-title">💳 Pago 1</div>
+            <div class="split-methods-mini">
+              <div class="split-m-btn nequi" onclick="selectSplitMethod(0,'nequi',this)">💜<br>Nequi</div>
+              <div class="split-m-btn daviplata" onclick="selectSplitMethod(0,'daviplata',this)">❤️<br>Daviplata</div>
+              <div class="split-m-btn llave" onclick="selectSplitMethod(0,'llave',this)">🔑<br>Llave</div>
+              <div class="split-m-btn efectivo" onclick="selectSplitMethod(0,'efectivo',this)">💵<br>Efectivo</div>
+            </div>
+            <input class="split-amt" type="number" id="splitAmt0" placeholder="¿Cuánto paga aquí? $" min="0" oninput="onSplitAmtChange(0)">
+            <div class="split-rem" id="splitRem0"></div>
+          </div>
+          <div class="split-row">
+            <div class="split-row-title">💳 Pago 2</div>
+            <div class="split-methods-mini">
+              <div class="split-m-btn nequi" onclick="selectSplitMethod(1,'nequi',this)">💜<br>Nequi</div>
+              <div class="split-m-btn daviplata" onclick="selectSplitMethod(1,'daviplata',this)">❤️<br>Daviplata</div>
+              <div class="split-m-btn llave" onclick="selectSplitMethod(1,'llave',this)">🔑<br>Llave</div>
+              <div class="split-m-btn efectivo" onclick="selectSplitMethod(1,'efectivo',this)">💵<br>Efectivo</div>
+            </div>
+            <input class="split-amt" type="number" id="splitAmt1" placeholder="Restante $" min="0" oninput="onSplitAmtChange(1)" readonly>
+            <div class="split-rem" id="splitRem1"></div>
+          </div>
         </div>
 
         <div class="upload-section" id="uploadSection" style="display:none">
@@ -1100,6 +1145,8 @@ let state = {
   additions: {},
   vegetales: {},
   payment: null,
+  isSplit: false,
+  splitPayments: [{method:null,amount:0},{method:null,amount:0}],
   entrega: null,
   comprobanteFile: null, comprobanteUrl: null,
   notes: '',
@@ -1547,6 +1594,68 @@ function selectPayment(method,card){
   updateNextBtn();
 }
 
+function setSplitMode(split){
+  state.isSplit=split;
+  state.payment=null;
+  state.splitPayments=[{method:null,amount:0},{method:null,amount:0}];
+  state.comprobanteFile=null;
+  document.getElementById('btnSinglePay').classList.toggle('active',!split);
+  document.getElementById('btnSplitPay').classList.toggle('active',split);
+  document.getElementById('singlePaySection').style.display=split?'none':'block';
+  document.getElementById('splitPaySection').style.display=split?'block':'none';
+  document.getElementById('uploadSection').style.display='none';
+  if(!split){
+    document.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('selected'));
+    document.getElementById('payInfo').classList.remove('show');
+  } else {
+    document.getElementById('splitAmt0').value='';
+    document.getElementById('splitAmt1').value='';
+    document.getElementById('splitRem0').textContent='';
+    document.getElementById('splitRem1').textContent='';
+    document.querySelectorAll('.split-m-btn').forEach(b=>b.classList.remove('sel'));
+  }
+  updateNextBtn();
+}
+
+function selectSplitMethod(slot,method,btn){
+  state.splitPayments[slot].method=method;
+  const row=document.querySelectorAll('.split-row')[slot];
+  row.querySelectorAll('.split-m-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  _updateSplitUpload();
+  updateNextBtn();
+}
+
+function onSplitAmtChange(slot){
+  const val=parseInt(document.getElementById('splitAmt'+slot).value)||0;
+  state.splitPayments[slot].amount=val;
+  const total=grandTotal();
+  const rem=total-val;
+  const otherSlot=slot===0?1:0;
+  const remEl=document.getElementById('splitRem'+slot);
+  if(val>total){
+    remEl.textContent='⚠️ El monto supera el total';
+    remEl.style.color='#E74C3C';
+  } else {
+    remEl.textContent=rem>0?`Restante: ${fmt(rem)}`:'✅ Monto exacto';
+    remEl.style.color=rem===0?'var(--ef)':'var(--mt)';
+  }
+  // Auto-completar el segundo campo
+  if(slot===0 && rem>=0){
+    document.getElementById('splitAmt1').value=rem||'';
+    state.splitPayments[1].amount=rem;
+    document.getElementById('splitRem1').textContent=rem===0?'✅ Completo':'';
+  }
+  _updateSplitUpload();
+  updateNextBtn();
+}
+
+function _updateSplitUpload(){
+  const needsComp=state.splitPayments.some(p=>p.method&&p.method!=='efectivo'&&p.amount>0);
+  const us=document.getElementById('uploadSection');
+  if(us) us.style.display=(state.isSplit&&needsComp)?'block':'none';
+}
+
 // ══════════════════════════════════════════════
 // STEP NAVIGATION
 // ══════════════════════════════════════════════
@@ -1729,7 +1838,13 @@ function nextStep(){
   }
   if(state.step===4){
     if(!state.entrega){alert('Selecciona cómo recibes tu pedido 🏪🛵');return;}
-    if(!state.payment){alert('Selecciona un método de pago 💳');return;}
+    if(state.isSplit){
+      const p0=state.splitPayments[0],p1=state.splitPayments[1];
+      if(!p0.method||!p1.method){alert('Selecciona el método para cada parte del pago 💳');return;}
+      if((p0.amount+p1.amount)!==grandTotal()){alert(`Los montos deben sumar exactamente ${fmt(grandTotal())} 💰`);return;}
+    } else {
+      if(!state.payment){alert('Selecciona un método de pago 💳');return;}
+    }
     if(!document.getElementById('orderTelefono').value.trim()){alert('Ingresa tu número de teléfono 📱');return;}
     if(state.entrega==='domicilio'){
       if(!document.getElementById('orderTorre').value.trim()){alert('Ingresa tu dirección de entrega 📍');return;}
@@ -1747,8 +1862,16 @@ function updateNextBtn(){
     btn.textContent='✅ Confirmar Pedido';
     const tel=(document.getElementById('orderTelefono')?.value||'').trim();
     const torre=state.entrega==='domicilio'?(document.getElementById('orderTorre')?.value||'').trim():'ok';
-    const needsComprobante=state.payment&&state.payment!=='efectivo'&&!state.comprobanteFile;
-    btn.disabled=!state.entrega||!state.payment||needsComprobante||!tel||!torre;
+    let payOk=false, needsComprobante=false;
+    if(state.isSplit){
+      const p0=state.splitPayments[0],p1=state.splitPayments[1];
+      payOk=!!(p0.method&&p1.method&&(p0.amount+p1.amount)===grandTotal());
+      needsComprobante=state.splitPayments.some(p=>p.method&&p.method!=='efectivo'&&p.amount>0)&&!state.comprobanteFile;
+    } else {
+      payOk=!!state.payment;
+      needsComprobante=state.payment&&state.payment!=='efectivo'&&!state.comprobanteFile;
+    }
+    btn.disabled=!state.entrega||!payOk||needsComprobante||!tel||!torre;
   } else if(state.step===0){
     btn.textContent='Siguiente →';
     const sinComida=Object.keys(state.food).length===0;
@@ -1844,7 +1967,10 @@ async function placeOrder(){
       const iv=item?.vegs||VEGETALES;
       return {itemId:id,itemName:item?.name||id,unit:idx+1,si:iv.filter(v=>vegs[v]===true),no:iv.filter(v=>vegs[v]===false)};
     }),
-    metodo_pago: state.payment,
+    metodo_pago: state.isSplit
+      ? state.splitPayments.map(p=>p.method+':'+p.amount).join('|')
+      : state.payment,
+    pago_dividido: state.isSplit ? state.splitPayments.map(p=>({metodo:p.method,monto:p.amount})) : null,
     tipo_entrega: state.entrega,
     notas: state.notes,
     direccion: state.entrega==='domicilio'?state.direccion:null,
@@ -1926,7 +2052,9 @@ function buildConfirmation(){
     return `${item?.name||id} U${idx+1}: ${si?'✓'+si:''}${no?' ✗'+no:''}`;
   }).join(' | ');
   const payLabels={nequi:'Nequi 💜',daviplata:'Daviplata ❤️',llave:'Llave B-reve 🔑',efectivo:'Efectivo 💵'};
-  const payLabel=payLabels[state.payment]||'—';
+  const payLabel=state.isSplit
+    ? state.splitPayments.map(p=>`${fmt(p.amount)} en ${payLabels[p.method]||p.method}`).join(' + ')
+    : (payLabels[state.payment]||'—');
   const totalMostrar=grandTotal()||state._savedTotal||0;
   const comprobanteImg=state.comprobanteUrl||(state.comprobanteFile?URL.createObjectURL(state.comprobanteFile):null);
 
@@ -1958,7 +2086,10 @@ function printReceipt(){
   const foodRows=Object.entries(state.food).map(([id,q])=>{const m=MENU_ITEMS.find(x=>x.id===id);return m?`<tr><td>${q}x ${m.name}</td><td style="text-align:right">${fmt(m.price*q)}</td></tr>`:''}).join('');
   const drinkRows=Object.entries(state.drinks).map(([id,q])=>{const d=DRINKS.find(x=>x.id===id);return d?`<tr><td>${q}x ${d.name}</td><td style="text-align:right">${fmt(d.price*q)}</td></tr>`:''}).join('');
   const sauceList=Object.entries(state.sauces).filter(([,arr])=>arr.length>0).map(([k,arr])=>{const fid=k.split('__')[0];const idx=parseInt(k.split('__')[1]);const food=MENU_ITEMS.find(m=>m.id===fid);return `${food?.name||fid} U${idx+1}: ${arr.map(id=>SAUCES.find(s=>s.id===id)?.name).join(', ')}`;}).join(' | ');
-  const payLabel={nequi:'Nequi',daviplata:'Daviplata',llave:'Llave B-reve',efectivo:'Efectivo'}[state.payment];
+  const _pl={nequi:'Nequi',daviplata:'Daviplata',llave:'Llave B-reve',efectivo:'Efectivo'};
+  const payLabel=state.isSplit
+    ? state.splitPayments.map(p=>`${fmt(p.amount)} en ${_pl[p.method]||p.method}`).join(' + ')
+    : (_pl[state.payment]||'—');
 
   const w=window.open('','_blank','width=400,height=700');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Recibo ${state.orderNum}</title>
@@ -2148,7 +2279,7 @@ function resetOrder(){
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   localStorage.removeItem('kan_active_order');
   hideOrderBar();
-  state={step:0,food:{},drinks:{},sauces:{},additions:{},vegetales:{},payment:null,entrega:null,comprobanteFile:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
+  state={step:0,food:{},drinks:{},sauces:{},additions:{},vegetales:{},payment:null,isSplit:false,splitPayments:[{method:null,amount:0},{method:null,amount:0}],entrega:null,comprobanteFile:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
   renderStep(0);
   updateFloatCart();
 }
