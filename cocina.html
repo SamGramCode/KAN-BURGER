@@ -270,6 +270,17 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 .gan-total-box{background:rgba(232,100,26,.12);border:2px solid rgba(232,100,26,.35);border-radius:16px;padding:1.4rem;text-align:center;margin-top:1.2rem}
 .gan-total-lbl{font-size:.65rem;font-weight:900;text-transform:uppercase;letter-spacing:3px;color:var(--mt);margin-bottom:.4rem}
 .gan-total-val{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;color:var(--or);letter-spacing:1px}
+.gan-lock-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:400;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.gan-lock-overlay.open{display:flex}
+.gan-lock-box{background:var(--dk2);border:1px solid var(--bd);border-radius:20px;padding:2rem 1.8rem;width:300px;max-width:94vw;text-align:center}
+.gan-lock-title{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--or);margin-bottom:.3rem}
+.gan-lock-sub{font-size:.78rem;color:var(--mt);margin-bottom:1.4rem}
+.gan-lock-input{width:100%;background:rgba(255,255,255,.07);border:2px solid var(--bd);color:var(--cr);border-radius:12px;padding:.75rem 1rem;font-size:1.4rem;font-family:'Bebas Neue',sans-serif;letter-spacing:6px;text-align:center;outline:none;transition:border .2s}
+.gan-lock-input:focus{border-color:var(--or)}
+.gan-lock-err{font-size:.78rem;color:#E74C3C;margin-top:.5rem;min-height:1rem}
+.gan-lock-btn{width:100%;margin-top:1rem;background:var(--or);color:#fff;border:none;border-radius:12px;padding:.85rem;font-weight:900;font-size:.95rem;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:background .2s}
+.gan-lock-btn:hover{background:var(--orl)}
+.gan-lock-cancel{width:100%;margin-top:.5rem;background:transparent;border:1px solid var(--bd);color:var(--mt);border-radius:12px;padding:.7rem;font-size:.85rem;cursor:pointer}
 
 /* MODAL DETALLE ORDEN */
 .det-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
@@ -374,6 +385,19 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
     </div>
   </div>
   <div id="printCierre" style="display:none"></div>
+
+  <!-- LOCK GANANCIAS -->
+  <div class="gan-lock-overlay" id="ganLockOverlay">
+    <div class="gan-lock-box">
+      <div class="gan-lock-title">💰 Ganancias</div>
+      <div class="gan-lock-sub">Ingresa la contraseña para continuar</div>
+      <input class="gan-lock-input" type="password" id="ganLockInput" maxlength="10" placeholder="····"
+        onkeydown="if(event.key==='Enter')verificarGanLock()">
+      <div class="gan-lock-err" id="ganLockErr"></div>
+      <button class="gan-lock-btn" onclick="verificarGanLock()">🔓 Entrar</button>
+      <button class="gan-lock-cancel" onclick="cerrarGanLock()">Cancelar</button>
+    </div>
+  </div>
 
   <!-- PANEL GANANCIAS -->
   <div class="gan-overlay" id="ganOverlay" onclick="cerrarGanancias()"></div>
@@ -1729,6 +1753,32 @@ let ganWeekOffset = 0;
 let ganMonthOffset = 0;
 
 function abrirGanancias() {
+  const el = document.getElementById('ganLockInput');
+  el.value = '';
+  document.getElementById('ganLockErr').textContent = '';
+  document.getElementById('ganLockOverlay').classList.add('open');
+  setTimeout(() => el.focus(), 100);
+}
+
+function cerrarGanLock() {
+  document.getElementById('ganLockOverlay').classList.remove('open');
+  document.getElementById('ganLockInput').value = '';
+  document.getElementById('ganLockErr').textContent = '';
+}
+
+function verificarGanLock() {
+  const val = document.getElementById('ganLockInput').value.trim();
+  if (val === '3087') {
+    cerrarGanLock();
+    _abrirPanelGanancias();
+  } else {
+    document.getElementById('ganLockErr').textContent = '❌ Contraseña incorrecta';
+    document.getElementById('ganLockInput').value = '';
+    document.getElementById('ganLockInput').focus();
+  }
+}
+
+function _abrirPanelGanancias() {
   document.getElementById('ganOverlay').classList.add('open');
   document.getElementById('ganPanel').classList.add('open');
   ganWeekOffset = 0;
