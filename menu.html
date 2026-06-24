@@ -1261,7 +1261,7 @@ function changeQty(id,delta){
   const card=document.getElementById('ocard_'+id);
   if(qel) qel.textContent=nv||0;
   if(card) card.classList.toggle('in-cart',nv>0);
-  if(nv===0) delete state.vegetales[id];
+  Object.keys(state.vegetales).forEach(k=>{if(k.split('__')[0]===id)delete state.vegetales[k];});
   buildVegPerItemGrid();
   updateTotalDisplay();
   updateFloatCart();
@@ -1395,12 +1395,15 @@ function buildSummary(){
   const vegEntries=Object.entries(state.vegetales);
   if(vegEntries.length){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Vegetales</div>`;
-    vegEntries.forEach(([id,vegs])=>{
+    vegEntries.forEach(([k,vegs])=>{
+      const id=k.split('__')[0];
+      const idx=parseInt(k.split('__')[1]);
       const item=MENU_ITEMS.find(m=>m.id===id);
-      const si=VEGETALES.filter(v=>vegs[v]===true).join(', ');
-      const no=VEGETALES.filter(v=>vegs[v]===false).join(', ');
+      const iv=item?.vegs||VEGETALES;
+      const si=iv.filter(v=>vegs[v]===true).join(', ');
+      const no=iv.filter(v=>vegs[v]===false).join(', ');
       html+=`<div class="summary-row" style="flex-direction:column;align-items:flex-start;gap:.2rem">
-        <span style="font-weight:800;font-size:.8rem">${item?.name||id}</span>
+        <span style="font-weight:800;font-size:.8rem">${item?.name||id} — Unidad ${idx+1}</span>
         ${si?`<span style="color:var(--ef);font-size:.78rem">✓ ${si}</span>`:''}
         ${no?`<span style="color:#E74C3C;font-size:.78rem">✗ Sin ${no}</span>`:''}
       </div>`;
@@ -1537,7 +1540,9 @@ function selectPayment(method,card){
 // ══════════════════════════════════════════════
 // STEP NAVIGATION
 // ══════════════════════════════════════════════
-// Build vegetales per-item grid
+function getVegKeys(id){return Array.from({length:state.food[id]||0},(_,i)=>id+'__'+i);}
+
+// Build vegetales per-item grid — una tarjeta por unidad
 function buildVegPerItemGrid(){
   const g=document.getElementById('vegPerItemGrid');
   if(!g) return;
@@ -1551,48 +1556,58 @@ function buildVegPerItemGrid(){
     return;
   }
   const icons={Cebolla:'🧅',Tomate:'🍅',Lechuga:'🥬',Tocineta:'🥓','Repollo y Zanahoria':'🥗'};
-  // Inicializar y limpiar state.vegetales
+  // Inicializar claves nuevas, limpiar huérfanas
   ordered.forEach(id=>{
     const item=MENU_ITEMS.find(x=>x.id===id);
     const itemVegs=item?.vegs||VEGETALES;
-    if(!state.vegetales[id]) state.vegetales[id]=Object.fromEntries(itemVegs.map(v=>[v,null]));
+    getVegKeys(id).forEach(k=>{
+      if(!state.vegetales[k]) state.vegetales[k]=Object.fromEntries(itemVegs.map(v=>[v,null]));
+    });
   });
-  Object.keys(state.vegetales).forEach(id=>{if(!state.food[id]||MENU_ITEMS.find(x=>x.id===id)?.cat==='plato') delete state.vegetales[id];});
-  g.innerHTML=ordered.map(id=>{
+  Object.keys(state.vegetales).forEach(k=>{
+    const id=k.split('__')[0];
+    const idx=parseInt(k.split('__')[1]);
+    if(!state.food[id]||MENU_ITEMS.find(x=>x.id===id)?.cat==='plato'||idx>=(state.food[id]||0)) delete state.vegetales[k];
+  });
+  g.innerHTML=ordered.flatMap(id=>{
     const item=MENU_ITEMS.find(m=>m.id===id);
-    if(!item) return '';
+    if(!item) return [];
     const itemVegs=item.vegs||VEGETALES;
-    const vegs=state.vegetales[id]||{};
-    const allOk=itemVegs.every(v=>vegs[v]!==null&&vegs[v]!==undefined);
-    const rows=itemVegs.map(v=>`
-      <div class="veg-row">
-        <span style="font-weight:700;font-size:.88rem">${icons[v]||'🥗'} ${v}</span>
-        <div class="veg-toggle">
-          <button class="veg-btn si ${vegs[v]===true?'active':''}" onclick="setVegetal('${id}','${v}',true,this)">Sí</button>
-          <button class="veg-btn no ${vegs[v]===false?'active':''}" onclick="setVegetal('${id}','${v}',false,this)">No</button>
+    return getVegKeys(id).map((k,i)=>{
+      const vegs=state.vegetales[k]||{};
+      const allOk=itemVegs.every(v=>vegs[v]!==null&&vegs[v]!==undefined);
+      const cardId=k.replace('__','_u');
+      const rows=itemVegs.map(v=>`
+        <div class="veg-row">
+          <span style="font-weight:700;font-size:.88rem">${icons[v]||'🥗'} ${v}</span>
+          <div class="veg-toggle">
+            <button class="veg-btn si ${vegs[v]===true?'active':''}" onclick="setVegetal('${k}','${v}',true,this)">Sí</button>
+            <button class="veg-btn no ${vegs[v]===false?'active':''}" onclick="setVegetal('${k}','${v}',false,this)">No</button>
+          </div>
+        </div>`).join('');
+      return `<div class="veg-item-card" id="vegcard_${cardId}">
+        <div style="font-weight:900;font-size:.92rem;color:var(--or);margin-bottom:.7rem">
+          🍔 ${item.name} — Unidad ${i+1}
+          ${allOk?'<span style="color:var(--ef);font-size:.75rem;margin-left:.5rem">✓ Listo</span>':'<span style="color:#E74C3C;font-size:.75rem;margin-left:.5rem">⚠ Pendiente</span>'}
         </div>
-      </div>`).join('');
-    return `<div class="veg-item-card" id="vegcard_${id}">
-      <div style="font-weight:900;font-size:.92rem;color:var(--or);margin-bottom:.7rem">
-        🍔 ${item.name} ×${state.food[id]}
-        ${allOk?'<span style="color:var(--ef);font-size:.75rem;margin-left:.5rem">✓ Listo</span>':'<span style="color:#E74C3C;font-size:.75rem;margin-left:.5rem">⚠ Pendiente</span>'}
-      </div>
-      ${rows}
-    </div>`;
+        ${rows}
+      </div>`;
+    });
   }).join('');
 }
 
-function setVegetal(itemId,vegName,value,btn){
-  if(!state.vegetales[itemId]) state.vegetales[itemId]={};
-  state.vegetales[itemId][vegName]=value;
+function setVegetal(vegKey,vegName,value,btn){
+  if(!state.vegetales[vegKey]) state.vegetales[vegKey]={};
+  state.vegetales[vegKey][vegName]=value;
   const row=btn.closest('.veg-toggle');
   row.querySelectorAll('.veg-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  // Actualizar badge listo/pendiente
-  const card=document.getElementById('vegcard_'+itemId);
+  const cardId=vegKey.replace('__','_u');
+  const card=document.getElementById('vegcard_'+cardId);
   if(card){
-    const vegs=state.vegetales[itemId];
-    const itemObj=MENU_ITEMS.find(x=>x.id===itemId);
+    const vegs=state.vegetales[vegKey];
+    const id=vegKey.split('__')[0];
+    const itemObj=MENU_ITEMS.find(x=>x.id===id);
     const itemVegs=itemObj?.vegs||VEGETALES;
     const allOk=itemVegs.every(v=>vegs[v]!==null&&vegs[v]!==undefined);
     const badge=card.querySelector('span[style*="margin-left"]');
@@ -1689,11 +1704,10 @@ function nextStep(){
     const sinConfirmar=Object.keys(state.food).some(id=>{
       const m=MENU_ITEMS.find(x=>x.id===id);
       if(!m||m.cat==='plato') return false;
-      const v=state.vegetales[id];
       const iv=m.vegs||VEGETALES;
-      return !v||iv.some(n=>v[n]===null||v[n]===undefined);
+      return getVegKeys(id).some(k=>{const v=state.vegetales[k];return !v||iv.some(n=>v[n]===null||v[n]===undefined);});
     });
-    if(sinConfirmar){alert('Selecciona Sí o No para todos los vegetales de cada producto 🥬');return;}
+    if(sinConfirmar){alert('Selecciona Sí o No para los vegetales de cada unidad 🥬');return;}
   }
   if(state.step===1){
     const _combos=countCombos();
@@ -1730,9 +1744,8 @@ function updateNextBtn(){
     const sinVeg=Object.keys(state.food).some(id=>{
       const m=MENU_ITEMS.find(x=>x.id===id);
       if(!m||m.cat==='plato') return false;
-      const v=state.vegetales[id];
       const iv=m.vegs||VEGETALES;
-      return !v||iv.some(n=>v[n]===null||v[n]===undefined);
+      return getVegKeys(id).some(k=>{const v=state.vegetales[k];return !v||iv.some(n=>v[n]===null||v[n]===undefined);});
     });
     btn.disabled=sinComida||sinVeg;
   } else if(state.step===1){
@@ -1811,12 +1824,13 @@ async function placeOrder(){
         return a?{foodId:fid,foodName:food?.name||fid,id:a.id,name:a.name,price:a.price,qty:q}:null;
       }).filter(Boolean);
     }),
-    vegetales: Object.entries(state.vegetales).filter(([id])=>{
-      const m=MENU_ITEMS.find(x=>x.id===id);return m&&m.cat!=='plato';
-    }).map(([id,vegs])=>{
+    vegetales: Object.entries(state.vegetales).filter(([k])=>{
+      const id=k.split('__')[0];const m=MENU_ITEMS.find(x=>x.id===id);return m&&m.cat!=='plato';
+    }).map(([k,vegs])=>{
+      const id=k.split('__')[0];const idx=parseInt(k.split('__')[1]);
       const item=MENU_ITEMS.find(m=>m.id===id);
       const iv=item?.vegs||VEGETALES;
-      return {itemId:id,itemName:item?.name||id,si:iv.filter(v=>vegs[v]===true),no:iv.filter(v=>vegs[v]===false)};
+      return {itemId:id,itemName:item?.name||id,unit:idx+1,si:iv.filter(v=>vegs[v]===true),no:iv.filter(v=>vegs[v]===false)};
     }),
     metodo_pago: state.payment,
     tipo_entrega: state.entrega,
@@ -1891,12 +1905,13 @@ function buildConfirmation(){
     return rows;
   }).join('');
   const sauceList=Object.entries(state.sauces).filter(([,arr])=>arr.length>0).map(([fid,arr])=>{const food=MENU_ITEMS.find(m=>m.id===fid);return `${food?.name||fid}: ${arr.map(id=>SAUCES.find(s=>s.id===id)?.name).join(', ')}`;}).join(' | ');
-  const vegList=Object.entries(state.vegetales).map(([id,vegs])=>{
+  const vegList=Object.entries(state.vegetales).map(([k,vegs])=>{
+    const id=k.split('__')[0];const idx=parseInt(k.split('__')[1]);
     const item=MENU_ITEMS.find(m=>m.id===id);
     const iv=item?.vegs||VEGETALES;
     const si=iv.filter(v=>vegs[v]===true).join(', ');
     const no=iv.filter(v=>vegs[v]===false).join(', ');
-    return `${item?.name||id}: ${si?'✓'+si:''}${no?' ✗'+no:''}`;
+    return `${item?.name||id} U${idx+1}: ${si?'✓'+si:''}${no?' ✗'+no:''}`;
   }).join(' | ');
   const payLabels={nequi:'Nequi 💜',daviplata:'Daviplata ❤️',llave:'Llave B-reve 🔑',efectivo:'Efectivo 💵'};
   const payLabel=payLabels[state.payment]||'—';
