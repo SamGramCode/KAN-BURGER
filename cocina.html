@@ -1890,30 +1890,34 @@ function renderGanSemana(orders, monday) {
 
 function renderGanMes(orders, inicioMes) {
   const hoyDate = new Date();
-  const day = inicioMes.getDay();
-  const diffToMon = day === 0 ? -6 : 1 - day;
-  let weekStart = new Date(inicioMes);
-  weekStart.setDate(inicioMes.getDate() + diffToMon);
-  weekStart.setHours(0, 0, 0, 0);
   const mesNum = inicioMes.getMonth();
   const mesYear = inicioMes.getFullYear();
-  const finMes = new Date(mesYear, mesNum + 1, 0);
+  const finMes = new Date(mesYear, mesNum + 1, 0, 23, 59, 59, 999);
   let html = '';
   let totalMes = 0;
   let semIdx = 1;
-  while (weekStart <= finMes) {
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 5);
-    weekEnd.setHours(23, 59, 59, 999);
+  // Avanzar día a día desde el 1 del mes agrupando en semanas de lunes a domingo
+  let cursor = new Date(inicioMes);
+  cursor.setHours(0, 0, 0, 0);
+  while (cursor <= finMes) {
+    // Inicio de semana = cursor (primer día del mes o siguiente lunes)
+    const segStart = new Date(cursor);
+    // Fin de semana = próximo domingo, pero no más allá del fin del mes
+    const dayOfWeek = cursor.getDay(); // 0=dom,1=lun...6=sab
+    const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+    const naturalSunday = new Date(cursor);
+    naturalSunday.setDate(cursor.getDate() + daysToSunday);
+    naturalSunday.setHours(23, 59, 59, 999);
+    const segEnd = naturalSunday <= finMes ? naturalSunday : new Date(finMes);
     const weekOrders = orders.filter(o => {
       const d = new Date(o.fecha_hora);
-      return d >= weekStart && d <= weekEnd;
+      return d >= segStart && d <= segEnd;
     });
     const weekTotal = weekOrders.reduce((s, o) => s + (o.total || 0), 0);
     totalMes += weekTotal;
-    const esFutura = weekStart > hoyDate;
-    const lbl = weekStart.toLocaleDateString('es-CO',{day:'2-digit',month:'short'}) + ' – ' +
-                weekEnd.toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
+    const esFutura = segStart > hoyDate;
+    const lbl = segStart.toLocaleDateString('es-CO',{day:'2-digit',month:'short'}) + ' – ' +
+                segEnd.toLocaleDateString('es-CO',{day:'2-digit',month:'short'});
     html += `<div class="gan-week-row">
       <div>
         <div class="gan-week-lbl">Semana ${semIdx} · ${lbl}</div>
@@ -1921,8 +1925,10 @@ function renderGanMes(orders, inicioMes) {
       </div>
       <div class="gan-week-val">${esFutura ? '—' : fmt(weekTotal)}</div>
     </div>`;
-    weekStart = new Date(weekStart);
-    weekStart.setDate(weekStart.getDate() + 7);
+    // Avanzar al día siguiente del domingo (lunes de la próxima semana)
+    cursor = new Date(naturalSunday);
+    cursor.setDate(naturalSunday.getDate() + 1);
+    cursor.setHours(0, 0, 0, 0);
     semIdx++;
     if (semIdx > 7) break;
   }
