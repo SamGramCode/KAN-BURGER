@@ -1828,16 +1828,16 @@ async function cargarGanancias() {
 
   if (ganTab === 'semana') {
     const monday = getLunesDeSemana(ganWeekOffset);
-    const saturday = new Date(monday);
-    saturday.setDate(monday.getDate() + 5);
-    saturday.setHours(23, 59, 59, 999);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
     const lbl = monday.toLocaleDateString('es-CO',{day:'2-digit',month:'short'}) + ' – ' +
-                saturday.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});
+                sunday.toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});
     document.getElementById('ganNavLbl').textContent = lbl;
     try {
       const { data } = await sb.from('ordenes').select('fecha_hora,total,estado')
         .gte('fecha_hora', monday.toISOString())
-        .lte('fecha_hora', saturday.toISOString())
+        .lte('fecha_hora', sunday.toISOString())
         .eq('estado', 'listo');
       renderGanSemana(data || [], monday);
     } catch(e) { renderGanSemana([], monday); }
@@ -1859,11 +1859,11 @@ async function cargarGanancias() {
 }
 
 function renderGanSemana(orders, monday) {
-  const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
   const hoyStr = new Date().toISOString().slice(0, 10);
   let totalSemana = 0;
   let html = '';
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 7; i++) {
     const dia = new Date(monday);
     dia.setDate(monday.getDate() + i);
     const diaStr = dia.toISOString().slice(0, 10);
