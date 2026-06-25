@@ -1791,8 +1791,18 @@ function renderStep(s){
     aplicarEstadoDomicilio();
     ['orderTorre','orderApto','orderTelefono'].forEach(id=>{
       const el=document.getElementById(id);
-      if(el){el.removeEventListener('input',updateNextBtn);el.addEventListener('input',updateNextBtn);}
+      if(el){
+        ['input','change','keyup','blur'].forEach(ev=>{
+          el.removeEventListener(ev,updateNextBtn);
+          el.addEventListener(ev,updateNextBtn);
+        });
+      }
     });
+    // Polling para autocompletar del navegador
+    if(window._payPoll) clearInterval(window._payPoll);
+    window._payPoll = setInterval(updateNextBtn, 300);
+  } else {
+    if(window._payPoll){ clearInterval(window._payPoll); window._payPoll=null; }
   }
   if(s===5) buildConfirmation();
 
