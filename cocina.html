@@ -714,6 +714,17 @@ const CARD_COLORS = [
 const POS_LABELS = ['1°','2°','3°','4°','5°','6°','7°','8°','9°','10°'];
 
 // ── TARJETA ───────────────────────────────────────────────────────────
+function fmtPago(mp, lbls) {
+  if (!mp) return '';
+  if (mp.includes('|')) {
+    return mp.split('|').map(p => {
+      const [m, a] = p.split(':');
+      return `${fmt(Number(a))} ${lbls[m] || m}`;
+    }).join(' + ');
+  }
+  return lbls[mp] || mp;
+}
+
 function buildCard(order, posIdx = 0) {
   const ts      = new Date(order.fecha_hora);
   const hora    = ts.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
@@ -783,7 +794,7 @@ function buildCard(order, posIdx = 0) {
       </div>
       <div style="text-align:right">
         <div style="font-weight:900;font-size:1.15rem;margin-bottom:.2rem;color:${order.mesa?'var(--or)':order.tipo_entrega==='domicilio'?'#3498DB':'#27AE60'}">${order.mesa?`🪑 MESA ${order.mesa}`:order.tipo_entrega==='domicilio'?'🛵 DOMICILIO':'🏪 TIENDA'}</div>
-        <div class="oc-pay ${payCls[order.metodo_pago] || ''}">${payLbls[order.metodo_pago] || order.metodo_pago || ''}</div>
+        <div class="oc-pay ${(order.metodo_pago||'').includes('|')?'':payCls[order.metodo_pago]||''}">${fmtPago(order.metodo_pago, payLbls)}</div>
         <div class="oc-total">${fmt(order.total)}</div>
       </div>
     </div>
@@ -1418,10 +1429,19 @@ function renderCierre() {
   const payMethods = { efectivo:'💵 Efectivo', nequi:'💜 Nequi', daviplata:'❤️ Daviplata', llave:'🔑 Llave' };
   const payStats = {};
   done.forEach(o => {
-    const m = o.metodo_pago || 'efectivo';
-    if (!payStats[m]) payStats[m] = { count: 0, total: 0 };
-    payStats[m].count++;
-    payStats[m].total += (o.total || 0);
+    const mp = o.metodo_pago || 'efectivo';
+    if (mp.includes('|')) {
+      mp.split('|').forEach((p, i) => {
+        const [m, a] = p.split(':');
+        if (!payStats[m]) payStats[m] = { count: 0, total: 0 };
+        if (i === 0) payStats[m].count++;
+        payStats[m].total += Number(a) || 0;
+      });
+    } else {
+      if (!payStats[mp]) payStats[mp] = { count: 0, total: 0 };
+      payStats[mp].count++;
+      payStats[mp].total += (o.total || 0);
+    }
   });
 
   const pendientesHoy = esHoy ? ordersCache.filter(o=>o.estado==='pendiente'||o.estado==='en_preparacion').length : 0;
@@ -1485,10 +1505,19 @@ function _generarCierre(tipo) {
   const payMethods = { efectivo:'Efectivo', nequi:'Nequi', daviplata:'Daviplata', llave:'Llave' };
   const payStats = {};
   done.forEach(o => {
-    const m = o.metodo_pago || 'efectivo';
-    if (!payStats[m]) payStats[m] = { count:0, total:0 };
-    payStats[m].count++;
-    payStats[m].total += (o.total || 0);
+    const mp = o.metodo_pago || 'efectivo';
+    if (mp.includes('|')) {
+      mp.split('|').forEach((p, i) => {
+        const [m, a] = p.split(':');
+        if (!payStats[m]) payStats[m] = { count:0, total:0 };
+        if (i === 0) payStats[m].count++;
+        payStats[m].total += Number(a) || 0;
+      });
+    } else {
+      if (!payStats[mp]) payStats[mp] = { count:0, total:0 };
+      payStats[mp].count++;
+      payStats[mp].total += (o.total || 0);
+    }
   });
   const productosImpr = contarProductos(done);
 
@@ -1714,7 +1743,7 @@ function verDetalleOrden(orderId){
   }).join(' | ');
   document.getElementById('detTitle').textContent=`Pedido #${order.id}`;
   document.getElementById('detBody').innerHTML=`
-    <div style="font-size:.78rem;color:var(--mt);margin-bottom:1rem">${ts.toLocaleDateString('es-CO')} · ${hora} · <span class="oc-pay ${payCls[order.metodo_pago]||''}">${payLbls[order.metodo_pago]||order.metodo_pago||''}</span></div>
+    <div style="font-size:.78rem;color:var(--mt);margin-bottom:1rem">${ts.toLocaleDateString('es-CO')} · ${hora} · <span class="oc-pay ${(order.metodo_pago||'').includes('|')?'':payCls[order.metodo_pago]||''}">${fmtPago(order.metodo_pago, payLbls)}</span></div>
     ${foodHTML?`<div class="cr-section-title">🍔 Comida</div>${foodHTML}`:''}
     ${drinkHTML?`<div class="cr-section-title">🥤 Bebidas</div>${drinkHTML}`:''}
     ${adicionHTML?`<div class="cr-section-title">➕ Extras</div>${adicionHTML}`:''}
