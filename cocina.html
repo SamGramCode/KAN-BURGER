@@ -365,6 +365,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
     <button class="tb-menu-btn" id="btnCambiarImpresora" onclick="cambiarImpresora()" title="Seleccionar impresora" style="font-size:.75rem;font-weight:900">🖨️?</button>
     <button class="tb-menu-btn" onclick="imprimirQRMesas()" title="Imprimir QR de mesas" style="font-size:1rem">🪑</button>
+    <button class="tb-menu-btn" id="btnNotifStatus" onclick="toggleNotifModal()" title="Estado notificaciones" style="font-size:1rem">🔔</button>
     <button class="tb-menu-btn" onclick="abrirGanancias()" title="Ganancias" style="font-size:1rem">💰</button>
     <button class="tb-menu-btn" onclick="abrirCierre()" title="Cierre de caja" style="font-size:1rem">📊</button>
     <button class="tb-menu-btn" onclick="abrirMenuPanel()" title="Gestión de menú">☰</button>
@@ -565,7 +566,32 @@ async function registrarSW() {
   } catch(e) { console.warn('SW no registrado:', e); }
 }
 
+function actualizarBtnNotif() {
+  const btn = document.getElementById('btnNotifStatus');
+  if (!btn) return;
+  if (!('Notification' in window)) { btn.style.display = 'none'; return; }
+  if (Notification.permission === 'granted') {
+    btn.textContent = '🔔';
+    btn.title = 'Notificaciones activas ✅';
+    btn.style.opacity = '1';
+    btn.style.filter = 'none';
+  } else {
+    btn.textContent = '🔕';
+    btn.title = 'Notificaciones inactivas — toca para activar';
+    btn.style.opacity = '1';
+    btn.style.filter = 'drop-shadow(0 0 4px #e74c3c)';
+  }
+}
+
+function toggleNotifModal() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') return;
+  const modal = document.getElementById('notifModal');
+  if (modal) modal.style.display = 'flex';
+}
+
 async function pedirPermisoNotificacion() {
+  actualizarBtnNotif();
   if (!('Notification' in window)) return;
   if (Notification.permission === 'granted') return;
   const modal = document.getElementById('notifModal');
@@ -576,6 +602,7 @@ async function activarNotificaciones() {
   const modal = document.getElementById('notifModal');
   const banner = document.getElementById('notifBanner');
   const perm = await Notification.requestPermission();
+  actualizarBtnNotif();
   if (perm === 'granted') {
     if (modal) modal.style.display = 'none';
     if (banner) banner.style.display = 'none';
