@@ -585,7 +585,16 @@ function actualizarBtnNotif() {
 
 function toggleNotifModal() {
   if (!('Notification' in window)) return;
-  if (Notification.permission === 'granted') return;
+  if (Notification.permission === 'granted') {
+    const btn = document.getElementById('btnNotifStatus');
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = '✅';
+      btn.title = 'Notificaciones activas';
+      setTimeout(() => { btn.textContent = orig; }, 2000);
+    }
+    return;
+  }
   const modal = document.getElementById('notifModal');
   if (modal) modal.style.display = 'flex';
 }
