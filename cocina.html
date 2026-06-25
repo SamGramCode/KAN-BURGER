@@ -1132,8 +1132,8 @@ ${sauceL ? `<tr class="sep"><td colspan="2">Salsas: ${sauceL}</td></tr>`   : ''}
 <tr class="tot"><td>TOTAL</td><td style="text-align:right">${fmt(order.total)}</td></tr>
 </table>
 <div style="text-align:center;font-size:13px;margin-top:4px">Pago: ${
-  order.pago_dividido
-    ? order.pago_dividido.map(p=>`${fmt(p.monto)} en ${payLbl[p.metodo]||p.metodo}`).join(' + ')
+  (order.metodo_pago||'').includes('|')
+    ? order.metodo_pago.split('|').map(p=>{const[m,a]=p.split(':');return `${fmt(Number(a))} en ${payLbl[m]||m}`;}).join(' + ')
     : (payLbl[order.metodo_pago]||order.metodo_pago||'')
 }</div>
 ${order.notas ? `<div style="font-size:10px;border-top:1px dashed #000;margin-top:5px;padding-top:5px">Nota: ${order.notas}</div>` : ''}
@@ -1180,7 +1180,11 @@ td:last-child{text-align:right}
 <div class="info-box">
   ${esDOM && order.direccion ? `<div><b>Dirección:</b> ${order.direccion}</div>` : ''}
   ${order.telefono ? `<div><b>Teléfono:</b> ${order.telefono}</div>` : ''}
-  <div><b>Método de pago:</b> ${payLbl[order.metodo_pago] || order.metodo_pago || ''}</div>
+  <div><b>Método de pago:</b> ${
+    (order.metodo_pago||'').includes('|')
+      ? order.metodo_pago.split('|').map(p=>{const[m,a]=p.split(':');return `${fmt(Number(a))} en ${payLbl[m]||m}`;}).join(' + ')
+      : (payLbl[order.metodo_pago]||order.metodo_pago||'')
+  }</div>
 </div>
 <table>
   <tr><th>Producto</th><th style="text-align:right">Valor</th></tr>
