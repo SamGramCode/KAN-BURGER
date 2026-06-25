@@ -336,6 +336,13 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
   </div>
 </div>
 
+<div id="notifModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;flex-direction:column;align-items:center;justify-content:center;gap:1.4rem;padding:2rem;text-align:center">
+  <div style="font-size:3.5rem">🔔</div>
+  <h2 style="color:#fff;font-size:1.25rem;font-weight:900;margin:0">Activa las notificaciones</h2>
+  <p style="color:#ccc;font-size:.9rem;margin:0;max-width:270px;line-height:1.5">Para que suene una alerta cuando llegue un pedido, incluso si cambias de app o el celular está bloqueado</p>
+  <button onclick="activarNotificaciones()" style="background:#E8641A;color:#fff;border:none;border-radius:14px;padding:1rem 0;font-weight:900;font-size:1.05rem;cursor:pointer;width:100%;max-width:290px">Activar notificaciones</button>
+</div>
+
 <div id="dashboard">
   <div id="notifBanner" style="display:none;align-items:center;gap:.8rem;background:#E8641A;color:#fff;padding:.7rem 1.2rem;font-size:.85rem;font-weight:700;position:sticky;top:0;z-index:200">
     <span>🔔 Activa las notificaciones para recibir alertas aunque cambies de app</span>
@@ -561,17 +568,24 @@ async function registrarSW() {
 async function pedirPermisoNotificacion() {
   if (!('Notification' in window)) return;
   if (Notification.permission === 'granted') return;
-  const banner = document.getElementById('notifBanner');
-  if (banner) banner.style.display = 'flex';
+  const modal = document.getElementById('notifModal');
+  if (modal) modal.style.display = 'flex';
 }
 
 async function activarNotificaciones() {
+  const modal = document.getElementById('notifModal');
   const banner = document.getElementById('notifBanner');
   const perm = await Notification.requestPermission();
-  if (perm === 'granted' && banner) banner.style.display = 'none';
-  else if (banner) {
-    banner.innerHTML = '<span style="color:#E74C3C;font-size:.85rem">❌ Permiso denegado. Actívalo en ajustes del navegador.</span>';
-    setTimeout(() => { banner.style.display='none'; }, 4000);
+  if (perm === 'granted') {
+    if (modal) modal.style.display = 'none';
+    if (banner) banner.style.display = 'none';
+  } else {
+    if (modal) modal.style.display = 'none';
+    if (banner) {
+      banner.style.display = 'flex';
+      banner.innerHTML = '<span style="color:#E74C3C;font-size:.85rem">❌ Permiso denegado. Actívalo en ajustes del navegador.</span>';
+      setTimeout(() => { banner.style.display='none'; }, 5000);
+    }
   }
 }
 
