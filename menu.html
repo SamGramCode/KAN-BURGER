@@ -1567,9 +1567,20 @@ function selectEntrega(tipo,el){
   el.classList.add('selected');
   const domFields=document.getElementById('domicilioFields');
   if(domFields) domFields.style.display=tipo==='domicilio'?'block':'none';
+  // Si hay pago dividido, resetear montos porque el total cambió
+  if(state.isSplit){
+    state.splitPayments=[{method:state.splitPayments[0].method,amount:0},{method:state.splitPayments[1].method,amount:0}];
+    const a0=document.getElementById('splitAmt0');
+    const a1=document.getElementById('splitAmt1');
+    const r0=document.getElementById('splitRem0');
+    const r1=document.getElementById('splitRem1');
+    if(a0) a0.value=''; if(a1) a1.value='';
+    if(r0) r0.textContent=''; if(r1) r1.textContent='';
+  }
   buildSummary();
   updateTotalDisplay();
   updateNextBtn();
+  setTimeout(updateNextBtn, 100);
 }
 
 function selectPayment(method,card){
