@@ -8,3 +8,23 @@ self.addEventListener('notificationclick', e => {
     })
   );
 });
+
+// Mantener SW activo para notificaciones en segundo plano
+self.addEventListener('push', e => {
+  const data = e.data ? e.data.json() : {};
+  e.waitUntil(
+    self.registration.showNotification(data.title || '🔔 KAN BURGER — Nuevo Pedido', {
+      body: data.body || 'Toca para ver el pedido',
+      icon: '/img/logo.jpg',
+      badge: '/img/logo.jpg',
+      tag: 'kan-nuevo-pedido',
+      renotify: true,
+      requireInteraction: true,
+      vibrate: [500, 200, 500, 200, 500, 200, 500]
+    })
+  );
+});
+
+// Forzar activación inmediata
+self.addEventListener('install', e => self.skipWaiting());
+self.addEventListener('activate', e => e.waitUntil(clients.claim()));

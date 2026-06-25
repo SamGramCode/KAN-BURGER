@@ -500,6 +500,7 @@ let primeraVez = true;
 let completedOpen = false;
 let audioCtx = null;
 let swReg = null;
+let realtimeChannel = null;
 
 // ── AUTH ──────────────────────────────────────────────────────────────
 async function doLogin() {
@@ -577,15 +578,21 @@ async function activarNotificaciones() {
 async function mostrarNotificacion(titulo, cuerpo) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   try {
-    if (swReg) {
-      await swReg.showNotification(titulo, {
-        body: cuerpo, icon: '/img/logo.jpg', badge: '/img/logo.jpg',
-        tag: 'kan-nuevo-pedido', renotify: true, requireInteraction: true
-      });
-    } else {
-      new Notification(titulo, { body: cuerpo, icon: '/img/logo.jpg' });
-    }
-  } catch(e) { console.warn('Notificación fallida:', e); }
+    const opts = {
+      body: cuerpo,
+      icon: '/img/logo.jpg',
+      badge: '/img/logo.jpg',
+      tag: 'kan-nuevo-pedido',
+      renotify: true,
+      requireInteraction: true,
+      vibrate: [500, 200, 500, 200, 500, 200, 500],
+      silent: false
+    };
+    const reg = swReg || (await navigator.serviceWorker.ready);
+    await reg.showNotification(titulo, opts);
+  } catch(e) {
+    try { new Notification(titulo, { body: cuerpo, icon: '/img/logo.jpg' }); } catch(e2) {}
+  }
 }
 
 // ── PANEL ─────────────────────────────────────────────────────────────
@@ -613,10 +620,25 @@ async function iniciarPanel() {
   primeraVez = false;
   renderizar();
 
+  // Realtime WebSocket — detecta pedidos nuevos instantáneamente, funciona en segundo plano
+  if (realtimeChannel) sb.removeChannel(realtimeChannel);
+  realtimeChannel = sb.channel('ordenes-live')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ordenes' }, async (payload) => {
+      await cargarOrdenes();
+      renderizar();
+      alertarNueva(payload.new);
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'ordenes' }, async () => {
+      await cargarOrdenes();
+      renderizar();
+    })
+    .subscribe();
+
+  // Polling de respaldo cada 15s (por si el WebSocket falla)
   setInterval(async () => {
     await cargarOrdenes();
     renderizar();
-  }, 3000);
+  }, 15000);
 }
 
 function actualizarReloj() {
