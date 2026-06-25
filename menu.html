@@ -1970,7 +1970,6 @@ async function placeOrder(){
     metodo_pago: state.isSplit
       ? state.splitPayments.map(p=>p.method+':'+p.amount).join('|')
       : state.payment,
-    pago_dividido: state.isSplit ? state.splitPayments.map(p=>({metodo:p.method,monto:p.amount})) : null,
     tipo_entrega: state.entrega,
     notas: state.notes,
     direccion: state.entrega==='domicilio'?state.direccion:null,
