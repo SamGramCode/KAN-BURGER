@@ -1567,20 +1567,19 @@ function selectEntrega(tipo,el){
   el.classList.add('selected');
   const domFields=document.getElementById('domicilioFields');
   if(domFields) domFields.style.display=tipo==='domicilio'?'block':'none';
-  // Si hay pago dividido, resetear montos porque el total cambió
-  if(state.isSplit){
-    state.splitPayments=[{method:state.splitPayments[0].method,amount:0},{method:state.splitPayments[1].method,amount:0}];
-    const a0=document.getElementById('splitAmt0');
-    const a1=document.getElementById('splitAmt1');
-    const r0=document.getElementById('splitRem0');
-    const r1=document.getElementById('splitRem1');
-    if(a0) a0.value=''; if(a1) a1.value='';
-    if(r0) r0.textContent=''; if(r1) r1.textContent='';
-  }
   buildSummary();
   updateTotalDisplay();
+  // Si hay pago dividido, ajustar el segundo monto al nuevo total
+  if(state.isSplit && state.splitPayments[0].amount>0){
+    const newTotal=grandTotal();
+    const rem=newTotal-state.splitPayments[0].amount;
+    state.splitPayments[1].amount=rem>=0?rem:0;
+    const a1=document.getElementById('splitAmt1');
+    const r1=document.getElementById('splitRem1');
+    if(a1) a1.value=state.splitPayments[1].amount||'';
+    if(r1) r1.textContent=rem===0?'✅ Completo':rem>0?`Restante: ${fmt(rem)}`:'⚠️ Revisa los montos';
+  }
   updateNextBtn();
-  setTimeout(updateNextBtn, 100);
 }
 
 function selectPayment(method,card){
