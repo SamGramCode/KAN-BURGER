@@ -1943,6 +1943,9 @@ async function generarNumPedido(){
 // PLACE ORDER
 // ══════════════════════════════════════════════
 async function placeOrder(){
+  const btn=document.getElementById('btnNext');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Enviando...';}
+  try{
   state.notes=document.getElementById('orderNotes').value;
   const torre=document.getElementById('orderTorre').value.trim();
   const apto=document.getElementById('orderApto').value.trim();
@@ -1950,10 +1953,6 @@ async function placeOrder(){
   state.telefono=document.getElementById('orderTelefono').value.trim();
   state.orderFechaHora=new Date().toISOString();
   state.orderNum=await generarNumPedido();
-
-  // Disable next button while sending
-  const btn=document.getElementById('btnNext');
-  if(btn){btn.disabled=true;btn.textContent='⏳ Enviando...';}
 
   const itemCount = Object.values(state.food).reduce((a,b)=>a+b,0) +
                     Object.values(state.drinks).reduce((a,b)=>a+b,0);
@@ -2039,6 +2038,11 @@ async function placeOrder(){
   showOrderBar(state.orderNum, state.entrega);
   renderStep(5);
   iniciarTracking(state.orderNum);
+  }catch(e){
+    console.error('placeOrder error:',e);
+    alert('Error inesperado al enviar el pedido. Intenta de nuevo.\n'+e.message);
+    if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Pedido';}
+  }
 }
 
 function buildConfirmation(){
