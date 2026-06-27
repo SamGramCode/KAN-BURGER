@@ -780,6 +780,12 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
             </div>
             <input class="split-amt" type="number" id="splitAmt0" placeholder="¿Cuánto paga aquí? $" min="0" oninput="onSplitAmtChange(0)">
             <div class="split-rem" id="splitRem0"></div>
+            <div class="upload-section" id="splitUpload0" style="display:none;margin-top:.8rem">
+              <div class="upload-title" style="font-size:.85rem">📸 Comprobante Pago 1</div>
+              <label class="upload-btn-lbl">📷 Seleccionar foto<input type="file" accept="image/*" style="display:none" onchange="previewSplitComprobante(this,0)"></label>
+              <img id="splitPreview0" class="upload-preview">
+              <div class="upload-ok" id="splitOk0" style="display:none">✅ Comprobante listo</div>
+            </div>
           </div>
           <div class="split-row">
             <div class="split-row-title">💳 Pago 2</div>
@@ -791,6 +797,12 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
             </div>
             <input class="split-amt" type="number" id="splitAmt1" placeholder="Restante $" min="0" oninput="onSplitAmtChange(1)" readonly>
             <div class="split-rem" id="splitRem1"></div>
+            <div class="upload-section" id="splitUpload1" style="display:none;margin-top:.8rem">
+              <div class="upload-title" style="font-size:.85rem">📸 Comprobante Pago 2</div>
+              <label class="upload-btn-lbl">📷 Seleccionar foto<input type="file" accept="image/*" style="display:none" onchange="previewSplitComprobante(this,1)"></label>
+              <img id="splitPreview1" class="upload-preview">
+              <div class="upload-ok" id="splitOk1" style="display:none">✅ Comprobante listo</div>
+            </div>
           </div>
         </div>
 
@@ -1152,7 +1164,7 @@ let state = {
   vegetales: {},
   payment: null,
   isSplit: false,
-  splitPayments: [{method:null,amount:0},{method:null,amount:0}],
+  splitPayments: [{method:null,amount:0,comprobanteFile:null,comprobanteUrl:null},{method:null,amount:0,comprobanteFile:null,comprobanteUrl:null}],
   entrega: null,
   comprobanteFile: null, comprobanteUrl: null,
   notes: '',
@@ -1641,6 +1653,9 @@ function selectSplitMethod(slot,method,btn){
   const row=document.querySelectorAll('.split-row')[slot];
   row.querySelectorAll('.split-m-btn').forEach(b=>b.classList.remove('sel'));
   btn.classList.add('sel');
+  // Mostrar/ocultar upload de este slot
+  const su=document.getElementById('splitUpload'+slot);
+  if(su) su.style.display=(method&&method!=='efectivo')?'block':'none';
   _updateSplitUpload();
   updateNextBtn();
 }
@@ -1670,9 +1685,9 @@ function onSplitAmtChange(slot){
 }
 
 function _updateSplitUpload(){
-  const needsComp=state.splitPayments.some(p=>p.method&&p.method!=='efectivo');
+  // En modo split cada slot tiene su propio upload — el global no se usa
   const us=document.getElementById('uploadSection');
-  if(us) us.style.display=(state.isSplit&&needsComp)?'block':'none';
+  if(us) us.style.display='none';
 }
 
 // ══════════════════════════════════════════════
@@ -1897,7 +1912,7 @@ function updateNextBtn(){
     if(state.isSplit){
       const p0=state.splitPayments[0],p1=state.splitPayments[1];
       payOk=!!(p0.method&&p1.method&&(p0.amount+p1.amount)===grandTotal());
-      needsComprobante=state.splitPayments.some(p=>p.method&&p.method!=='efectivo'&&p.amount>0)&&!state.comprobanteFile;
+      needsComprobante=state.splitPayments.some(p=>p.method&&p.method!=='efectivo'&&p.amount>0&&!p.comprobanteFile);
     } else {
       payOk=!!state.payment;
       needsComprobante=state.payment&&state.payment!=='efectivo'&&!state.comprobanteFile;
@@ -2031,7 +2046,9 @@ async function placeOrder(){
     estado: 'pendiente',
     verificaciones: {},
     cantidad_items: itemCount,
-    comprobante_url: state.comprobanteUrl||null
+    comprobante_url: state.isSplit
+      ? state.splitPayments.filter(p=>p.comprobanteUrl).map(p=>p.comprobanteUrl).join('|')||null
+      : state.comprobanteUrl||null
   };
 
   // Mostrar confirmación INMEDIATAMENTE
@@ -2047,21 +2064,45 @@ async function placeOrder(){
 
 async function _enviarOrdenBackground(order){
   try{
-    // Si el comprobante aún no subió, subirlo ahora
-    if(state.comprobanteFile && !state.comprobanteUrl){
-      try{
-        const f=state.comprobanteFile;
-        const ext=f.type.includes('png')?'png':f.type.includes('webp')?'webp':f.type.includes('gif')?'gif':'jpg';
-        const fileName=state.orderNum+'_'+Date.now()+'.'+ext;
-        const {error:upErr}=await sb.storage.from('COMPROBANTES').upload(fileName,f,{upsert:true,contentType:f.type});
-        if(!upErr){
-          const {data:urlData}=sb.storage.from('COMPROBANTES').getPublicUrl(fileName);
-          order.comprobante_url=urlData.publicUrl;
-          state.comprobanteUrl=urlData.publicUrl;
+    if(state.isSplit){
+      // Subir comprobantes por slot si aún no subieron
+      const urls=[];
+      for(let i=0;i<2;i++){
+        const p=state.splitPayments[i];
+        if(p.method&&p.method!=='efectivo'){
+          if(p.comprobanteUrl){ urls.push(p.comprobanteUrl); }
+          else if(p.comprobanteFile){
+            try{
+              const f=p.comprobanteFile;
+              const ext=f.type.includes('png')?'png':f.type.includes('webp')?'webp':f.type.includes('gif')?'gif':'jpg';
+              const fileName=state.orderNum+'_pago'+(i+1)+'_'+Date.now()+'.'+ext;
+              const {error:upErr}=await sb.storage.from('COMPROBANTES').upload(fileName,f,{upsert:true,contentType:f.type});
+              if(!upErr){
+                const {data:urlData}=sb.storage.from('COMPROBANTES').getPublicUrl(fileName);
+                urls.push(urlData.publicUrl);
+              }
+            }catch(e){}
+          }
         }
-      }catch(e){}
+      }
+      if(urls.length) order.comprobante_url=urls.join('|');
+    } else {
+      // Comprobante pago único
+      if(state.comprobanteFile && !state.comprobanteUrl){
+        try{
+          const f=state.comprobanteFile;
+          const ext=f.type.includes('png')?'png':f.type.includes('webp')?'webp':f.type.includes('gif')?'gif':'jpg';
+          const fileName=state.orderNum+'_'+Date.now()+'.'+ext;
+          const {error:upErr}=await sb.storage.from('COMPROBANTES').upload(fileName,f,{upsert:true,contentType:f.type});
+          if(!upErr){
+            const {data:urlData}=sb.storage.from('COMPROBANTES').getPublicUrl(fileName);
+            order.comprobante_url=urlData.publicUrl;
+            state.comprobanteUrl=urlData.publicUrl;
+          }
+        }catch(e){}
+      }
+      if(state.comprobanteUrl) order.comprobante_url=state.comprobanteUrl;
     }
-    if(state.comprobanteUrl) order.comprobante_url=state.comprobanteUrl;
 
     const {error}=await sb.from('ordenes').insert(order);
     if(error){
@@ -2184,6 +2225,37 @@ function printReceipt(){
 }
 
 // ── COMPROBANTE ──────────────────────────────────
+async function previewSplitComprobante(input,slot){
+  const file=input.files[0];
+  if(!file) return;
+  state.splitPayments[slot].comprobanteFile=file;
+  state.splitPayments[slot].comprobanteUrl=null;
+  const preview=document.getElementById('splitPreview'+slot);
+  const ok=document.getElementById('splitOk'+slot);
+  if(preview){preview.src=URL.createObjectURL(file);preview.style.display='block';}
+  if(ok){ok.style.display='block';ok.textContent='⏳ Subiendo comprobante...';}
+  // Bloquear solo los botones de este slot
+  const row=document.querySelectorAll('.split-row')[slot];
+  if(row) row.querySelectorAll('.split-m-btn').forEach(el=>{el.style.pointerEvents='none';el.style.opacity='0.5';});
+  const amt=document.getElementById('splitAmt'+slot);
+  if(amt){amt.disabled=true;amt.style.opacity='0.5';}
+  updateNextBtn();
+  // Subir en segundo plano
+  try{
+    const numBase=state.orderNum||('tmp_'+Date.now());
+    const ext=file.type.includes('png')?'png':file.type.includes('webp')?'webp':file.type.includes('gif')?'gif':'jpg';
+    const fileName=numBase+'_pago'+(slot+1)+'_'+Date.now()+'.'+ext;
+    const {error:upErr}=await sb.storage.from('COMPROBANTES').upload(fileName,file,{upsert:true,contentType:file.type});
+    if(!upErr){
+      const {data:urlData}=sb.storage.from('COMPROBANTES').getPublicUrl(fileName);
+      state.splitPayments[slot].comprobanteUrl=urlData.publicUrl;
+    }
+    if(ok) ok.textContent='✅ Comprobante listo';
+  }catch(e){
+    if(ok) ok.textContent='✅ Comprobante listo';
+  }
+}
+
 async function previewComprobante(input){
   const file=input.files[0];
   if(!file) return;
