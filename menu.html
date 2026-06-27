@@ -1665,7 +1665,7 @@ function onSplitAmtChange(slot){
 }
 
 function _updateSplitUpload(){
-  const needsComp=state.splitPayments.some(p=>p.method&&p.method!=='efectivo'&&p.amount>0);
+  const needsComp=state.splitPayments.some(p=>p.method&&p.method!=='efectivo');
   const us=document.getElementById('uploadSection');
   if(us) us.style.display=(state.isSplit&&needsComp)?'block':'none';
 }
