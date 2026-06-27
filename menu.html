@@ -906,15 +906,20 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 
 
     <div class="modal-foot" id="modalFoot">
-      <div class="modal-total">
-        <div style="display:flex;flex-direction:column;gap:.1rem">
-          Total<strong id="modalTotal">$0</strong>
-          <span style="font-size:.7rem;color:var(--mt);font-weight:400" id="domicilioLabel" style="display:none"></span>
+      <div style="display:flex;flex-direction:column;gap:.25rem;width:100%">
+        <div id="btnHint" style="display:none;font-size:.75rem;color:#E8641A;font-weight:700;text-align:right;padding-right:.2rem"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="modal-total">
+            <div style="display:flex;flex-direction:column;gap:.1rem">
+              Total<strong id="modalTotal">$0</strong>
+              <span style="font-size:.7rem;color:var(--mt);font-weight:400" id="domicilioLabel" style="display:none"></span>
+            </div>
+          </div>
+          <div style="display:flex;gap:.6rem">
+            <button class="btn-back" id="btnBack" onclick="prevStep()" style="display:none">← Atrás</button>
+            <button class="btn-next" id="btnNext" onclick="nextStep()">Siguiente →</button>
+          </div>
         </div>
-      </div>
-      <div style="display:flex;gap:.6rem">
-        <button class="btn-back" id="btnBack" onclick="prevStep()" style="display:none">← Atrás</button>
-        <button class="btn-next" id="btnNext" onclick="nextStep()">Siguiente →</button>
       </div>
     </div>
   </div>
@@ -1897,7 +1902,28 @@ function updateNextBtn(){
       payOk=!!state.payment;
       needsComprobante=state.payment&&state.payment!=='efectivo'&&!state.comprobanteFile;
     }
-    btn.disabled=!state.entrega||!payOk||needsComprobante||!tel||!torre;
+    const disabled=!state.entrega||!payOk||needsComprobante||!tel||!torre;
+    btn.disabled=disabled;
+    const hint=document.getElementById('btnHint');
+    if(hint){
+      if(!disabled){ hint.style.display='none'; hint.textContent=''; }
+      else {
+        const faltan=[];
+        if(!state.entrega) faltan.push('Selecciona tienda o domicilio');
+        else if(!tel) faltan.push('Falta el teléfono');
+        else if(state.entrega==='domicilio'&&!torre) faltan.push('Falta la dirección');
+        if(!payOk){
+          if(state.isSplit){
+            const p0=state.splitPayments[0],p1=state.splitPayments[1];
+            if(!p0.method||!p1.method) faltan.push('Selecciona método en cada pago');
+            else faltan.push(`Los montos deben sumar ${fmt(grandTotal())}`);
+          } else faltan.push('Selecciona método de pago');
+        }
+        if(needsComprobante) faltan.push('Falta subir el comprobante');
+        hint.textContent='⚠️ '+faltan[0];
+        hint.style.display='block';
+      }
+    }
   } else if(state.step===0){
     btn.textContent='Siguiente →';
     const sinComida=Object.keys(state.food).length===0;
