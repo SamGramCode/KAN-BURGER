@@ -912,7 +912,14 @@ function buildCard(order, posIdx = 0) {
         ? '<div class="pago-verificado-badge">✅ Pago verificado</div>'
         : `<button class="btn-pago-ok" onclick="verificarPago('${order.id}')">✅ Confirmar pago recibido</button>`
       }
-    </div>` : ''}
+    </div>` : (()=>{
+      const mp=order.metodo_pago||'';
+      const esEfectivo=mp==='efectivo'||mp.includes('efectivo');
+      const sinComp=mp&&mp!=='efectivo'&&!mp.includes('nequi:0')&&!mp.includes('daviplata:0')&&!mp.includes('llave:0');
+      if(esEfectivo) return `<div style="background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.3);border-radius:10px;padding:.6rem .9rem;margin:.4rem 0;font-size:.82rem;font-weight:800;color:#27AE60;text-align:center">💵 Recordar cobrar efectivo al entregar</div>`;
+      if(sinComp) return `<div style="background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.25);border-radius:10px;padding:.6rem .9rem;margin:.4rem 0;font-size:.82rem;font-weight:800;color:#E74C3C;text-align:center">⚠️ Sin comprobante — verificar pago</div>`;
+      return '';
+    })()}
     <div class="oc-foot">
       <button class="btn-ready" ${allDone ? '' : 'disabled'} onclick="marcarListo('${order.id}')">
         ${allDone ? '✅ Marcar como Lista' : `⏳ Faltan ${total - checked} ítems`}
