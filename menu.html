@@ -426,8 +426,8 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .modal-foot{padding:1.1rem 1.5rem;border-top:1px solid var(--bd);background:var(--dk);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .modal-total{font-size:.85rem;color:var(--mt)}
 .modal-total strong{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--or);letter-spacing:1px;display:block}
-.btn-next{background:var(--or);color:#fff;padding:.75rem 2rem;border-radius:50px;font-weight:800;font-size:.9rem;letter-spacing:1px;text-transform:uppercase;transition:all .3s;box-shadow:0 4px 15px rgba(232,100,26,.3)}
-.btn-next:hover:not(:disabled){background:var(--orl);transform:translateY(-2px)}
+.btn-next{background:var(--or);color:#fff;padding:.75rem 2rem;border-radius:50px;font-weight:800;font-size:.9rem;letter-spacing:1px;text-transform:uppercase;transition:all .3s;box-shadow:0 4px 15px rgba(232,100,26,.3);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.btn-next:hover:not(:disabled){background:var(--orl)}
 .btn-next:disabled{opacity:.4;cursor:not-allowed}
 .btn-back{background:transparent;border:1px solid var(--bd);color:var(--mt);padding:.75rem 1.4rem;border-radius:50px;font-weight:700;font-size:.85rem;transition:all .3s}
 .btn-back:hover{border-color:var(--mt);color:var(--cr)}
@@ -1153,7 +1153,8 @@ let state = {
   direccion: '',
   telefono: '',
   orderFechaHora: null,
-  orderNum: null
+  orderNum: null,
+  enviandoPedido: false
 };
 
 function fmt(n){return'$'+n.toLocaleString('es-CO')}
@@ -1943,6 +1944,8 @@ async function generarNumPedido(){
 // PLACE ORDER
 // ══════════════════════════════════════════════
 async function placeOrder(){
+  if(state.enviandoPedido) return;
+  state.enviandoPedido=true;
   const btn=document.getElementById('btnNext');
   if(btn){btn.disabled=true;btn.textContent='⏳ Enviando...';}
   try{
@@ -2023,12 +2026,14 @@ async function placeOrder(){
     if(error){
       console.error('Error guardando en Supabase:',error);
       alert('Hubo un problema al enviar tu pedido. Intenta de nuevo.\n\n'+error.message);
+      state.enviandoPedido=false;
       if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Pedido';}
       return;
     }
   } catch(err){
     console.error('Error de red:',err);
     alert('No se pudo conectar. Verifica tu internet.');
+    state.enviandoPedido=false;
     if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Pedido';}
     return;
   }
@@ -2041,6 +2046,7 @@ async function placeOrder(){
   }catch(e){
     console.error('placeOrder error:',e);
     alert('Error inesperado al enviar el pedido. Intenta de nuevo.\n'+e.message);
+    state.enviandoPedido=false;
     if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Pedido';}
   }
 }
