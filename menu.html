@@ -1802,6 +1802,8 @@ function renderStep(s){
   if(s===4){
     buildSummary();
     aplicarEstadoDomicilio();
+    // Pre-generar número de pedido para que al confirmar no haya espera de red
+    if(!state.orderNum) generarNumPedido().then(n=>{ state.orderNum=n; });
     ['orderTorre','orderApto','orderTelefono'].forEach(id=>{
       const el=document.getElementById(id);
       if(el){
@@ -1955,7 +1957,7 @@ async function placeOrder(){
   state.direccion=[torre,apto].filter(Boolean).join(', Apto ');
   state.telefono=document.getElementById('orderTelefono').value.trim();
   state.orderFechaHora=new Date().toISOString();
-  state.orderNum=await generarNumPedido();
+  if(!state.orderNum) state.orderNum=await generarNumPedido();
 
   const itemCount = Object.values(state.food).reduce((a,b)=>a+b,0) +
                     Object.values(state.drinks).reduce((a,b)=>a+b,0);
@@ -2005,8 +2007,8 @@ async function placeOrder(){
     cantidad_items: itemCount
   };
 
-  // Subir comprobante si existe
-  if(state.comprobanteFile){
+  // Subir comprobante solo si aún no fue subido en segundo plano
+  if(state.comprobanteFile && !state.comprobanteUrl){
     try{
       const f=state.comprobanteFile;
       const ext=f.type.includes('png')?'png':f.type.includes('webp')?'webp':f.type.includes('gif')?'gif':'jpg';
@@ -2019,6 +2021,7 @@ async function placeOrder(){
       }
     }catch(e){console.error('Error subiendo comprobante:',e);}
   }
+  if(state.comprobanteUrl) order.comprobante_url=state.comprobanteUrl;
 
   // Save to Supabase
   try {
@@ -2159,17 +2162,33 @@ function printReceipt(){
 }
 
 // ── COMPROBANTE ──────────────────────────────────
-function previewComprobante(input){
+async function previewComprobante(input){
   const file=input.files[0];
   if(!file) return;
   state.comprobanteFile=file;
+  state.comprobanteUrl=null;
   const preview=document.getElementById('uploadPreview');
   const ok=document.getElementById('uploadOk');
   if(preview){preview.src=URL.createObjectURL(file);preview.style.display='block';}
-  if(ok) ok.style.display='block';
-  // Bloquear campos de monto y métodos de pago al subir comprobante
+  if(ok){ok.style.display='block';ok.textContent='⏳ Subiendo comprobante...';}
   _bloquearPago(true);
   updateNextBtn();
+  // Subir comprobante en segundo plano para que al confirmar ya esté listo
+  try{
+    const numBase=state.orderNum||('tmp_'+Date.now());
+    const ext=file.type.includes('png')?'png':file.type.includes('webp')?'webp':file.type.includes('gif')?'gif':'jpg';
+    const fileName=numBase+'_'+Date.now()+'.'+ext;
+    const {error:upErr}=await sb.storage.from('COMPROBANTES').upload(fileName,file,{upsert:true,contentType:file.type});
+    if(!upErr){
+      const {data:urlData}=sb.storage.from('COMPROBANTES').getPublicUrl(fileName);
+      state.comprobanteUrl=urlData.publicUrl;
+      if(ok) ok.textContent='✅ Foto lista — ya puedes confirmar tu pedido';
+    } else {
+      if(ok) ok.textContent='✅ Foto lista — ya puedes confirmar tu pedido';
+    }
+  }catch(e){
+    if(ok) ok.textContent='✅ Foto lista — ya puedes confirmar tu pedido';
+  }
 }
 
 function _bloquearPago(bloquear){
