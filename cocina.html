@@ -345,6 +345,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 </div>
 
 <div id="dashboard">
+  <div id="planBanner" style="display:none;background:#E74C3C;color:#fff;padding:.75rem 1.2rem;font-size:.88rem;font-weight:800;text-align:center;position:sticky;top:0;z-index:201;letter-spacing:.3px"></div>
   <div id="notifBanner" style="display:none;align-items:center;gap:.8rem;background:#E8641A;color:#fff;padding:.7rem 1.2rem;font-size:.85rem;font-weight:700;position:sticky;top:0;z-index:200">
     <span>🔔 Activa las notificaciones para recibir alertas aunque cambies de app</span>
     <button onclick="activarNotificaciones()" style="background:#fff;color:#E8641A;border:none;border-radius:8px;padding:.35rem .9rem;font-weight:900;font-size:.82rem;cursor:pointer;white-space:nowrap">Activar ahora</button>
@@ -556,7 +557,27 @@ function mostrarDashboard() {
   dash.style.display = 'flex';
   dash.style.flexDirection = 'column';
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  mostrarRecordatorioPlan();
   iniciarPanel();
+}
+
+function mostrarRecordatorioPlan() {
+  const vence = new Date('2026-06-28T00:00:00');
+  const hoy = new Date();
+  hoy.setHours(0,0,0,0);
+  vence.setHours(0,0,0,0);
+  const dias = Math.round((vence - hoy) / 86400000);
+  const banner = document.getElementById('planBanner');
+  if (!banner) return;
+  if (dias > 0 && dias <= 3) {
+    const txt = dias === 1 ? 'Te queda 1 día' : `Te quedan ${dias} días`;
+    banner.textContent = `⚠️ ${txt} para que se venza el plan — renueva antes del 28 de junio`;
+    banner.style.display = 'block';
+  } else if (dias <= 0) {
+    banner.textContent = '🔴 El plan venció — contacta al administrador para renovar el servicio';
+    banner.style.display = 'block';
+    banner.style.background = '#7B0000';
+  }
 }
 
 // ── NOTIFICACIONES / SERVICE WORKER ──────────────────────────────────
