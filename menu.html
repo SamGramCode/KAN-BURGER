@@ -816,6 +816,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 
 
       <div class="step" id="step5">
+        <div id="confirmErrorMsg" style="display:none;background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.4);border-radius:12px;padding:.9rem 1.1rem;margin-bottom:1rem;font-size:.85rem;font-weight:700;color:#E74C3C;text-align:center"></div>
         <div class="confirm-wrap">
           <div class="confirm-icon">🎉</div>
           <div class="confirm-order-num" id="confirmNum">#KN-0000</div>
@@ -1948,19 +1949,18 @@ async function generarNumPedido(){
 async function placeOrder(){
   if(state.enviandoPedido) return;
   state.enviandoPedido=true;
-  const btn=document.getElementById('btnNext');
-  if(btn){btn.disabled=true;btn.textContent='⏳ Enviando...';}
-  try{
+
+  // Recoger datos del formulario
   state.notes=document.getElementById('orderNotes').value;
   const torre=document.getElementById('orderTorre').value.trim();
   const apto=document.getElementById('orderApto').value.trim();
   state.direccion=[torre,apto].filter(Boolean).join(', Apto ');
   state.telefono=document.getElementById('orderTelefono').value.trim();
   state.orderFechaHora=new Date().toISOString();
-  if(!state.orderNum) state.orderNum=await generarNumPedido();
+  if(!state.orderNum) state.orderNum='KN-'+String(Date.now()).slice(-4);
 
-  const itemCount = Object.values(state.food).reduce((a,b)=>a+b,0) +
-                    Object.values(state.drinks).reduce((a,b)=>a+b,0);
+  const itemCount=Object.values(state.food).reduce((a,b)=>a+b,0)+
+                  Object.values(state.drinks).reduce((a,b)=>a+b,0);
 
   const order={
     id: state.orderNum,
@@ -2004,53 +2004,49 @@ async function placeOrder(){
     total: grandTotal(),
     estado: 'pendiente',
     verificaciones: {},
-    cantidad_items: itemCount
+    cantidad_items: itemCount,
+    comprobante_url: state.comprobanteUrl||null
   };
 
-  // Subir comprobante solo si aún no fue subido en segundo plano
-  if(state.comprobanteFile && !state.comprobanteUrl){
-    try{
-      const f=state.comprobanteFile;
-      const ext=f.type.includes('png')?'png':f.type.includes('webp')?'webp':f.type.includes('gif')?'gif':'jpg';
-      const fileName=state.orderNum+'_'+Date.now()+'.'+ext;
-      const {error:upErr}=await sb.storage.from('COMPROBANTES').upload(fileName,f,{upsert:true,contentType:f.type});
-      if(!upErr){
-        const {data:urlData}=sb.storage.from('COMPROBANTES').getPublicUrl(fileName);
-        order.comprobante_url=urlData.publicUrl;
-        state.comprobanteUrl=urlData.publicUrl;
-      }
-    }catch(e){console.error('Error subiendo comprobante:',e);}
-  }
-  if(state.comprobanteUrl) order.comprobante_url=state.comprobanteUrl;
-
-  // Save to Supabase
-  try {
-    const { error } = await sb.from('ordenes').insert(order);
-    if(error){
-      console.error('Error guardando en Supabase:',error);
-      alert('Hubo un problema al enviar tu pedido. Intenta de nuevo.\n\n'+error.message);
-      state.enviandoPedido=false;
-      if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Pedido';}
-      return;
-    }
-  } catch(err){
-    console.error('Error de red:',err);
-    alert('No se pudo conectar. Verifica tu internet.');
-    state.enviandoPedido=false;
-    if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Pedido';}
-    return;
-  }
-
+  // Mostrar confirmación INMEDIATAMENTE
   saveActiveOrder();
   checkHistBtn();
   showOrderBar(state.orderNum, state.entrega);
   renderStep(5);
   iniciarTracking(state.orderNum);
+
+  // Enviar a Supabase en segundo plano
+  _enviarOrdenBackground(order);
+}
+
+async function _enviarOrdenBackground(order){
+  try{
+    // Si el comprobante aún no subió, subirlo ahora
+    if(state.comprobanteFile && !state.comprobanteUrl){
+      try{
+        const f=state.comprobanteFile;
+        const ext=f.type.includes('png')?'png':f.type.includes('webp')?'webp':f.type.includes('gif')?'gif':'jpg';
+        const fileName=state.orderNum+'_'+Date.now()+'.'+ext;
+        const {error:upErr}=await sb.storage.from('COMPROBANTES').upload(fileName,f,{upsert:true,contentType:f.type});
+        if(!upErr){
+          const {data:urlData}=sb.storage.from('COMPROBANTES').getPublicUrl(fileName);
+          order.comprobante_url=urlData.publicUrl;
+          state.comprobanteUrl=urlData.publicUrl;
+        }
+      }catch(e){}
+    }
+    if(state.comprobanteUrl) order.comprobante_url=state.comprobanteUrl;
+
+    const {error}=await sb.from('ordenes').insert(order);
+    if(error){
+      console.error('Error Supabase:',error);
+      const el=document.getElementById('confirmErrorMsg');
+      if(el){el.textContent='⚠️ Problema al registrar el pedido. Llama al restaurante: 311 758 0802';el.style.display='block';}
+    }
   }catch(e){
-    console.error('placeOrder error:',e);
-    alert('Error inesperado al enviar el pedido. Intenta de nuevo.\n'+e.message);
-    state.enviandoPedido=false;
-    if(btn){btn.disabled=false;btn.textContent='✅ Confirmar Pedido';}
+    console.error('Error de red:',e);
+    const el=document.getElementById('confirmErrorMsg');
+    if(el){el.textContent='⚠️ Sin conexión. Llama al restaurante: 311 758 0802';el.style.display='block';}
   }
 }
 
