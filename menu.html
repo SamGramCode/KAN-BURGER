@@ -2215,19 +2215,35 @@ async function previewComprobante(input){
 
 function _bloquearPago(bloquear){
   // Campos de monto
-  ['splitAmt0','splitAmt1'].forEach(id=>{
+  ['splitAmt0','splitAmt1'].forEach((id,i)=>{
     const el=document.getElementById(id);
-    if(el){
-      el.disabled=bloquear;
-      el.style.opacity=bloquear?'0.5':'1';
-      el.style.cursor=bloquear?'not-allowed':'text';
-    }
+    if(!el) return;
+    // En split: solo bloquear monto si ese slot ya tiene método seleccionado
+    const lock=bloquear&&(!state.isSplit||!!(state.splitPayments[i]?.method));
+    el.disabled=lock;
+    el.style.opacity=lock?'0.5':'1';
+    el.style.cursor=lock?'not-allowed':'text';
   });
-  // Botones de método de pago (cards y split-m-btn)
-  document.querySelectorAll('.pay-card,.split-m-btn').forEach(el=>{
+  // Cards de pago único
+  document.querySelectorAll('.pay-card').forEach(el=>{
     el.style.pointerEvents=bloquear?'none':'auto';
     el.style.opacity=bloquear?'0.5':'1';
   });
+  // Botones de método split: solo bloquear el slot que ya tiene método elegido
+  if(state.isSplit){
+    document.querySelectorAll('.split-row').forEach((row,i)=>{
+      const hasMethod=!!(state.splitPayments[i]?.method);
+      row.querySelectorAll('.split-m-btn').forEach(el=>{
+        el.style.pointerEvents=(bloquear&&hasMethod)?'none':'auto';
+        el.style.opacity=(bloquear&&hasMethod)?'0.5':'1';
+      });
+    });
+  } else {
+    document.querySelectorAll('.split-m-btn').forEach(el=>{
+      el.style.pointerEvents=bloquear?'none':'auto';
+      el.style.opacity=bloquear?'0.5':'1';
+    });
+  }
   // Botones Un solo pago / Dividir pago
   ['btnSinglePay','btnSplitPay'].forEach(id=>{
     const el=document.getElementById(id);
