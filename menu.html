@@ -361,6 +361,14 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .upload-ok{color:#27AE60;font-weight:800;font-size:.85rem;margin-top:.6rem;display:none}
 .upload-err{color:#E74C3C;font-weight:800;font-size:.82rem;margin-top:.5rem;display:none}
 
+/* ── SALSA PREP TOGGLE ── */
+.salsa-toggle{display:flex;align-items:center;gap:.4rem;margin-top:.6rem;padding-top:.5rem;border-top:1px solid rgba(255,255,255,.07)}
+.salsa-toggle-lbl{font-size:.72rem;font-weight:800;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;white-space:nowrap}
+.salsa-btn{padding:.28rem .65rem;border-radius:6px;border:1.5px solid var(--bd);background:transparent;color:var(--mt);font-size:.75rem;font-weight:800;cursor:pointer;transition:all .2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.salsa-btn.si.active{background:rgba(39,174,96,.15);border-color:#27AE60;color:#27AE60}
+.salsa-btn.no.active{background:rgba(231,76,60,.12);border-color:#E74C3C;color:#E74C3C}
+body.light .salsa-toggle{border-top-color:rgba(0,0,0,.1)}
+
 /* ── ORDER TRACKING TIMELINE ── */
 .order-timeline{margin:1.5rem 0;padding:1.4rem 1.2rem;background:var(--dk3);border:1px solid var(--bd);border-radius:16px}
 .tl-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;color:var(--or);text-align:center;margin-bottom:1.4rem}
@@ -700,7 +708,7 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 
 
       <div class="step" id="step2">
-        <div class="step-title">Elige tus <span>Salsas</span></div>
+        <div class="step-title">Elige tus <span>Salsas para llevar</span></div>
         <p style="font-size:.85rem;color:var(--mt);margin-bottom:1.2rem">Máximo 2 salsas por producto — incluidas gratis 🎉</p>
         <div id="sauceGrid"></div>
       </div>
@@ -1096,7 +1104,7 @@ const MENU_ITEMS = [
   {id:'b3',cat:'burger',name:'Especial Res',price:21000,badge:'🔥 Especial',img:'img/especial-res.jpg',bgSize:'cover',bgPos:'40% 73%',vegs:['Tomate','Lechuga'],desc:'Doble carne artesanal de 130gr cada una, doble queso cheddar, huevo, doble tocineta, tomate, lechuga, salsa de la casa, pan brioche artesanal'},
   {id:'b2',cat:'burger',name:'Sencilla Pollo',price:14000,badge:'🍔 Burger',img:'img/sencilla-pollo.jpg',bgSize:'110%',bgPos:'87% 54%',vegs:['Tomate','Lechuga'],desc:'Pechuga a la plancha 130gr, queso cheddar, huevo, tocineta, tomate, lechuga, salsa de la casa, pan brioche artesanal'},
   {id:'b4',cat:'burger',name:'Especial Pollo Crispy',price:17000,badge:'🍗 Crispy',img:'img/especial-pollo.jpg',bgSize:'128%',bgPos:'50% 48%',vegs:['Lechuga'],desc:'Pollo crispy 130gr, bañado en salsa barbacoa, doble queso cheddar, doble topping de tocineta crocante, lechuga, salsa de la casa, pan brioche artesanal'},
-  {id:'b5',cat:'burger',name:'Mixta',price:21000,badge:'💥 Mixta',img:'img/mixta.jpg',bgSize:'101%',bgPos:'50% 62%',vegs:['Tomate','Lechuga'],desc:'Carne artesanal de res 130gr, pollo crispy 130gr, doble queso cheddar, huevo, doble tocineta, tomate, lechuga, salsa de la casa, pan brioche artesanal'},
+  {id:'b5',cat:'burger',name:'Mixta',price:23000,badge:'💥 Mixta',img:'img/mixta.jpg',bgSize:'101%',bgPos:'50% 62%',vegs:['Tomate','Lechuga'],desc:'Carne artesanal de res 130gr, pollo crispy 130gr, doble queso cheddar, huevo, doble tocineta, tomate, lechuga, salsa de la casa, pan brioche artesanal'},
   {id:'v3',cat:'venezolano',name:'Arepa Cabimera Volcán',price:21000,badge:'🇻🇪 Venezolano',img:'img/arepa-cabimera.jpg',bgSize:'cover',bgPos:'50% 68%',vegs:['Repollo y Zanahoria'],desc:'Arepa frita, carne mechada, ensalada de repollo y zanahoria aderezada con "Yogurt Griego" de la casa, aguacate, tocineta, queso cheddar, queso rallado "Costeño", huevo y salsas de la casa'},
   {id:'v4',cat:'venezolano',name:'Patacón',price:22000,badge:'🇻🇪 Especial',img:'img/patacon.jpg',bgSize:'101%',bgPos:'50% 68%',vegs:['Repollo y Zanahoria'],desc:'Patacón frito "Semi-Maduro", carne mechada, ensalada de repollo y zanahoria aderezada con "Yogurt Griego" de la casa, tocineta, queso cheddar, queso rallado "Costeño", aguacate y salsas de la casa'},
   {id:'a1',cat:'plato',name:'Salchipapa',price:14000,badge:'🍟 Plato',img:'img/salchipapa.jpg',bgSize:'cover',bgPos:'50% 66%',desc:'Papas francesas 250gr, salchicha americana, chorizo, maíz, queso rallado "Costeño" y salsa de la casa'},
@@ -1162,6 +1170,7 @@ let state = {
   sauces: {},
   additions: {},
   vegetales: {},
+  salsaPrep: {},
   payment: null,
   isSplit: false,
   splitPayments: [{method:null,amount:0,comprobanteFile:null,comprobanteUrl:null},{method:null,amount:0,comprobanteFile:null,comprobanteUrl:null}],
@@ -1307,6 +1316,11 @@ function buildFoodGrid(){
           <span class="qty-val" id="qty_${m.id}">${state.food[m.id]||0}</span>
           <button class="qty-btn" onclick="changeQty('${m.id}',1)">+</button>
         </div>
+        <div class="salsa-toggle">
+          <span class="salsa-toggle-lbl">¿Con salsa?</span>
+          <button class="salsa-btn si ${state.salsaPrep[m.id]===false?'':'active'}" id="salsaSi_${m.id}" onclick="setSalsaPrep('${m.id}',true,event)">SÍ</button>
+          <button class="salsa-btn no ${state.salsaPrep[m.id]===false?'active':''}" id="salsaNo_${m.id}" onclick="setSalsaPrep('${m.id}',false,event)">NO</button>
+        </div>
       </div>
     </div>`;
   g.innerHTML=secciones.map(({cat,label})=>{
@@ -1317,6 +1331,15 @@ function buildFoodGrid(){
       <div class="order-grid">${items.map(cardHtml).join('')}</div>
     </div>`;
   }).join('');
+}
+
+function setSalsaPrep(id, val, e){
+  if(e) e.stopPropagation();
+  state.salsaPrep[id]=val;
+  const si=document.getElementById('salsaSi_'+id);
+  const no=document.getElementById('salsaNo_'+id);
+  if(si) si.classList.toggle('active', val===true);
+  if(no) no.classList.toggle('active', val===false);
 }
 
 function changeQty(id,delta){
@@ -1427,7 +1450,7 @@ function filterOrderCat(){}
 function buildSummary(){
   const allItems=Object.entries(state.food).map(([id,q])=>{
     const m=MENU_ITEMS.find(x=>x.id===id);
-    return m?{name:m.name,price:m.price,qty:q,cat:m.cat}:null;
+    return m?{id:m.id,name:m.name,price:m.price,qty:q,cat:m.cat}:null;
   }).filter(Boolean);
   // Hamburguesas primero, combos (burgerfries) abajo
   const burgers=allItems.filter(i=>i.cat==='burger');
@@ -1442,12 +1465,14 @@ function buildSummary(){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.3rem">Hamburguesas</div>`;
     burgers.forEach(it=>{
       html+=`<div class="summary-row"><span>${it.qty}x ${it.name}</span><span>${fmt(it.price*it.qty)}</span></div>`;
+      if(state.salsaPrep[it.id]===false) html+=`<div class="summary-row" style="padding-left:.8rem"><span style="font-size:.78rem;color:#E74C3C">🚫 Sin salsa en preparación</span><span></span></div>`;
     });
   }
   if(combos.length){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Combos</div>`;
     combos.forEach(it=>{
       html+=`<div class="summary-row"><span>${it.qty}x ${it.name}</span><span>${fmt(it.price*it.qty)}</span></div>`;
+      if(state.salsaPrep[it.id]===false) html+=`<div class="summary-row" style="padding-left:.8rem"><span style="font-size:.78rem;color:#E74C3C">🚫 Sin salsa en preparación</span><span></span></div>`;
       html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
       html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🥤 Bebida x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
     });
@@ -2008,7 +2033,7 @@ async function placeOrder(){
     fecha_hora: state.orderFechaHora,
     comida: Object.entries(state.food).map(([id,q])=>{
       const m=MENU_ITEMS.find(x=>x.id===id);
-      return m?{id:m.id,name:m.name,price:m.price,qty:q,cat:m.cat}:null;
+      return m?{id:m.id,name:m.name,price:m.price,qty:q,cat:m.cat,conSalsa:state.salsaPrep[id]!==false}:null;
     }).filter(Boolean),
     bebidas: Object.entries(state.drinks).map(([id,q])=>{
       const d=DRINKS.find(x=>x.id===id);
@@ -2128,6 +2153,7 @@ function buildConfirmation(){
     const m=MENU_ITEMS.find(x=>x.id===id);
     if(!m) return '';
     let html=`<div class="receipt-item"><span>${q}x ${m.name}</span><span>${fmt(m.price*q)}</span></div>`;
+    if(state.salsaPrep[id]===false) html+=`<div class="receipt-item" style="padding-left:.8rem"><span style="font-size:.75rem;color:#E74C3C">🚫 Sin salsa en preparación</span><span></span></div>`;
     if(m.cat==='burgerfries'){
       html+=`<div class="receipt-item" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr x${q}</span><span style="font-size:.75rem;color:#27AE60">Incluido</span></div>`;
       html+=`<div class="receipt-item" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🥤 Bebida x${q}</span><span style="font-size:.75rem;color:#27AE60">Incluido</span></div>`;
@@ -2464,7 +2490,7 @@ function resetOrder(){
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
   localStorage.removeItem('kan_active_order');
   hideOrderBar();
-  state={step:0,food:{},drinks:{},sauces:{},additions:{},vegetales:{},payment:null,isSplit:false,splitPayments:[{method:null,amount:0},{method:null,amount:0}],entrega:null,comprobanteFile:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null};
+  state={step:0,food:{},drinks:{},sauces:{},additions:{},vegetales:{},salsaPrep:{},payment:null,isSplit:false,splitPayments:[{method:null,amount:0},{method:null,amount:0}],entrega:null,comprobanteFile:null,notes:'',direccion:'',telefono:'',orderFechaHora:null,orderNum:null,enviandoPedido:false};
   renderStep(0);
   updateFloatCart();
 }

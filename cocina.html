@@ -884,9 +884,10 @@ function buildCard(order, posIdx = 0) {
   const foodHTML = comida.map((item, i) => {
     const isChecked = !!checks['f' + i];
     const displayName = esCombo(item) ? nombreBurger(item) : item.name;
+    const sinSalsa = item.conSalsa === false;
     let html = `<div class="check-item ${isChecked ? 'checked' : ''}" onclick="toggleCheck('${order.id}','f${i}')">
       <div class="check-box">${isChecked ? '✓' : ''}</div>
-      <div style="flex:1"><div class="check-item-name">🍔 ${esc(displayName)}</div></div>
+      <div style="flex:1"><div class="check-item-name">🍔 ${esc(displayName)}${sinSalsa ? ' <span style="background:#E74C3C;color:#fff;font-size:.68rem;font-weight:800;padding:1px 6px;border-radius:4px;margin-left:4px">SIN SALSA</span>' : ''}</div></div>
       <span class="check-item-qty">x${item.qty}</span>
     </div>`;
     if(esCombo(item)){
