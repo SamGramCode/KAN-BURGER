@@ -1250,23 +1250,24 @@ function _abrirVentana(w) {
 }
 
 function _ticketTermico(order, { dt, payLbl, esDOM, entregaTxt, foodR, drinkR, adicionR, sauceL, vegL }) {
-  const w = window.open('', '_blank', 'width=320,height=620');
+  const w = window.open('', '_blank', 'width=220,height=620');
   if (!_abrirVentana(w)) return;
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ticket ${order.id}</title>
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ticket ${order.id}</title>
 <style>
-@page{size:58mm auto;margin:0}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Courier New',monospace;font-size:14px;padding:8px;max-width:280px;margin:0 auto}
-.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:8px;margin-bottom:8px}
-.logo{font-size:22px;font-weight:bold;letter-spacing:3px}
-.num{text-align:center;font-size:20px;font-weight:bold;margin:6px 0;padding-bottom:6px;border-bottom:1px dashed #000}
-.entrega{text-align:center;font-weight:bold;font-size:15px;border:2px solid #000;padding:4px 0;margin-bottom:6px;letter-spacing:1px}
-.info{font-size:13px;margin-bottom:4px}
-table{width:100%}
-td{padding:3px 0;font-size:14px}
-.sep td{border-top:1px dashed #000;padding-top:4px;font-size:13px}
-.tot td{font-weight:bold;font-size:17px;border-top:2px solid #000;padding-top:6px}
-.ft{text-align:center;font-size:12px;margin-top:8px;border-top:1px dashed #000;padding-top:6px}
+@page{size:58mm auto;margin:0 2mm}
+*{margin:0;padding:0;box-sizing:border-box;word-break:break-word;overflow-wrap:break-word}
+body{font-family:'Courier New',monospace;font-size:12px;padding:4px 6px;width:100%;max-width:100%}
+.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:6px;margin-bottom:6px}
+.logo{font-size:18px;font-weight:bold;letter-spacing:2px}
+.num{text-align:center;font-size:16px;font-weight:bold;margin:4px 0;padding-bottom:4px;border-bottom:1px dashed #000}
+.entrega{text-align:center;font-weight:bold;font-size:13px;border:2px solid #000;padding:3px 0;margin-bottom:5px;letter-spacing:1px}
+.info{font-size:11px;margin-bottom:3px}
+table{width:100%;table-layout:fixed}
+td{padding:2px 0;font-size:12px;vertical-align:top}
+td:last-child{width:38%;text-align:right}
+.sep td{border-top:1px dashed #000;padding-top:3px;font-size:11px}
+.tot td{font-weight:bold;font-size:14px;border-top:2px solid #000;padding-top:5px}
+.ft{text-align:center;font-size:10px;margin-top:6px;border-top:1px dashed #000;padding-top:5px}
 .no-print{}
 @media print{.no-print{display:none!important}}
 </style></head><body>
