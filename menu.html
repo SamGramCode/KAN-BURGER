@@ -362,12 +362,14 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .upload-err{color:#E74C3C;font-weight:800;font-size:.82rem;margin-top:.5rem;display:none}
 
 /* ── SALSA PREP TOGGLE ── */
-.salsa-toggle{display:flex;align-items:center;gap:.4rem;margin-top:.6rem;padding-top:.5rem;border-top:1px solid rgba(255,255,255,.07)}
-.salsa-toggle-lbl{font-size:.72rem;font-weight:800;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;white-space:nowrap}
-.salsa-btn{padding:.28rem .65rem;border-radius:6px;border:1.5px solid var(--bd);background:transparent;color:var(--mt);font-size:.75rem;font-weight:800;cursor:pointer;transition:all .2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.salsa-wrap{margin-top:.6rem;padding-top:.5rem;border-top:1px solid rgba(255,255,255,.07)}
+.salsa-wrap-lbl{font-size:.7rem;font-weight:800;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.35rem}
+.salsa-unit-row{display:flex;align-items:center;gap:.35rem;margin-bottom:.25rem}
+.salsa-unit-lbl{font-size:.7rem;font-weight:700;color:var(--mt);flex-shrink:0;min-width:2rem}
+.salsa-btn{padding:.26rem .6rem;border-radius:6px;border:1.5px solid var(--bd);background:transparent;color:var(--mt);font-size:.73rem;font-weight:800;cursor:pointer;transition:all .2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .salsa-btn.si.active{background:rgba(39,174,96,.15);border-color:#27AE60;color:#27AE60}
 .salsa-btn.no.active{background:rgba(231,76,60,.12);border-color:#E74C3C;color:#E74C3C}
-body.light .salsa-toggle{border-top-color:rgba(0,0,0,.1)}
+body.light .salsa-wrap{border-top-color:rgba(0,0,0,.1)}
 
 /* ── ORDER TRACKING TIMELINE ── */
 .order-timeline{margin:1.5rem 0;padding:1.4rem 1.2rem;background:var(--dk3);border:1px solid var(--bd);border-radius:16px}
@@ -1316,11 +1318,7 @@ function buildFoodGrid(){
           <span class="qty-val" id="qty_${m.id}">${state.food[m.id]||0}</span>
           <button class="qty-btn" onclick="changeQty('${m.id}',1)">+</button>
         </div>
-        <div class="salsa-toggle">
-          <span class="salsa-toggle-lbl">¿Con salsa?</span>
-          <button class="salsa-btn si ${state.salsaPrep[m.id]===false?'':'active'}" id="salsaSi_${m.id}" onclick="setSalsaPrep('${m.id}',true,event)">SÍ</button>
-          <button class="salsa-btn no ${state.salsaPrep[m.id]===false?'active':''}" id="salsaNo_${m.id}" onclick="setSalsaPrep('${m.id}',false,event)">NO</button>
-        </div>
+        <div class="salsa-wrap" id="salsaWrap_${m.id}"></div>
       </div>
     </div>`;
   g.innerHTML=secciones.map(({cat,label})=>{
@@ -1331,15 +1329,34 @@ function buildFoodGrid(){
       <div class="order-grid">${items.map(cardHtml).join('')}</div>
     </div>`;
   }).join('');
+  MENU_ITEMS.forEach(m=>buildSalsaWrap(m.id));
 }
 
-function setSalsaPrep(id, val, e){
+function setSalsaPrep(key, val, e){
   if(e) e.stopPropagation();
-  state.salsaPrep[id]=val;
-  const si=document.getElementById('salsaSi_'+id);
-  const no=document.getElementById('salsaNo_'+id);
+  state.salsaPrep[key]=val;
+  const si=document.getElementById('salsaSi_'+key);
+  const no=document.getElementById('salsaNo_'+key);
   if(si) si.classList.toggle('active', val===true);
   if(no) no.classList.toggle('active', val===false);
+}
+
+function buildSalsaWrap(id){
+  const wrap=document.getElementById('salsaWrap_'+id);
+  if(!wrap) return;
+  const qty=Math.max(1, state.food[id]||0);
+  const multiUnit=qty>1;
+  let html=`<div class="salsa-wrap-lbl">¿Con salsa?</div>`;
+  for(let i=0;i<qty;i++){
+    const key=id+'__'+i;
+    const isSi=state.salsaPrep[key]!==false;
+    html+=`<div class="salsa-unit-row">
+      ${multiUnit?`<span class="salsa-unit-lbl">U${i+1}</span>`:''}
+      <button class="salsa-btn si ${isSi?'active':''}" id="salsaSi_${key}" onclick="setSalsaPrep('${key}',true,event)">SÍ</button>
+      <button class="salsa-btn no ${isSi?'':'active'}" id="salsaNo_${key}" onclick="setSalsaPrep('${key}',false,event)">NO</button>
+    </div>`;
+  }
+  wrap.innerHTML=html;
 }
 
 function changeQty(id,delta){
@@ -1352,6 +1369,8 @@ function changeQty(id,delta){
   if(card) card.classList.toggle('in-cart',nv>0);
   Object.keys(state.vegetales).forEach(k=>{if(k.split('__')[0]===id)delete state.vegetales[k];});
   Object.keys(state.sauces).forEach(k=>{if(k.split('__')[0]===id)delete state.sauces[k];});
+  Object.keys(state.salsaPrep).forEach(k=>{if(k.split('__')[0]===id&&parseInt(k.split('__')[1])>=nv)delete state.salsaPrep[k];});
+  buildSalsaWrap(id);
   buildVegPerItemGrid();
   updateTotalDisplay();
   updateFloatCart();
@@ -1465,14 +1484,20 @@ function buildSummary(){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.3rem">Hamburguesas</div>`;
     burgers.forEach(it=>{
       html+=`<div class="summary-row"><span>${it.qty}x ${it.name}</span><span>${fmt(it.price*it.qty)}</span></div>`;
-      if(state.salsaPrep[it.id]===false) html+=`<div class="summary-row" style="padding-left:.8rem"><span style="font-size:.78rem;color:#E74C3C">🚫 Sin salsa en preparación</span><span></span></div>`;
+      Array.from({length:it.qty},(_,i)=>i).filter(i=>state.salsaPrep[it.id+'__'+i]===false).forEach(i=>{
+        const lbl=it.qty>1?` U${i+1}`:'';
+        html+=`<div class="summary-row" style="padding-left:.8rem"><span style="font-size:.78rem;color:#E74C3C">🚫 Sin salsa${lbl}</span><span></span></div>`;
+      });
     });
   }
   if(combos.length){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Combos</div>`;
     combos.forEach(it=>{
       html+=`<div class="summary-row"><span>${it.qty}x ${it.name}</span><span>${fmt(it.price*it.qty)}</span></div>`;
-      if(state.salsaPrep[it.id]===false) html+=`<div class="summary-row" style="padding-left:.8rem"><span style="font-size:.78rem;color:#E74C3C">🚫 Sin salsa en preparación</span><span></span></div>`;
+      Array.from({length:it.qty},(_,i)=>i).filter(i=>state.salsaPrep[it.id+'__'+i]===false).forEach(i=>{
+        const lbl=it.qty>1?` U${i+1}`:'';
+        html+=`<div class="summary-row" style="padding-left:.8rem"><span style="font-size:.78rem;color:#E74C3C">🚫 Sin salsa${lbl}</span><span></span></div>`;
+      });
       html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
       html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🥤 Bebida x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
     });
@@ -2033,7 +2058,9 @@ async function placeOrder(){
     fecha_hora: state.orderFechaHora,
     comida: Object.entries(state.food).map(([id,q])=>{
       const m=MENU_ITEMS.find(x=>x.id===id);
-      return m?{id:m.id,name:m.name,price:m.price,qty:q,cat:m.cat,conSalsa:state.salsaPrep[id]!==false}:null;
+      if(!m) return null;
+      const salsaUnidades=Array.from({length:q},(_,i)=>state.salsaPrep[id+'__'+i]!==false);
+      return {id:m.id,name:m.name,price:m.price,qty:q,cat:m.cat,salsaUnidades};
     }).filter(Boolean),
     bebidas: Object.entries(state.drinks).map(([id,q])=>{
       const d=DRINKS.find(x=>x.id===id);
@@ -2153,7 +2180,10 @@ function buildConfirmation(){
     const m=MENU_ITEMS.find(x=>x.id===id);
     if(!m) return '';
     let html=`<div class="receipt-item"><span>${q}x ${m.name}</span><span>${fmt(m.price*q)}</span></div>`;
-    if(state.salsaPrep[id]===false) html+=`<div class="receipt-item" style="padding-left:.8rem"><span style="font-size:.75rem;color:#E74C3C">🚫 Sin salsa en preparación</span><span></span></div>`;
+    Array.from({length:q},(_,i)=>i).filter(i=>state.salsaPrep[id+'__'+i]===false).forEach(i=>{
+      const lbl=q>1?` U${i+1}`:'';
+      html+=`<div class="receipt-item" style="padding-left:.8rem"><span style="font-size:.75rem;color:#E74C3C">🚫 Sin salsa${lbl}</span><span></span></div>`;
+    });
     if(m.cat==='burgerfries'){
       html+=`<div class="receipt-item" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr x${q}</span><span style="font-size:.75rem;color:#27AE60">Incluido</span></div>`;
       html+=`<div class="receipt-item" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🥤 Bebida x${q}</span><span style="font-size:.75rem;color:#27AE60">Incluido</span></div>`;
