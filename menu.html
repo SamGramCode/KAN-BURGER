@@ -288,9 +288,6 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 .veg-row{display:flex;align-items:center;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
 .veg-row:last-child{border-bottom:none}
 .veg-toggle{display:flex;gap:.4rem}
-.veg-btn{padding:.3rem .9rem;border-radius:50px;border:1.5px solid var(--bd);background:transparent;color:var(--mt);font-size:.8rem;font-weight:800;cursor:pointer;transition:all .2s}
-.veg-btn.si.active{background:rgba(39,174,96,.15);border-color:#27AE60;color:#27AE60}
-.veg-btn.no.active{background:rgba(231,76,60,.1);border-color:#E74C3C;color:#E74C3C}
 .add-food-block{background:var(--dkc);border:1px solid var(--bd);border-radius:14px;padding:1rem;margin-bottom:1rem}
 .add-food-title{font-weight:900;font-size:.92rem;color:var(--or);margin-bottom:.8rem;display:flex;align-items:center;gap:.4rem}
 .add-food-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.6rem}
@@ -364,11 +361,15 @@ footer img{height:36px;width:auto;margin:0 auto 1rem;object-fit:contain;border-r
 /* ── SALSA PREP TOGGLE ── */
 .salsa-wrap{margin-top:.6rem;padding-top:.5rem;border-top:1px solid rgba(255,255,255,.07)}
 .salsa-wrap-lbl{font-size:.7rem;font-weight:800;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.35rem}
-.salsa-unit-row{display:flex;align-items:center;gap:.35rem;margin-bottom:.25rem}
-.salsa-unit-lbl{font-size:.7rem;font-weight:700;color:var(--mt);flex-shrink:0;min-width:2rem}
-.salsa-btn{padding:.26rem .6rem;border-radius:6px;border:1.5px solid var(--bd);background:transparent;color:var(--mt);font-size:.73rem;font-weight:800;cursor:pointer;transition:all .2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.salsa-unit-row{display:flex;align-items:center;gap:.25rem;margin-bottom:.22rem}
+.salsa-unit-lbl{font-size:.68rem;font-weight:700;color:var(--mt);flex-shrink:0;min-width:0;max-width:5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.salsa-unit-sep{font-size:.68rem;font-weight:800;color:var(--or);text-transform:uppercase;letter-spacing:.5px;margin:.3rem 0 .2rem;opacity:.7}
+.salsa-btn{padding:.22rem .45rem;border-radius:6px;border:1.5px solid var(--bd);background:transparent;color:var(--mt);font-size:.7rem;font-weight:800;cursor:pointer;transition:all .2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;white-space:nowrap}
 .salsa-btn.si.active{background:rgba(39,174,96,.15);border-color:#27AE60;color:#27AE60}
 .salsa-btn.no.active{background:rgba(231,76,60,.12);border-color:#E74C3C;color:#E74C3C}
+.veg-btn{padding:.22rem .45rem;border-radius:6px;border:1.5px solid var(--bd);background:transparent;color:var(--mt);font-size:.7rem;font-weight:800;cursor:pointer;transition:all .2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.veg-btn.si.active{background:rgba(39,174,96,.15);border-color:#27AE60;color:#27AE60}
+.veg-btn.no.active{background:rgba(231,76,60,.1);border-color:#E74C3C;color:#E74C3C}
 body.light .salsa-wrap{border-top-color:rgba(0,0,0,.1)}
 
 /* ── ORDER TRACKING TIMELINE ── */
@@ -693,11 +694,6 @@ body.light .salsa-wrap{border-top-color:rgba(0,0,0,.1)}
         <div class="step-title">Elige tu <span>Comida</span></div>
         <div id="foodGrid"></div>
 
-        <div style="margin-top:1.4rem" id="vegSection">
-          <div class="step-title" style="font-size:1.2rem;margin-bottom:.3rem">¿Con qué <span>vegetales</span>?</div>
-          <p style="font-size:.82rem;color:var(--mt);margin-bottom:.8rem">Elige Sí o No para cada vegetal — obligatorio antes de continuar 🥬</p>
-          <div id="vegPerItemGrid"></div>
-        </div>
       </div>
 
 
@@ -927,6 +923,9 @@ body.light .salsa-wrap{border-top-color:rgba(0,0,0,.1)}
     </div>
 
 
+    <div style="text-align:center;padding:.5rem 1rem;border-top:1px solid var(--bd);font-size:.72rem;color:var(--mt)">
+      ¿Quieres un sistema como este? <a href="https://wa.me/573145788337?text=Hola%2C%20me%20interesa%20un%20sistema%20como%20el%20de%20KAN%20BURGER" target="_blank" style="color:var(--or);text-decoration:none;font-weight:700">Escríbeme aquí →</a>
+    </div>
     <div class="modal-foot" id="modalFoot">
       <div style="display:flex;flex-direction:column;gap:.25rem;width:100%">
         <div id="btnHint" style="display:none;font-size:.75rem;color:#E8641A;font-weight:700;text-align:right;padding-right:.2rem"></div>
@@ -1072,6 +1071,7 @@ body.light .salsa-wrap{border-top-color:rgba(0,0,0,.1)}
 <footer>
   <img src="img/logo.jpg" alt="KAN BURGER">
   <p>© 2025 KAN BURGER · 100% Artesanal · Hecho con ❤️ en Venezuela</p>
+  <p style="margin-top:.8rem;font-size:.75rem;opacity:.6">¿Quieres un sistema como este para tu negocio? <a href="https://wa.me/573145788337?text=Hola%2C%20me%20interesa%20un%20sistema%20como%20el%20de%20KAN%20BURGER" target="_blank" style="color:var(--or);text-decoration:none">Escríbeme aquí →</a></p>
   <p style="margin-top:.5rem;font-size:.72rem">
     <a href="#cocina" style="color:rgba(255,255,255,.2);font-size:.7rem" onclick="goKitchen();return false">⚙ Panel Cocina</a>
   </p>
@@ -1142,16 +1142,17 @@ const SAUCES = [
 const ADDITIONS = [
   {id:'ad1',name:'Adición de carne',price:7500,icon:'🥩'},
   {id:'ad2',name:'Adición de tocineta',price:1500,icon:'🥓'},
-  {id:'ad3',name:'Adición de huevo',price:1000,icon:'🍳'},
+  {id:'ad3',name:'Adición de huevo',price:1500,icon:'🍳'},
   {id:'ad4',name:'Queso cheddar tajado',price:1000,icon:'🧀'},
   {id:'ad10',name:'Queso cheddar fundido',price:2000,icon:'🫕'},
-  {id:'ad5',name:'Adición de pollo',price:5500,icon:'🍗'},
-  {id:'ad6',name:'Adición de pollo crispy',price:6500,icon:'🍗'},
+  {id:'ad5',name:'Adición de pollo',price:6500,icon:'🍗'},
+  {id:'ad6',name:'Adición de pollo crispy',price:7500,icon:'🍗'},
   {id:'ad7',name:'Papas francesas',price:4500,icon:'🍟'},
   {id:'ad8',name:'Adición de maíz',price:1500,icon:'🌽'},
   {id:'ad9',name:'Adición de pepinillo',price:1500,icon:'🥒'},
   {id:'ad11',name:'Adición de cebolla caramelizada',price:2000,icon:'🍯'},
-  {id:'ad12',name:'Adición de carne mechada',price:7500,icon:'🍖'}
+  {id:'ad12',name:'Adición de carne mechada',price:7500,icon:'🍖'},
+  {id:'ad13',name:'Adición de salchicha',price:3000,icon:'🌭',onlyFor:['v1','v2','v3','v4','a1','a2']}
 ];
 const VEGETALES = ['Cebolla','Tomate','Lechuga','Repollo y Zanahoria','Tocineta'];
 const PAYMENT_INFO = {
@@ -1341,20 +1342,41 @@ function setSalsaPrep(key, val, e){
   if(no) no.classList.toggle('active', val===false);
 }
 
+const _VEGICONS={Cebolla:'🧅',Tomate:'🍅',Lechuga:'🥬',Tocineta:'🥓','Repollo y Zanahoria':'🥗'};
+const _VEGLABELS={Cebolla:'Cebolla',Tomate:'Tomate',Lechuga:'Lechuga',Tocineta:'Tocineta','Repollo y Zanahoria':'Repollo'};
 function buildSalsaWrap(id){
   const wrap=document.getElementById('salsaWrap_'+id);
   if(!wrap) return;
-  const qty=Math.max(1, state.food[id]||0);
+  if(!state.food[id]){wrap.innerHTML='';return;}
+  const qty=state.food[id];
+  const item=MENU_ITEMS.find(x=>x.id===id);
+  const itemVegs=item?.vegs||[];
   const multiUnit=qty>1;
-  let html=`<div class="salsa-wrap-lbl">¿Con salsa?</div>`;
+  let html='';
   for(let i=0;i<qty;i++){
-    const key=id+'__'+i;
-    const isSi=state.salsaPrep[key]!==false;
+    const sKey=id+'__'+i;
+    const vKey=id+'__'+i;
+    const isSi=state.salsaPrep[sKey]!==false;
+    if(itemVegs.length&&!state.vegetales[vKey])
+      state.vegetales[vKey]=Object.fromEntries(itemVegs.map(v=>[v,null]));
+    const vegs=state.vegetales[vKey]||{};
+    if(multiUnit) html+=`<div class="salsa-unit-sep">Unidad ${i+1}</div>`;
     html+=`<div class="salsa-unit-row">
-      ${multiUnit?`<span class="salsa-unit-lbl">U${i+1}</span>`:''}
-      <button class="salsa-btn si ${isSi?'active':''}" id="salsaSi_${key}" onclick="setSalsaPrep('${key}',true,event)">SÍ</button>
-      <button class="salsa-btn no ${isSi?'':'active'}" id="salsaNo_${key}" onclick="setSalsaPrep('${key}',false,event)">NO</button>
+      <span class="salsa-unit-lbl">Salsa</span>
+      <button class="salsa-btn si ${isSi?'active':''}" id="salsaSi_${sKey}" onclick="setSalsaPrep('${sKey}',true,event)">SÍ</button>
+      <button class="salsa-btn no ${isSi?'':'active'}" id="salsaNo_${sKey}" onclick="setSalsaPrep('${sKey}',false,event)">NO</button>
     </div>`;
+    itemVegs.forEach(v=>{
+      const icon=_VEGICONS[v]||'🥗';
+      const lbl=_VEGLABELS[v]||v;
+      html+=`<div class="salsa-unit-row">
+        <span class="salsa-unit-lbl">${icon} ${lbl}</span>
+        <span class="veg-toggle">
+          <button class="veg-btn si ${vegs[v]===true?'active':''}" onclick="setVegetal('${vKey}','${v}',true,this)">Sí</button>
+          <button class="veg-btn no ${vegs[v]===false?'active':''}" onclick="setVegetal('${vKey}','${v}',false,this)">No</button>
+        </span>
+      </div>`;
+    });
   }
   wrap.innerHTML=html;
 }
@@ -1471,37 +1493,37 @@ function buildSummary(){
     const m=MENU_ITEMS.find(x=>x.id===id);
     return m?{id:m.id,name:m.name,price:m.price,qty:q,cat:m.cat}:null;
   }).filter(Boolean);
-  // Hamburguesas primero, combos (burgerfries) abajo
   const burgers=allItems.filter(i=>i.cat==='burger');
+  const venezolanos=allItems.filter(i=>i.cat==='venezolano');
+  const platos=allItems.filter(i=>i.cat==='plato');
   const combos=allItems.filter(i=>i.cat==='burgerfries');
-  const items=[...burgers,...combos];
+  const acompanantes=allItems.filter(i=>i.cat==='acompanante');
   const drinks=Object.entries(state.drinks).map(([id,q])=>{
     const d=DRINKS.find(x=>x.id===id);
     return d?{name:d.name,price:d.price,qty:q}:null;
   }).filter(Boolean);
   let html=`<div class="summary-title">Resumen de tu Orden</div>`;
-  if(burgers.length){
-    html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.3rem">Hamburguesas</div>`;
-    burgers.forEach(it=>{
+  function renderFoodGroup(list,label,extraFn){
+    if(!list.length) return;
+    html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">${label}</div>`;
+    list.forEach(it=>{
       html+=`<div class="summary-row"><span>${it.qty}x ${it.name}</span><span>${fmt(it.price*it.qty)}</span></div>`;
       Array.from({length:it.qty},(_,i)=>i).filter(i=>state.salsaPrep[it.id+'__'+i]===false).forEach(i=>{
         const lbl=it.qty>1?` U${i+1}`:'';
         html+=`<div class="summary-row" style="padding-left:.8rem"><span style="font-size:.78rem;color:#E74C3C">🚫 Sin salsa${lbl}</span><span></span></div>`;
       });
+      if(extraFn) extraFn(it);
     });
   }
-  if(combos.length){
-    html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Combos</div>`;
-    combos.forEach(it=>{
-      html+=`<div class="summary-row"><span>${it.qty}x ${it.name}</span><span>${fmt(it.price*it.qty)}</span></div>`;
-      Array.from({length:it.qty},(_,i)=>i).filter(i=>state.salsaPrep[it.id+'__'+i]===false).forEach(i=>{
-        const lbl=it.qty>1?` U${i+1}`:'';
-        html+=`<div class="summary-row" style="padding-left:.8rem"><span style="font-size:.78rem;color:#E74C3C">🚫 Sin salsa${lbl}</span><span></span></div>`;
-      });
-      html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
-      html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🥤 Bebida x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
-    });
-  }
+  renderFoodGroup(burgers,'Hamburguesas');
+  renderFoodGroup(venezolanos,'Perros Calientes');
+  renderFoodGroup(platos,'Platos');
+  renderFoodGroup(combos,'Hamburguesas + Francesas',it=>{
+    html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
+  });
+  renderFoodGroup(acompanantes,'Combos',it=>{
+    html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr + bebida x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
+  });
   if(drinks.length){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Bebidas</div>`;
     drinks.forEach(d=>{
@@ -1538,9 +1560,12 @@ function buildSummary(){
   const addEntries=Object.entries(state.additions).filter(([,adds])=>Object.keys(adds).length>0);
   if(addEntries.length){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Adiciones</div>`;
-    addEntries.forEach(([fid,adds])=>{
+    addEntries.forEach(([k,adds])=>{
+      const fid=k.split('__')[0];const u=parseInt(k.split('__')[1]);
       const food=MENU_ITEMS.find(m=>m.id===fid);
-      html+=`<div style="font-size:.75rem;color:var(--or);font-weight:800;margin:.3rem 0 .1rem">→ ${food?.name||fid}</div>`;
+      const qty=state.food[fid]||1;
+      const unitLabel=qty>1?` — U${u+1}`:'';
+      html+=`<div style="font-size:.75rem;color:var(--or);font-weight:800;margin:.3rem 0 .1rem">→ ${food?.name||fid}${unitLabel}</div>`;
       Object.entries(adds).forEach(([adId,q])=>{
         const a=ADDITIONS.find(x=>x.id===adId);
         if(a) html+=`<div class="summary-row"><span>${q}x ${a.name}</span><span>${fmt(a.price*q)}</span></div>`;
@@ -1568,13 +1593,23 @@ function esFeriado(d){
   const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');
   return FERIADOS_CO.includes(`${y}-${m}-${dd}`);
 }
+let domiciliosManualOff = false;
+async function cargarEstadoDomiciliosConfig() {
+  try {
+    const { data } = await sb.from('config').select('valor').eq('clave','domicilios_activo').single();
+    domiciliosManualOff = data && data.valor === 'false';
+  } catch(e) { domiciliosManualOff = false; }
+  aplicarEstadoDomicilio();
+}
 function isDomicilioDisponible(){
+  if (domiciliosManualOff) return false;
   const now=new Date();
-  const dia=now.getDay(); // 0=dom,1=lun...6=sab
+  const dia=now.getDay();
   const mins=now.getHours()*60+now.getMinutes();
   const esDomOrFeriado=dia===0||esFeriado(now);
+  const inicio=18*60; // 6:00 PM
   const limite=esDomOrFeriado ? 22*60 : 23*60; // dom/feriado→10PM, lun-sab→11PM
-  return mins < limite;
+  return mins >= inicio && mins < limite;
 }
 
 function aplicarEstadoDomicilio(){
@@ -1590,6 +1625,8 @@ function aplicarEstadoDomicilio(){
   const mins=now.getHours()*60+now.getMinutes();
   const esDomOrFeriado=dia===0||esFeriado(now);
   const cierreHora=esDomOrFeriado?'10:00 PM':'11:00 PM';
+  const mins2=now.getHours()*60+now.getMinutes();
+  const antesDeApertura=mins2 < 18*60;
 
   const domDisponible=isDomicilioDisponible();
   // Tienda cierra a medianoche — consideramos cerrado de 00:00 a 05:59
@@ -1613,7 +1650,7 @@ function aplicarEstadoDomicilio(){
       if(sub) sub.textContent='+ $2.500';
     } else {
       btnDom.classList.add('closed');
-      if(sub) sub.textContent=`Cerrado · hasta las ${cierreHora}`;
+      if(sub) sub.textContent=antesDeApertura ? 'Disponible desde las 6:00 PM' : `Cerrado · hasta las ${cierreHora}`;
       if(state.entrega==='domicilio'){
         state.entrega=null;
         document.querySelectorAll('.entrega-btn').forEach(b=>b.classList.remove('selected'));
@@ -1822,42 +1859,54 @@ function setVegetal(vegKey,vegName,value,btn){
   updateNextBtn();
 }
 
-// Build additions grid — per food item
+// Build additions grid — per unit
 function buildAdditionsGrid(){
   const g=document.getElementById('additionsGrid');
   const orderedFoods=Object.keys(state.food);
   if(!orderedFoods.length){g.innerHTML='<div style="color:var(--mt);font-size:.85rem;text-align:center;padding:.5rem">Selecciona un producto primero 👆</div>';return;}
-  orderedFoods.forEach(fid=>{if(!state.additions[fid])state.additions[fid]={};});
-  Object.keys(state.additions).forEach(fid=>{if(!state.food[fid])delete state.additions[fid];});
-  g.innerHTML=orderedFoods.map(fid=>{
+  orderedFoods.forEach(fid=>{
+    const qty=state.food[fid]||0;
+    for(let u=0;u<qty;u++){const k=fid+'__'+u;if(!state.additions[k])state.additions[k]={};}
+  });
+  Object.keys(state.additions).forEach(k=>{
+    const fid=k.split('__')[0];const u=parseInt(k.split('__')[1]);
+    if(!state.food[fid]||u>=(state.food[fid]||0)) delete state.additions[k];
+  });
+  g.innerHTML=orderedFoods.flatMap(fid=>{
     const food=MENU_ITEMS.find(m=>m.id===fid);
-    const foodAdds=state.additions[fid]||{};
-    return `<div class="add-food-block">
-      <div class="add-food-title">🍔 ${food.name} ×${state.food[fid]}</div>
-      <div class="add-food-grid">
-        ${ADDITIONS.filter(a=>productosActivos[a.id]!==false).map(a=>`
-          <div class="dorder-card ${foodAdds[a.id]?'in-cart':''}" id="adcard_${fid}_${a.id}">
-            <div class="do-ic">${a.icon}</div>
-            <div class="do-name">${a.name}</div>
-            <div class="do-price">${fmt(a.price)}</div>
-            <div class="qty-ctrl" style="justify-content:center">
-              <button class="qty-btn" onclick="changeAddition('${fid}','${a.id}',-1)">−</button>
-              <span class="qty-val" id="adqty_${fid}_${a.id}">${foodAdds[a.id]||0}</span>
-              <button class="qty-btn" onclick="changeAddition('${fid}','${a.id}',1)">+</button>
-            </div>
-          </div>`).join('')}
-      </div>
-    </div>`;
+    const qty=state.food[fid]||1;
+    const multi=qty>1;
+    return Array.from({length:qty},(_,u)=>{
+      const k=fid+'__'+u;
+      const foodAdds=state.additions[k]||{};
+      const unitLabel=multi?` — Unidad ${u+1}`:'';
+      return `<div class="add-food-block">
+        <div class="add-food-title">🍔 ${food.name}${unitLabel}</div>
+        <div class="add-food-grid">
+          ${ADDITIONS.filter(a=>productosActivos[a.id]!==false&&(!a.onlyFor||a.onlyFor.includes(fid))).map(a=>`
+            <div class="dorder-card ${foodAdds[a.id]?'in-cart':''}" id="adcard_${k}_${a.id}">
+              <div class="do-ic">${a.icon}</div>
+              <div class="do-name">${a.name}</div>
+              <div class="do-price">${fmt(a.price)}</div>
+              <div class="qty-ctrl" style="justify-content:center">
+                <button class="qty-btn" onclick="changeAddition('${k}','${a.id}',-1)">−</button>
+                <span class="qty-val" id="adqty_${k}_${a.id}">${foodAdds[a.id]||0}</span>
+                <button class="qty-btn" onclick="changeAddition('${k}','${a.id}',1)">+</button>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+    });
   }).join('');
 }
 
-function changeAddition(foodId,adId,delta){
-  if(!state.additions[foodId])state.additions[foodId]={};
-  const cur=state.additions[foodId][adId]||0;
+function changeAddition(key,adId,delta){
+  if(!state.additions[key])state.additions[key]={};
+  const cur=state.additions[key][adId]||0;
   const nv=Math.max(0,cur+delta);
-  if(nv===0) delete state.additions[foodId][adId]; else state.additions[foodId][adId]=nv;
-  const el=document.getElementById('adqty_'+foodId+'_'+adId);
-  const card=document.getElementById('adcard_'+foodId+'_'+adId);
+  if(nv===0) delete state.additions[key][adId]; else state.additions[key][adId]=nv;
+  const el=document.getElementById('adqty_'+key+'_'+adId);
+  const card=document.getElementById('adcard_'+key+'_'+adId);
   if(el) el.textContent=nv||0;
   if(card) card.classList.toggle('in-cart',nv>0);
   updateTotalDisplay();
@@ -1884,9 +1933,12 @@ function renderStep(s){
         });
       }
     });
-    // Polling para autocompletar del navegador
+    // Polling para autocompletar del navegador (solo activa el botón, nunca lo desactiva)
     if(window._payPoll) clearInterval(window._payPoll);
-    window._payPoll = setInterval(updateNextBtn, 300);
+    window._payPoll = setInterval(()=>{
+      const btn=document.getElementById('btnNext');
+      if(btn && btn.disabled) updateNextBtn();
+    }, 300);
   } else {
     if(window._payPoll){ clearInterval(window._payPoll); window._payPoll=null; }
   }
@@ -2027,8 +2079,9 @@ function formatNumPedido(n){
 }
 async function generarNumPedido(){
   try{
-    const {count}=await sb.from('ordenes').select('*',{count:'exact',head:true});
-    return formatNumPedido((count||0)+1);
+    const {data,error}=await sb.rpc('siguiente_num_orden');
+    if(error) throw error;
+    return formatNumPedido(data);
   }catch(e){
     return 'KN-'+String(Date.now()).slice(-4);
   }
@@ -2071,11 +2124,12 @@ async function placeOrder(){
       const food=MENU_ITEMS.find(m=>m.id===fid);
       return arr.map(id=>{const s=SAUCES.find(x=>x.id===id);return s?{foodId:fid,foodName:food?.name||fid,unit,id:s.id,name:s.name}:null;}).filter(Boolean);
     }),
-    adiciones: Object.entries(state.additions).flatMap(([fid,adds])=>{
+    adiciones: Object.entries(state.additions).flatMap(([k,adds])=>{
+      const fid=k.split('__')[0];const u=parseInt(k.split('__')[1])+1;
       const food=MENU_ITEMS.find(m=>m.id===fid);
       return Object.entries(adds).map(([adId,q])=>{
         const a=ADDITIONS.find(x=>x.id===adId);
-        return a?{foodId:fid,foodName:food?.name||fid,id:a.id,name:a.name,price:a.price,qty:q}:null;
+        return a?{foodId:fid,foodName:food?.name||fid,unit:u,id:a.id,name:a.name,price:a.price,qty:q}:null;
       }).filter(Boolean);
     }),
     vegetales: Object.entries(state.vegetales).filter(([k])=>{
@@ -2156,16 +2210,36 @@ async function _enviarOrdenBackground(order){
       if(state.comprobanteUrl) order.comprobante_url=state.comprobanteUrl;
     }
 
-    const {error}=await sb.from('ordenes').insert(order);
+    let {error}=await sb.from('ordenes').insert(order);
+    // Si el número ya existe (colisión), pedir uno nuevo y reintentar
+    if(error && error.message && error.message.includes('duplicate key')){
+      console.warn('Colisión de número de orden, reintentando...');
+      const nuevoNum=await generarNumPedido();
+      order.id=nuevoNum;
+      state.orderNum=nuevoNum;
+      const numEl=document.getElementById('confirmNum');
+      if(numEl) numEl.textContent='#'+nuevoNum;
+      const obNumEl=document.getElementById('obNum');
+      if(obNumEl) obNumEl.textContent='#'+nuevoNum;
+      const r2=await sb.from('ordenes').insert(order);
+      error=r2.error;
+    }
     if(error){
       console.error('Error Supabase:',error);
       const el=document.getElementById('confirmErrorMsg');
-      if(el){el.textContent='⚠️ Problema al registrar el pedido. Llama al restaurante: 311 758 0802';el.style.display='block';}
+      if(el){
+        el.innerHTML='⚠️ Error al guardar pedido<br><small style="font-size:.72rem;word-break:break-all">'+
+          (error.message||error.code||JSON.stringify(error))+'</small><br>Llama al restaurante: 311 758 0802';
+        el.style.display='block';
+      }
     }
   }catch(e){
     console.error('Error de red:',e);
     const el=document.getElementById('confirmErrorMsg');
-    if(el){el.textContent='⚠️ Sin conexión. Llama al restaurante: 311 758 0802';el.style.display='block';}
+    if(el){
+      el.innerHTML='⚠️ Sin conexión<br><small style="font-size:.75rem">'+e.message+'</small><br>Llama al restaurante: 311 758 0802';
+      el.style.display='block';
+    }
   }
 }
 
@@ -2186,7 +2260,9 @@ function buildConfirmation(){
     });
     if(m.cat==='burgerfries'){
       html+=`<div class="receipt-item" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr x${q}</span><span style="font-size:.75rem;color:#27AE60">Incluido</span></div>`;
-      html+=`<div class="receipt-item" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🥤 Bebida x${q}</span><span style="font-size:.75rem;color:#27AE60">Incluido</span></div>`;
+    }
+    if(m.cat==='acompanante'){
+      html+=`<div class="receipt-item" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr + bebida x${q}</span><span style="font-size:.75rem;color:#27AE60">Incluido</span></div>`;
     }
     return html;
   }).join('');
@@ -2237,9 +2313,35 @@ function buildConfirmation(){
 function printReceipt(){
   const ts=new Date();
   const dt=ts.toLocaleDateString('es-CO')+' '+ts.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
-  const foodRows=Object.entries(state.food).map(([id,q])=>{const m=MENU_ITEMS.find(x=>x.id===id);return m?`<tr><td>${q}x ${m.name}</td><td style="text-align:right">${fmt(m.price*q)}</td></tr>`:''}).join('');
+  const foodRows=Object.entries(state.food).flatMap(([id,q])=>{
+    const m=MENU_ITEMS.find(x=>x.id===id);
+    if(!m) return [];
+    return Array.from({length:q},(_,u)=>{
+      const key=`${id}__${u}`;
+      const noSalsa=state.salsaPrep[key]===false;
+      const sels=state.sauces[key]||[];
+      const vegs=state.vegetales[key]||{};
+      const siV=Object.entries(vegs).filter(([,v])=>v===true).map(([k])=>k);
+      const noV=Object.entries(vegs).filter(([,v])=>v===false).map(([k])=>k);
+      let rows=`<tr><td>1x ${m.name}</td><td style="text-align:right">${fmt(m.price)}</td></tr>`;
+      rows+=noSalsa
+        ?`<tr><td style="padding-left:12px;font-size:10px">Sin salsa</td><td></td></tr>`
+        :`<tr><td style="padding-left:12px;font-size:10px">Con salsa</td><td></td></tr>`;
+      if(sels.length){
+        const names=sels.map(sid=>SAUCES.find(s=>s.id===sid)?.name||sid).join(', ');
+        rows+=`<tr><td style="padding-left:12px;font-size:10px">Llevar: ${names}</td><td></td></tr>`;
+      }
+      if(siV.length) rows+=`<tr><td style="padding-left:12px;font-size:10px">Con: ${siV.join(', ')}</td><td></td></tr>`;
+      if(noV.length) rows+=`<tr><td style="padding-left:12px;font-size:10px">Sin: ${noV.join(', ')}</td><td></td></tr>`;
+      const unitAdds=state.additions[key]||{};
+      Object.entries(unitAdds).forEach(([adId,aq])=>{
+        const a=ADDITIONS.find(x=>x.id===adId);
+        if(a&&aq>0) rows+=`<tr><td style="padding-left:12px;font-size:10px">+ ${aq}x ${a.name}</td><td style="text-align:right;font-size:10px">${fmt(a.price*aq)}</td></tr>`;
+      });
+      return rows;
+    });
+  }).join('');
   const drinkRows=Object.entries(state.drinks).map(([id,q])=>{const d=DRINKS.find(x=>x.id===id);return d?`<tr><td>${q}x ${d.name}</td><td style="text-align:right">${fmt(d.price*q)}</td></tr>`:''}).join('');
-  const sauceList=Object.entries(state.sauces).filter(([,arr])=>arr.length>0).map(([k,arr])=>{const fid=k.split('__')[0];const idx=parseInt(k.split('__')[1]);const food=MENU_ITEMS.find(m=>m.id===fid);return `${food?.name||fid} U${idx+1}: ${arr.map(id=>SAUCES.find(s=>s.id===id)?.name).join(', ')}`;}).join(' | ');
   const _pl={nequi:'Nequi',daviplata:'Daviplata',llave:'Llave B-reve',efectivo:'Efectivo'};
   const payLabel=state.isSplit
     ? state.splitPayments.map(p=>`${fmt(p.amount)} en ${_pl[p.method]||p.method}`).join(' + ')
@@ -2265,10 +2367,10 @@ function printReceipt(){
   <hr class="sep">
   <div class="num">Pedido #${state.orderNum}</div>
   <div style="text-align:center;font-size:10px;color:#555;margin-bottom:8px">${dt}</div>
+  ${state.entrega==='domicilio'?`<div style="text-align:center;font-weight:bold;font-size:11px;border:1px solid #000;padding:3px;margin:4px 0">🛵 DOMICILIO</div>${state.direccion?`<div style="font-size:10px;margin:2px 0"><b>Dir:</b> ${state.direccion}</div>`:''}${state.telefono?`<div style="font-size:10px;margin:2px 0"><b>Tel:</b> ${state.telefono}</div>`:''}`:''}
   <hr class="sep">
   <table>
   ${foodRows}${drinkRows}
-  ${sauceList?`<tr><td>Salsas: ${sauceList}</td><td style="text-align:right">Gratis</td></tr>`:''}
   <tr class="total-row"><td>TOTAL</td><td style="text-align:right">${fmt(grandTotal())}</td></tr>
   </table>
   <div style="text-align:center;font-size:11px;margin-top:6px">Pago: ${payLabel}</div>
@@ -2419,25 +2521,29 @@ async function subirComprobante(input) {
 let trackingInterval = null;
 let timerInterval = null;
 
-function iniciarTimer(){
+function iniciarTimer(orderId){
   clearInterval(timerInterval);
-  let seg=40*60;
-  const el=document.getElementById('timerDisplay');
+  const key='kanTimer_'+(orderId||'order');
+  if(!localStorage.getItem(key)) localStorage.setItem(key, Date.now());
+  const startTime=parseInt(localStorage.getItem(key));
+  const totalSeg=40*60;
   function tick(){
-    if(seg<0){
+    const elapsed=Math.floor((Date.now()-startTime)/1000);
+    const seg=totalSeg-elapsed;
+    const el=document.getElementById('timerDisplay');
+    const obTimer=document.getElementById('obTimer');
+    if(seg<=0){
       clearInterval(timerInterval);
       if(el)el.textContent='¡En camino! 🛵';
-      const obTimer=document.getElementById('obTimer');
-      if(obTimer) obTimer.textContent='';
+      if(obTimer)obTimer.textContent='';
+      localStorage.removeItem(key);
       return;
     }
     const m=Math.floor(seg/60);
     const s=seg%60;
     const t=m+':'+(s<10?'0':'')+s;
-    if(el) el.textContent=t;
-    const obTimer=document.getElementById('obTimer');
-    if(obTimer) obTimer.textContent=t;
-    seg--;
+    if(el)el.textContent=t;
+    if(obTimer)obTimer.textContent=t;
   }
   tick();
   timerInterval=setInterval(tick,1000);
@@ -2455,7 +2561,7 @@ async function cargarPosicionFila(fechaHora){
 
 function iniciarTracking(orderId) {
   actualizarTimeline('pendiente');
-  iniciarTimer();
+  iniciarTimer(orderId);
   cargarPosicionFila(state.orderFechaHora);
   if (trackingInterval) clearInterval(trackingInterval);
   trackingInterval = setInterval(async () => {
@@ -2960,12 +3066,15 @@ window.addEventListener('hashchange',handleHash);
 // ── INIT ──
 (async function(){
   await cargarProductosActivos();
+  await cargarEstadoDomiciliosConfig();
   buildShowcase();
   filterMenu(document.querySelector('.menu-filter .fbtn.active'));
   initReveal();
   handleHash();
   checkActiveOrder();
   checkHistBtn();
+  // Re-verificar estado domicilios cada 2 minutos
+  setInterval(cargarEstadoDomiciliosConfig, 120000);
 })();
 
 // Realtime — actualiza vitrina al instante cuando cocina activa/desactiva productos

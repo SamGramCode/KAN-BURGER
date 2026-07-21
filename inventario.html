@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KAN BURGER — Inventario</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<meta property="og:title" content="KAN BURGER — Inventario">
+<meta property="og:description" content="Panel de inventario interno KAN BURGER">
+<meta property="og:image" content="https://kan-burger-five.vercel.app/img/inventario-preview.png">
+<meta property="og:type" content="website">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --or:#E8641A;--orl:#FF7A28;
+  --ok:#27AE60;--err:#E74C3C;--warn:#F39C12;
+  --bg:#F5F5F5;--bg2:#FFFFFF;--bg3:#FAFAFA;
+  --tx:#111111;--tx2:#555555;--bd:rgba(0,0,0,.1);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',-apple-system,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:manipulation}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--or);border-radius:2px}
+
+/* LOGIN */
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fff}
+.pin-box{background:#fff;border:1px solid var(--bd);border-radius:24px;padding:2.5rem 2rem;width:100%;max-width:340px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.08)}
+.pin-logo{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:3px;color:var(--or);margin-bottom:.3rem}
+.pin-sub{font-size:.8rem;color:var(--tx2);margin-bottom:2rem}
+.pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:1.5rem}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid #ccc;transition:all .2s}
+.pin-dot.filled{background:var(--or);border-color:var(--or)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto}
+.pin-key{background:#f5f5f5;border:1px solid #e0e0e0;color:var(--tx);border-radius:12px;padding:1rem;font-size:1.3rem;font-weight:700;transition:all .2s}
+.pin-key:active{background:rgba(232,100,26,.1);border-color:var(--or)}
+.pin-err{color:var(--err);font-size:.82rem;margin-top:1rem;min-height:1.2rem}
+
+/* APP */
+#app{display:none;min-height:100vh;flex-direction:column}
+.inv-header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:2px solid var(--or);padding:.8rem 1.2rem;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.inv-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--tx)}
+.inv-title span{color:var(--or)}
+.btn-logout{background:transparent;border:1px solid #ddd;color:var(--tx2);padding:.4rem .9rem;border-radius:20px;font-size:.75rem;font-weight:700}
+.btn-logout:hover{border-color:var(--err);color:var(--err)}
+
+/* ALERT BANNER */
+.alert-banner{background:rgba(231,76,60,.07);border-bottom:1px solid rgba(231,76,60,.2);padding:.7rem 1.2rem;display:none;align-items:center;gap:.6rem;font-size:.84rem;font-weight:700;color:var(--err)}
+.alert-banner.show{display:flex}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:2px solid #eee;background:#fff;flex-shrink:0}
+.tab{flex:1;padding:.8rem .5rem;font-weight:800;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;border:none;background:transparent;color:#999;border-bottom:3px solid transparent;transition:all .2s;position:relative}
+.tab.active{color:var(--or);border-bottom-color:var(--or);background:rgba(232,100,26,.04)}
+.tab-badge{position:absolute;top:6px;right:8px;background:var(--err);color:#fff;border-radius:50%;width:16px;height:16px;font-size:.6rem;display:flex;align-items:center;justify-content:center;font-weight:900}
+
+/* CONTENT */
+.inv-body{flex:1;overflow-y:auto;padding:1rem 1rem 5rem}
+
+/* ITEMS */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;margin-top:.5rem}
+.section-desc{font-size:.78rem;color:var(--tx2);margin-bottom:1rem}
+.btn-add-item{background:var(--or);color:#fff;padding:.5rem 1rem;border-radius:20px;font-size:.78rem;font-weight:800}
+.item-list{display:flex;flex-direction:column;gap:.6rem}
+.item-card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:.9rem 1rem;display:flex;align-items:center;gap:.8rem;transition:border-color .2s;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.item-card.alerta{border-color:rgba(231,76,60,.4);background:rgba(231,76,60,.03)}
+.item-card.ok{border-color:rgba(39,174,96,.3)}
+.item-info{flex:1;min-width:0}
+.item-nombre{font-weight:800;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tx)}
+.item-unidad{font-size:.72rem;color:var(--tx2)}
+.item-stock{text-align:center;min-width:60px}
+.item-stock-num{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;line-height:1}
+.item-stock-num.ok{color:var(--ok)}
+.item-stock-num.warn{color:var(--warn)}
+.item-stock-num.err{color:var(--err)}
+.item-stock-min{font-size:.65rem;color:var(--tx2)}
+.item-actions{display:flex;gap:.4rem}
+.btn-mas{background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.3);color:var(--ok);border-radius:8px;padding:.35rem .65rem;font-size:.9rem;font-weight:900}
+.btn-menos{background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.2);color:var(--err);border-radius:8px;padding:.35rem .65rem;font-size:.9rem;font-weight:900}
+.btn-transfer{background:rgba(232,100,26,.08);border:1px solid rgba(232,100,26,.2);color:var(--or);border-radius:8px;padding:.35rem .65rem;font-size:.8rem;font-weight:800}
+.btn-edit-item{background:transparent;border:1px solid #ddd;color:#999;border-radius:8px;padding:.35rem .5rem;font-size:.75rem}
+
+/* HISTORIAL */
+.historial-btn{display:flex;align-items:center;gap:.5rem;background:transparent;border:1px solid #ddd;color:var(--tx2);padding:.5rem 1rem;border-radius:20px;font-size:.78rem;font-weight:700;margin-bottom:1rem}
+
+/* FAB */
+.fab{position:fixed;bottom:1.5rem;right:1.5rem;width:52px;height:52px;border-radius:50%;background:var(--or);color:#fff;font-size:1.6rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(232,100,26,.35);z-index:40;transition:transform .2s}
+.fab:active{transform:scale(.93)}
+
+/* MODALES */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+@media(min-width:600px){.modal-overlay{align-items:center}}
+.modal-box{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:1.5rem 1.2rem;animation:slideUp .3s ease}
+@media(min-width:600px){.modal-box{border-radius:20px;max-height:80vh}}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--or);margin-bottom:1.2rem}
+.modal-label{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--tx2);font-weight:700;margin-bottom:.4rem;display:block}
+.modal-input{width:100%;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:10px;padding:.8rem 1rem;color:var(--tx);font-size:.95rem;margin-bottom:1rem;outline:none;font-family:inherit}
+.modal-input:focus{border-color:rgba(232,100,26,.5)}
+.modal-select{width:100%;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:10px;padding:.8rem 1rem;color:var(--tx);font-size:.95rem;margin-bottom:1rem;outline:none;font-family:inherit}
+.modal-select option{background:#fff}
+.modal-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.btn-modal-ok{width:100%;background:var(--or);color:#fff;padding:.9rem;border-radius:12px;font-weight:800;font-size:.95rem;margin-top:.5rem}
+.btn-modal-cancel{width:100%;background:transparent;border:1px solid #ddd;color:var(--tx2);padding:.8rem;border-radius:12px;font-weight:700;font-size:.88rem;margin-top:.5rem}
+.btn-modal-delete{width:100%;background:rgba(231,76,60,.07);border:1px solid rgba(231,76,60,.25);color:var(--err);padding:.8rem;border-radius:12px;font-weight:700;font-size:.88rem;margin-top:.4rem}
+.cant-row-modal{display:flex;align-items:center;gap:12px;margin-bottom:1rem;justify-content:center}
+.cant-btn-modal{background:#f5f5f5;border:1px solid #ddd;color:var(--tx);border-radius:10px;width:44px;height:44px;font-size:1.4rem;display:flex;align-items:center;justify-content:center}
+.cant-val-modal{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--or);min-width:60px;text-align:center}
+
+/* HISTORIAL ITEMS */
+.mov-item{padding:.7rem 0;border-bottom:1px solid #f0f0f0;display:flex;gap:.8rem;align-items:flex-start}
+.mov-item:last-child{border-bottom:none}
+.mov-ico{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.mov-ico.entrada{background:rgba(39,174,96,.12)}
+.mov-ico.salida{background:rgba(231,76,60,.08)}
+.mov-ico.transferencia{background:rgba(232,100,26,.1)}
+.mov-info{flex:1;min-width:0}
+.mov-nombre{font-size:.84rem;font-weight:700;color:var(--tx)}
+.mov-det{font-size:.73rem;color:var(--tx2);margin-top:.1rem}
+.mov-cant{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;flex-shrink:0}
+.mov-cant.entrada{color:var(--ok)}
+.mov-cant.salida{color:var(--err)}
+.mov-cant.transferencia{color:var(--or)}
+
+.empty-state{text-align:center;padding:3rem 1rem;color:#bbb}
+.empty-state div{font-size:2.5rem;margin-bottom:.5rem}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:.8rem 1.4rem;font-size:.85rem;font-weight:700;z-index:999;white-space:nowrap;animation:toastIn .3s;display:none;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.toast.show{display:block}
+.toast.ok{border-color:var(--ok);color:var(--ok)}
+.toast.err{border-color:var(--err);color:var(--err)}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* RECETAS */
+.receta-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;padding-bottom:4rem}
+@media(min-width:480px){.receta-grid{grid-template-columns:repeat(3,1fr)}}
+.receta-card{background:#fff;border:1.5px solid #e8e8e8;border-radius:14px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05);transition:all .2s;position:relative}
+.receta-card.bloqueada{opacity:.6;filter:grayscale(.25)}
+.receta-photo{height:105px;background-size:cover;background-position:center;position:relative}
+.receta-badge{position:absolute;top:5px;right:5px;border-radius:16px;padding:.15rem .45rem;font-size:.7rem;font-weight:800;color:#fff}
+.receta-badge.lock{background:rgba(0,0,0,.55)}
+.receta-badge.done{background:rgba(39,174,96,.85)}
+.receta-info{padding:.6rem .65rem .75rem}
+.receta-name{font-weight:900;font-size:.78rem;color:var(--tx);margin-bottom:.5rem;line-height:1.25}
+.btn-receta{width:100%;border-radius:8px;padding:.42rem;font-size:.74rem;font-weight:800;color:#fff;transition:opacity .2s}
+.btn-receta.crear{background:var(--or)}
+.btn-receta.editar{background:var(--ok)}
+.btn-receta.lock{background:#888}
+.btn-receta:active{opacity:.8}
+/* modal receta */
+.rec-head{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;padding-bottom:.8rem;border-bottom:1px solid #eee}
+.rec-photo{width:52px;height:52px;border-radius:10px;background-size:cover;background-position:center;flex-shrink:0}
+.rec-name{font-weight:900;font-size:.95rem;color:var(--tx);line-height:1.2}
+.rec-cols{display:grid;grid-template-columns:1fr 66px 58px 30px;gap:.3rem;margin-bottom:.3rem}
+.rec-cols span{font-size:.65rem;color:var(--tx2);font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding-left:.15rem}
+.rec-rows{display:flex;flex-direction:column;gap:.4rem;max-height:250px;overflow-y:auto;margin-bottom:.7rem}
+.rec-row{display:grid;grid-template-columns:1fr 66px 58px 30px;gap:.3rem;align-items:center}
+.rec-inp{border:1.5px solid #e0e0e0;border-radius:7px;padding:.38rem .45rem;font-size:.8rem;font-family:inherit;color:var(--tx);width:100%;background:#fafafa}
+.rec-inp:focus{outline:none;border-color:var(--or);background:#fff}
+.rec-del{background:rgba(231,76,60,.1);color:var(--err);border:none;border-radius:7px;font-size:.82rem;cursor:pointer;height:100%;width:100%;display:flex;align-items:center;justify-content:center}
+.btn-add-row{background:rgba(232,100,26,.08);border:1.5px dashed rgba(232,100,26,.5);color:var(--or);border-radius:8px;padding:.48rem;font-size:.8rem;font-weight:800;width:100%;margin-bottom:.6rem}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="pin-box">
+    <img src="img/logo.jpg" alt="KAN BURGER" style="width:90px;height:90px;object-fit:cover;border-radius:16px;display:block;margin:0 auto 1rem">
+    <div class="pin-logo">KAN <span style="color:var(--or)">INVENTARIO</span></div>
+    <div class="pin-sub">Ingresa tu PIN de acceso</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key" onclick="pinClear()" style="font-size:.9rem;color:var(--mt)">✕</button>
+      <button class="pin-key" onclick="pinPress('0')">0</button>
+      <button class="pin-key" onclick="pinBack()" style="font-size:.9rem">⌫</button>
+    </div>
+    <div class="pin-err" id="pinErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="inv-header">
+    <div class="inv-title">KAN <span>INVENTARIO</span></div>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+
+  <div class="alert-banner" id="alertBanner">
+    <span>⚠️</span>
+    <span id="alertText"></span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab0" onclick="cambiarTab(0)">🛒 Insumos<span class="tab-badge" id="badge0" style="display:none"></span></button>
+    <button class="tab" id="tab1" onclick="cambiarTab(1)">🔧 Producción<span class="tab-badge" id="badge1" style="display:none"></span></button>
+    <button class="tab" id="tab2" onclick="cambiarTab(2)">🏪 Venta<span class="tab-badge" id="badge2" style="display:none"></span></button>
+    <button class="tab" id="tab3" onclick="cambiarTab(3)">📋 Recetas</button>
+  </div>
+
+  <div class="inv-body" id="invBody"></div>
+
+  <button class="fab" onclick="abrirModalNuevo()" title="Agregar item">+</button>
+</div>
+
+<!-- MODAL AJUSTE DE STOCK -->
+<div class="modal-overlay" id="modalAjuste">
+  <div class="modal-box">
+    <div class="modal-title" id="ajusteTitulo">Ajustar Stock</div>
+    <div style="text-align:center;margin-bottom:1rem">
+      <div style="font-size:.78rem;color:var(--mt);margin-bottom:.5rem">Stock actual: <span id="ajusteActual" style="color:var(--or);font-weight:800"></span></div>
+      <div class="cant-row-modal">
+        <button class="cant-btn-modal" onclick="ajusteCant(-1)">−</button>
+        <div class="cant-val-modal" id="ajusteCantVal">1</div>
+        <button class="cant-btn-modal" onclick="ajusteCant(1)">+</button>
+      </div>
+    </div>
+    <label class="modal-label">Nota (opcional)</label>
+    <input class="modal-input" id="ajusteNota" placeholder="Ej: llegó pedido de proveedor">
+    <button class="btn-modal-ok" id="ajusteBtn" onclick="confirmarAjuste()">✓ Confirmar</button>
+    <button class="btn-modal-cancel" onclick="cerrarModal('modalAjuste')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL TRANSFERENCIA -->
+<div class="modal-overlay" id="modalTransfer">
+  <div class="modal-box">
+    <div class="modal-title">Transferir</div>
+    <div style="font-size:.85rem;color:var(--mt);margin-bottom:1rem">
+      <span id="transferItemNombre" style="color:var(--cr);font-weight:800"></span><br>
+      Stock disponible: <span id="transferDisponible" style="color:var(--or);font-weight:800"></span>
+    </div>
+    <label class="modal-label">Cantidad a transferir</label>
+    <div class="cant-row-modal">
+      <button class="cant-btn-modal" onclick="transferCant(-1)">−</button>
+      <div class="cant-val-modal" id="transferCantVal">1</div>
+      <button class="cant-btn-modal" onclick="transferCant(1)">+</button>
+    </div>
+    <label class="modal-label">Destino</label>
+    <select class="modal-select" id="transferDestino"></select>
+    <label class="modal-label">Nota (opcional)</label>
+    <input class="modal-input" id="transferNota" placeholder="">
+    <button class="btn-modal-ok" onclick="confirmarTransfer()">→ Transferir</button>
+    <button class="btn-modal-cancel" onclick="cerrarModal('modalTransfer')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL NUEVO/EDITAR ITEM -->
+<div class="modal-overlay" id="modalItem">
+  <div class="modal-box">
+    <div class="modal-title" id="itemModalTitulo">Nuevo Item</div>
+    <label class="modal-label">Nombre</label>
+    <input class="modal-input" id="itemNombre" placeholder="Ej: Carne de res">
+    <div class="modal-row">
+      <div>
+        <label class="modal-label">Unidad</label>
+        <input class="modal-input" id="itemUnidad" placeholder="Ej: unidades, kg, gr">
+      </div>
+      <div>
+        <label class="modal-label">Stock mínimo (alerta)</label>
+        <input class="modal-input" type="number" id="itemMinimo" placeholder="0">
+      </div>
+    </div>
+    <label class="modal-label">Inventario</label>
+    <select class="modal-select" id="itemCategoria">
+      <option value="insumos">🛒 Insumos</option>
+      <option value="produccion">🔧 Producción</option>
+      <option value="venta">🏪 Venta diaria</option>
+    </select>
+    <label class="modal-label">Stock inicial</label>
+    <input class="modal-input" type="number" id="itemStock" placeholder="0">
+    <label class="modal-label">Proveedor (opcional)</label>
+    <input class="modal-input" id="itemProvNombre" placeholder="Nombre del proveedor">
+    <label class="modal-label">Teléfono proveedor</label>
+    <input class="modal-input" type="tel" id="itemProvTel" placeholder="Ej: +57 300 123 4567">
+    <button class="btn-modal-ok" onclick="guardarItem()">✓ Guardar</button>
+    <button class="btn-modal-delete" id="btnEliminar" style="display:none" onclick="eliminarItem()">🗑 Eliminar item</button>
+    <button class="btn-modal-cancel" onclick="cerrarModal('modalItem')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL HISTORIAL -->
+<div class="modal-overlay" id="modalHistorial">
+  <div class="modal-box">
+    <div class="modal-title">Historial de Movimientos</div>
+    <div id="historialList" style="min-height:200px"></div>
+    <button class="btn-modal-cancel" onclick="cerrarModal('modalHistorial')" style="margin-top:.5rem">Cerrar</button>
+  </div>
+</div>
+
+<!-- MODAL RECETA -->
+<div class="modal-overlay" id="modalReceta">
+  <div class="modal-box">
+    <div class="modal-title">Configurar Receta</div>
+    <div class="rec-head">
+      <div class="rec-photo" id="recFoto"></div>
+      <div class="rec-name" id="recNombre"></div>
+    </div>
+    <div class="rec-cols">
+      <span>Ingrediente</span><span>Cant.</span><span>Unidad</span><span></span>
+    </div>
+    <div class="rec-rows" id="recRows"></div>
+    <button class="btn-add-row" onclick="agregarFilaIngrediente()">+ Agregar ingrediente</button>
+    <button class="btn-modal-ok" onclick="guardarReceta()">🔒 Guardar y bloquear</button>
+    <button class="btn-modal-cancel" onclick="cerrarModal('modalReceta')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL PIN DESBLOQUEAR RECETA -->
+<div class="modal-overlay" id="modalPinReceta">
+  <div class="modal-box" style="text-align:center">
+    <div class="modal-title">🔒 Desbloquear</div>
+    <p style="font-size:.82rem;color:var(--tx2);margin-bottom:1rem">Ingresa el código de seguridad para editar esta receta</p>
+    <div class="pin-dots" id="pinRecDots">
+      <div class="pin-dot" id="prd0"></div><div class="pin-dot" id="prd1"></div>
+      <div class="pin-dot" id="prd2"></div><div class="pin-dot" id="prd3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinRecPress('1')">1</button>
+      <button class="pin-key" onclick="pinRecPress('2')">2</button>
+      <button class="pin-key" onclick="pinRecPress('3')">3</button>
+      <button class="pin-key" onclick="pinRecPress('4')">4</button>
+      <button class="pin-key" onclick="pinRecPress('5')">5</button>
+      <button class="pin-key" onclick="pinRecPress('6')">6</button>
+      <button class="pin-key" onclick="pinRecPress('7')">7</button>
+      <button class="pin-key" onclick="pinRecPress('8')">8</button>
+      <button class="pin-key" onclick="pinRecPress('9')">9</button>
+      <button class="pin-key" onclick="pinRecClear()" style="font-size:.9rem">✕</button>
+      <button class="pin-key" onclick="pinRecPress('0')">0</button>
+      <button class="pin-key" onclick="pinRecBack()" style="font-size:.9rem">⌫</button>
+    </div>
+    <div class="pin-err" id="pinRecErr"></div>
+    <button class="btn-modal-cancel" onclick="cerrarModal('modalPinReceta')" style="margin-top:1rem">Cancelar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://enjlbusizeospzadndwj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_sUXpKKZgEDbE7r77VRjFpQ_z815AhOd';
+const PIN_CORRECTO = '3087';
+
+let sb, items = [], tabActual = 0;
+let _ajusteId = null, _ajusteTipo = null, _ajusteCant = 1;
+let _transferId = null, _transferCant = 1;
+let recetas = {}, _recEditId = null, _pinRecBuf = '';
+
+const RECETA_ITEMS = [
+  {id:'v1',name:'Perro Caliente Sencillo',img:'img/perro-sencillo.jpg'},
+  {id:'v2',name:'Perro Caliente Especial',img:'img/perro-especial-2.jpg'},
+  {id:'b1',name:'Sencilla Res',img:'img/sencilla-res.jpg'},
+  {id:'b3',name:'Especial Res',img:'img/especial-res.jpg'},
+  {id:'b2',name:'Sencilla Pollo',img:'img/sencilla-pollo.jpg'},
+  {id:'b4',name:'Especial Pollo Crispy',img:'img/especial-pollo.jpg'},
+  {id:'b5',name:'Mixta',img:'img/mixta.jpg'},
+  {id:'v3',name:'Arepa Cabimera Volcán',img:'img/arepa-cabimera.jpg'},
+  {id:'v4',name:'Patacón',img:'img/patacon.jpg'},
+  {id:'a1',name:'Salchipapa',img:'img/salchipapa.jpg'},
+  {id:'a2',name:'Papa al Queso Cheddar',img:'img/papas-cheddar.jpg'},
+  {id:'f1',name:'Sencilla Res + Francesas',img:'img/sencilla-res.jpg'},
+  {id:'f2',name:'Sencilla Pollo + Francesas',img:'img/sencilla-pollo.jpg'},
+  {id:'f3',name:'Especial Res + Francesas',img:'img/especial-res.jpg'},
+  {id:'f4',name:'Especial Pollo Crispy + Francesas',img:'img/especial-pollo.jpg'},
+  {id:'f5',name:'Mixta + Francesas',img:'img/mixta.jpg'},
+  {id:'c1',name:'Combo Sencilla Res',img:'img/sencilla-res.jpg'},
+  {id:'c2',name:'Combo Sencilla Pollo',img:'img/sencilla-pollo.jpg'},
+  {id:'c3',name:'Combo Especial Res',img:'img/especial-res.jpg'},
+  {id:'c4',name:'Combo Especial Pollo Crispy',img:'img/especial-pollo.jpg'},
+  {id:'c5',name:'Combo Mixta',img:'img/mixta.jpg'},
+  // Adiciones — auto-descuento 1:1 con inventario
+  {id:'ad1',name:'Adición de carne',icon:'🥩'},
+  {id:'ad2',name:'Adición de tocineta',icon:'🥓'},
+  {id:'ad3',name:'Adición de huevo',icon:'🍳'},
+  {id:'ad4',name:'Queso cheddar tajado',icon:'🧀'},
+  {id:'ad10',name:'Queso cheddar fundido',icon:'🫕'},
+  {id:'ad5',name:'Adición de pollo',icon:'🍗'},
+  {id:'ad6',name:'Adición de pollo crispy',icon:'🍗'},
+  {id:'ad7',name:'Papas francesas',icon:'🍟'},
+  {id:'ad8',name:'Adición de maíz',icon:'🌽'},
+  {id:'ad9',name:'Adición de pepinillo',icon:'🥒'},
+  {id:'ad11',name:'Adición de cebolla caramelizada',icon:'🍯'},
+  {id:'ad12',name:'Adición de carne mechada',icon:'🍖'},
+  {id:'ad13',name:'Adición de salchicha',icon:'🌭'},
+];
+let _editId = null;
+
+// ── PIN ──────────────────────────────────────────────────────────────────────
+let pinActual = '';
+function pinPress(n) {
+  if (pinActual.length >= 4) return;
+  pinActual += n;
+  actualizarDots();
+  if (pinActual.length === 4) {
+    setTimeout(() => {
+      if (pinActual === PIN_CORRECTO) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        document.getElementById('app').style.flexDirection = 'column';
+        iniciar();
+      } else {
+        document.getElementById('pinErr').textContent = 'PIN incorrecto';
+        pinActual = '';
+        actualizarDots();
+        setTimeout(() => document.getElementById('pinErr').textContent = '', 1500);
+      }
+    }, 200);
+  }
+}
+function pinBack() { pinActual = pinActual.slice(0, -1); actualizarDots(); }
+function pinClear() { pinActual = ''; actualizarDots(); }
+function actualizarDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('d' + i).classList.toggle('filled', i < pinActual.length);
+  }
+}
+function logout() { pinActual = ''; actualizarDots(); document.getElementById('loginScreen').style.display = 'flex'; document.getElementById('app').style.display = 'none'; }
+
+// ── NOTIFICACIONES Y SONIDO ───────────────────────────────────────────────────
+function sonarAlerta() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.18, 0.36].forEach(t => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine'; osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.4, ctx.currentTime + t);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.15);
+      osc.start(ctx.currentTime + t);
+      osc.stop(ctx.currentTime + t + 0.15);
+    });
+  } catch(e) {}
+}
+
+async function pedirPermisoNotificaciones() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+}
+
+function notificarItems(alertas) {
+  if (!alertas.length) return;
+  const hoy = new Date().toDateString();
+  const yaNotificados = JSON.parse(localStorage.getItem('inv_notif_' + hoy) || '[]');
+  const nuevos = alertas.filter(i => !yaNotificados.includes(i.id));
+  if (!nuevos.length) return;
+  sonarAlerta();
+  nuevos.forEach(item => {
+    if (Notification.permission === 'granted') {
+      new Notification('⚠️ KAN BURGER — Inventario', {
+        body: `${item.nombre} necesita reposición (stock: ${item.stock} ${item.unidad})`,
+        icon: '/img/logo.jpg',
+        tag: 'inv_' + item.id
+      });
+    }
+  });
+  const ids = [...yaNotificados, ...nuevos.map(i => i.id)];
+  localStorage.setItem('inv_notif_' + hoy, JSON.stringify(ids));
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+async function iniciar() {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  await pedirPermisoNotificaciones();
+  await cargarItems();
+  await sembrarInsumos();
+  await Promise.all([cargarItems(), cargarRecetas()]);
+  renderTab();
+  escucharCambios();
+}
+
+function escucharCambios() {
+  sb.channel('inventario-realtime')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventario' }, async (payload) => {
+      const anterior = items.find(i => i.id === payload.new.id);
+      const nuevo = payload.new;
+      const idx = items.findIndex(i => i.id === nuevo.id);
+      if (idx !== -1) items[idx] = nuevo;
+      renderTab();
+      // Solo notifica si ACABA de cruzar el mínimo (no estaba en alerta antes)
+      if (anterior && anterior.stock > anterior.stock_minimo && nuevo.stock <= nuevo.stock_minimo) {
+        notificarItems([nuevo]);
+      }
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'inventario' }, async () => {
+      await cargarItems(); renderTab();
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'inventario' }, async () => {
+      await cargarItems(); renderTab();
+    })
+    .subscribe();
+}
+
+const INSUMOS_INICIALES = [
+  {nombre:'Carne de res',unidad:'unidades',stock_minimo:40},{nombre:'Carne desmechada',unidad:'unidades',stock_minimo:20},
+  {nombre:'Pollo',unidad:'unidades',stock_minimo:20},{nombre:'Patacón',unidad:'unidades',stock_minimo:8},
+  {nombre:'Pan de hamburguesa',unidad:'unidades',stock_minimo:25},{nombre:'Harina de maíz',unidad:'kg',stock_minimo:1},
+  {nombre:'Pan whopper',unidad:'unidades',stock_minimo:15},{nombre:'Pan de perro',unidad:'unidades',stock_minimo:15},
+  {nombre:'Huevos',unidad:'unidades',stock_minimo:60},{nombre:'Tocineta paquetes',unidad:'paquetes',stock_minimo:4},
+  {nombre:'Salchichas',unidad:'unidades',stock_minimo:30},{nombre:'Chorizo',unidad:'unidades',stock_minimo:60},
+  {nombre:'Maíz',unidad:'gr',stock_minimo:500},{nombre:'Aderezo queso cheddar',unidad:'gr',stock_minimo:500},
+  {nombre:'Tocineta artesanal',unidad:'kg',stock_minimo:10},{nombre:'Queso cheddar',unidad:'bloques',stock_minimo:2},
+  {nombre:'Papa francesa',unidad:'unidades',stock_minimo:40},{nombre:'Papas 250gr',unidad:'unidades',stock_minimo:30},
+  {nombre:'Tomate',unidad:'unidades',stock_minimo:5},{nombre:'Cebolla',unidad:'unidades',stock_minimo:1},
+  {nombre:'Grasa de cerdo',unidad:'litros',stock_minimo:1},{nombre:'Aceite de freír',unidad:'litros',stock_minimo:10},
+  {nombre:'Plátano patacón',unidad:'unidades',stock_minimo:7},{nombre:'Panco',unidad:'gr',stock_minimo:500},
+  {nombre:'Aguacate',unidad:'unidades',stock_minimo:1},{nombre:'Empaque K1',unidad:'unidades',stock_minimo:15},
+  {nombre:'Empaque P1',unidad:'unidades',stock_minimo:10},{nombre:'Caja de hamburguesa',unidad:'unidades',stock_minimo:100},
+  {nombre:'Caja hamburguesa whopper',unidad:'unidades',stock_minimo:50},{nombre:'Servilletas',unidad:'unidades',stock_minimo:2},
+  {nombre:'Toallín',unidad:'unidades',stock_minimo:1},{nombre:'Tenedores',unidad:'paquetes',stock_minimo:1},
+  {nombre:'Sal',unidad:'kg',stock_minimo:1},{nombre:'Azúcar de sobre',unidad:'unidades',stock_minimo:1},
+  {nombre:'Removedores',unidad:'unidades',stock_minimo:1},{nombre:'Vasos 5oz',unidad:'unidades',stock_minimo:1},
+  {nombre:'Vasos 7oz',unidad:'unidades',stock_minimo:1},{nombre:'Copa 0.5oz',unidad:'unidades',stock_minimo:1},
+  {nombre:'Tapas 0.5oz',unidad:'unidades',stock_minimo:1},{nombre:'Bolsas plásticas 5kg',unidad:'unidades',stock_minimo:1},
+  {nombre:'Bolsa biodegradable hamburguesa',unidad:'unidades',stock_minimo:2},{nombre:'Bolsa biodegradable papas',unidad:'unidades',stock_minimo:2},
+  {nombre:'Bolsa papel 6 libras',unidad:'unidades',stock_minimo:1},{nombre:'Bolsa papel 12 libras',unidad:'unidades',stock_minimo:1},
+  {nombre:'Papel cuadro negro',unidad:'unidades',stock_minimo:1},{nombre:'Tinta negra',unidad:'unidades',stock_minimo:1},
+  {nombre:'Grapas',unidad:'unidades',stock_minimo:1},{nombre:'Coca-Cola',unidad:'unidades',stock_minimo:2},
+  {nombre:'Cuatro',unidad:'unidades',stock_minimo:1},{nombre:'Sprite',unidad:'unidades',stock_minimo:1},
+  {nombre:'Jugo Hit',unidad:'unidades',stock_minimo:1},{nombre:'Agua Cielo',unidad:'unidades',stock_minimo:1},
+  {nombre:'Agua Cristal',unidad:'unidades',stock_minimo:1},
+  // Aseo
+  {nombre:'Jabón líquido manos',unidad:'unidades',stock_minimo:1},
+  {nombre:'Desengrasante',unidad:'unidades',stock_minimo:1},
+  {nombre:'Desinfectante',unidad:'litros',stock_minimo:1},
+  {nombre:'Cloro / Blanqueador',unidad:'litros',stock_minimo:1},
+  {nombre:'Limpiapisos',unidad:'litros',stock_minimo:1},
+  {nombre:'Esponjas',unidad:'unidades',stock_minimo:2},
+  {nombre:'Estropajo',unidad:'unidades',stock_minimo:1},
+  {nombre:'Escoba',unidad:'unidades',stock_minimo:1},
+  {nombre:'Trapero / Mopa',unidad:'unidades',stock_minimo:1},
+  {nombre:'Bolsas de basura',unidad:'paquetes',stock_minimo:1},
+  {nombre:'Guantes desechables',unidad:'cajas',stock_minimo:1},
+  {nombre:'Papel higiénico',unidad:'rollos',stock_minimo:2},
+  {nombre:'Gel antibacterial',unidad:'unidades',stock_minimo:1},
+  {nombre:'Toallas de papel rollo',unidad:'rollos',stock_minimo:1}
+];
+
+async function sembrarInsumos() {
+  const existentes = items.filter(i => i.categoria === 'insumos');
+  if (existentes.length > 0) return;
+  const filas = INSUMOS_INICIALES.map(i => ({...i, categoria:'insumos', stock:0}));
+  await sb.from('inventario').insert(filas);
+}
+
+async function cargarItems() {
+  const { data } = await sb.from('inventario').select('*').order('nombre');
+  items = data || [];
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+const CATS = ['insumos', 'produccion', 'venta'];
+const CAT_LABEL = ['Insumos', 'Producción', 'Venta diaria'];
+const CAT_NEXT = ['produccion', 'venta', null];
+const CAT_NEXT_LABEL = ['Producción', 'Venta diaria', null];
+
+function cambiarTab(n) {
+  tabActual = n;
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === n));
+  document.querySelector('.fab').style.display = n === 3 ? 'none' : 'flex';
+  renderTab();
+}
+
+function renderTab() {
+  if (tabActual === 3) { renderRecetas(); return; }
+  const cat = CATS[tabActual];
+  const lista = items.filter(i => i.categoria === cat);
+  const alertas = items.filter(i => i.stock <= i.stock_minimo);
+
+  // badges
+  CATS.forEach((c, i) => {
+    const cnt = items.filter(x => x.categoria === c && x.stock <= x.stock_minimo).length;
+    const badge = document.getElementById('badge' + i);
+    badge.textContent = cnt; badge.style.display = cnt ? 'flex' : 'none';
+  });
+
+  // banner global
+  const banner = document.getElementById('alertBanner');
+  if (alertas.length) {
+    banner.classList.add('show');
+    document.getElementById('alertText').textContent = `${alertas.length} item${alertas.length > 1 ? 's' : ''} bajo el mínimo — revisar inventario`;
+  } else {
+    banner.classList.remove('show');
+  }
+
+  const body = document.getElementById('invBody');
+  const canTransfer = CAT_NEXT[tabActual] !== null;
+  let html = `
+    <div class="section-header">
+      <div>
+        <div style="font-weight:900;font-size:.95rem;color:var(--or)">${CAT_LABEL[tabActual]}</div>
+        <div class="section-desc">${lista.length} items · ${lista.filter(i=>i.stock<=i.stock_minimo).length} alertas</div>
+      </div>
+      <button class="btn-add-item" onclick="abrirModalNuevo('${cat}')">+ Nuevo</button>
+    </div>
+    <button class="historial-btn" onclick="abrirHistorial('${cat}')">📋 Ver historial de movimientos</button>`;
+
+  if (!lista.length) {
+    html += `<div class="empty-state"><div>📦</div><p>Sin items. Agrega el primero con el botón +</p></div>`;
+  } else {
+    html += `<div class="item-list">`;
+    lista.forEach(item => {
+      const alerta = item.stock <= item.stock_minimo;
+      const clase = item.stock > item.stock_minimo * 1.5 ? 'ok' : alerta ? 'alerta' : '';
+      const numClase = item.stock > item.stock_minimo * 1.5 ? 'ok' : alerta ? 'err' : 'warn';
+      html += `<div class="item-card ${clase}">
+        <div class="item-info">
+          <div class="item-nombre">${item.nombre}</div>
+          <div class="item-unidad">${item.unidad} · mín: ${item.stock_minimo}</div>
+        </div>
+        <div class="item-stock">
+          <div class="item-stock-num ${numClase}">${item.stock}</div>
+          <div class="item-stock-min">${alerta ? '⚠️ bajo' : 'stock'}</div>
+        </div>
+        <div class="item-actions">
+          <button class="btn-mas" onclick="abrirAjuste('${item.id}','entrada')">+</button>
+          <button class="btn-menos" onclick="abrirAjuste('${item.id}','salida')">−</button>
+          ${canTransfer ? `<button class="btn-transfer" onclick="abrirTransfer('${item.id}')">→</button>` : ''}
+          ${item.proveedor_telefono ? `<a href="tel:${item.proveedor_telefono}" title="${item.proveedor_nombre||'Proveedor'}" style="background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.3);color:var(--ok);border-radius:8px;padding:.35rem .65rem;font-size:.9rem;text-decoration:none;display:flex;align-items:center">📞</a>` : ''}
+          <button class="btn-edit-item" onclick="abrirEditar('${item.id}')">✎</button>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  body.innerHTML = html;
+}
+
+// ── AJUSTE STOCK ─────────────────────────────────────────────────────────────
+function abrirAjuste(id, tipo) {
+  _ajusteId = id; _ajusteTipo = tipo; _ajusteCant = 1;
+  const item = items.find(i => i.id === id);
+  document.getElementById('ajusteTitulo').textContent = tipo === 'entrada' ? '📥 Entrada de Stock' : '📤 Salida de Stock';
+  document.getElementById('ajusteActual').textContent = `${item.stock} ${item.unidad}`;
+  document.getElementById('ajusteCantVal').textContent = 1;
+  document.getElementById('ajusteBtn').textContent = tipo === 'entrada' ? '✓ Agregar al stock' : '✓ Descontar del stock';
+  document.getElementById('ajusteNota').value = '';
+  document.getElementById('modalAjuste').classList.add('open');
+}
+function ajusteCant(d) {
+  _ajusteCant = Math.max(1, _ajusteCant + d);
+  document.getElementById('ajusteCantVal').textContent = _ajusteCant;
+}
+async function confirmarAjuste() {
+  const item = items.find(i => i.id === _ajusteId);
+  const nota = document.getElementById('ajusteNota').value.trim();
+  const nuevoStock = _ajusteTipo === 'entrada'
+    ? item.stock + _ajusteCant
+    : Math.max(0, item.stock - _ajusteCant);
+  const { error } = await sb.from('inventario').update({ stock: nuevoStock }).eq('id', _ajusteId);
+  if (error) { toast('Error al guardar', 'err'); return; }
+  await sb.from('inventario_movimientos').insert({
+    item_id: _ajusteId, tipo: _ajusteTipo, cantidad: _ajusteCant,
+    origen: item.categoria, nota: nota || null
+  });
+  cerrarModal('modalAjuste');
+  await cargarItems();
+  renderTab();
+  toast(_ajusteTipo === 'entrada' ? `+${_ajusteCant} agregado` : `-${_ajusteCant} descontado`, 'ok');
+}
+
+// ── TRANSFERENCIA ─────────────────────────────────────────────────────────────
+function abrirTransfer(id) {
+  _transferId = id; _transferCant = 1;
+  const item = items.find(i => i.id === id);
+  const catIdx = CATS.indexOf(item.categoria);
+  document.getElementById('transferItemNombre').textContent = item.nombre;
+  document.getElementById('transferDisponible').textContent = `${item.stock} ${item.unidad}`;
+  document.getElementById('transferCantVal').textContent = 1;
+  document.getElementById('transferNota').value = '';
+  const sel = document.getElementById('transferDestino');
+  sel.innerHTML = '';
+  for (let i = catIdx + 1; i < CATS.length; i++) {
+    sel.innerHTML += `<option value="${CATS[i]}">${CAT_LABEL[i]}</option>`;
+  }
+  document.getElementById('modalTransfer').classList.add('open');
+}
+function transferCant(d) {
+  _transferCant = Math.max(1, _transferCant + d);
+  document.getElementById('transferCantVal').textContent = _transferCant;
+}
+async function confirmarTransfer() {
+  const item = items.find(i => i.id === _transferId);
+  const destino = document.getElementById('transferDestino').value;
+  const nota = document.getElementById('transferNota').value.trim();
+  if (_transferCant > item.stock) { toast('Stock insuficiente', 'err'); return; }
+  const nuevoStock = item.stock - _transferCant;
+  await sb.from('inventario').update({ stock: nuevoStock }).eq('id', _transferId);
+  const existeEnDestino = items.find(i => i.nombre === item.nombre && i.categoria === destino);
+  if (existeEnDestino) {
+    await sb.from('inventario').update({ stock: existeEnDestino.stock + _transferCant }).eq('id', existeEnDestino.id);
+  } else {
+    await sb.from('inventario').insert({ nombre: item.nombre, unidad: item.unidad, categoria: destino, stock: _transferCant, stock_minimo: item.stock_minimo });
+  }
+  await sb.from('inventario_movimientos').insert({
+    item_id: _transferId, tipo: 'transferencia', cantidad: _transferCant,
+    origen: item.categoria, destino, nota: nota || null
+  });
+  cerrarModal('modalTransfer');
+  await cargarItems();
+  renderTab();
+  toast(`${_transferCant} transferido a ${CAT_LABEL[CATS.indexOf(destino)]}`, 'ok');
+}
+
+// ── NUEVO / EDITAR ITEM ───────────────────────────────────────────────────────
+function abrirModalNuevo(cat) {
+  _editId = null;
+  document.getElementById('itemModalTitulo').textContent = 'Nuevo Item';
+  document.getElementById('itemNombre').value = '';
+  document.getElementById('itemUnidad').value = 'unidades';
+  document.getElementById('itemMinimo').value = '0';
+  document.getElementById('itemStock').value = '0';
+  document.getElementById('itemCategoria').value = cat || CATS[tabActual];
+  document.getElementById('itemProvNombre').value = '';
+  document.getElementById('itemProvTel').value = '';
+  document.getElementById('btnEliminar').style.display = 'none';
+  document.getElementById('modalItem').classList.add('open');
+}
+function abrirEditar(id) {
+  _editId = id;
+  const item = items.find(i => i.id === id);
+  document.getElementById('itemModalTitulo').textContent = 'Editar Item';
+  document.getElementById('itemNombre').value = item.nombre;
+  document.getElementById('itemUnidad').value = item.unidad;
+  document.getElementById('itemMinimo').value = item.stock_minimo;
+  document.getElementById('itemStock').value = item.stock;
+  document.getElementById('itemCategoria').value = item.categoria;
+  document.getElementById('itemProvNombre').value = item.proveedor_nombre || '';
+  document.getElementById('itemProvTel').value = item.proveedor_telefono || '';
+  document.getElementById('btnEliminar').style.display = 'block';
+  document.getElementById('modalItem').classList.add('open');
+}
+async function guardarItem() {
+  const nombre = document.getElementById('itemNombre').value.trim();
+  if (!nombre) { toast('Escribe un nombre', 'err'); return; }
+  const data = {
+    nombre,
+    unidad: document.getElementById('itemUnidad').value.trim() || 'unidades',
+    stock_minimo: parseFloat(document.getElementById('itemMinimo').value) || 0,
+    stock: parseFloat(document.getElementById('itemStock').value) || 0,
+    categoria: document.getElementById('itemCategoria').value,
+    proveedor_nombre: document.getElementById('itemProvNombre').value.trim() || null,
+    proveedor_telefono: document.getElementById('itemProvTel').value.trim() || null
+  };
+  if (_editId) {
+    await sb.from('inventario').update(data).eq('id', _editId);
+    toast('Item actualizado', 'ok');
+  } else {
+    await sb.from('inventario').insert(data);
+    toast('Item agregado', 'ok');
+  }
+  cerrarModal('modalItem');
+  await cargarItems();
+  renderTab();
+}
+async function eliminarItem() {
+  if (!confirm('¿Eliminar este item del inventario?')) return;
+  await sb.from('inventario').delete().eq('id', _editId);
+  cerrarModal('modalItem');
+  await cargarItems();
+  renderTab();
+  toast('Item eliminado', 'ok');
+}
+
+// ── HISTORIAL ─────────────────────────────────────────────────────────────────
+async function abrirHistorial(cat) {
+  const { data } = await sb.from('inventario_movimientos')
+    .select('*, inventario(nombre,unidad)')
+    .eq('origen', cat)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  const list = document.getElementById('historialList');
+  if (!data || !data.length) {
+    list.innerHTML = '<div class="empty-state"><div>📋</div><p>Sin movimientos aún</p></div>';
+  } else {
+    const icons = { entrada: '📥', salida: '📤', transferencia: '↔️' };
+    list.innerHTML = data.map(m => {
+      const fecha = new Date(m.created_at).toLocaleDateString('es-CO', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+      const signo = m.tipo === 'entrada' ? '+' : m.tipo === 'salida' ? '-' : '→';
+      return `<div class="mov-item">
+        <div class="mov-ico ${m.tipo}">${icons[m.tipo]||'•'}</div>
+        <div class="mov-info">
+          <div class="mov-nombre">${m.inventario?.nombre || '—'}</div>
+          <div class="mov-det">${fecha}${m.nota ? ' · ' + m.nota : ''}${m.destino ? ' → ' + CAT_LABEL[CATS.indexOf(m.destino)] : ''}</div>
+        </div>
+        <div class="mov-cant ${m.tipo}">${signo}${m.cantidad} ${m.inventario?.unidad||''}</div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('modalHistorial').classList.add('open');
+}
+
+// ── RECETAS ──────────────────────────────────────────────────────────────────
+async function cargarRecetas() {
+  const { data } = await sb.from('inventario_recetas').select('*');
+  recetas = {};
+  if (data) data.forEach(r => { recetas[r.menu_item_id] = r; });
+}
+
+function renderRecetas() {
+  const body = document.getElementById('invBody');
+  const platos = RECETA_ITEMS.filter(m => !m.id.startsWith('ad'));
+  const adiciones = RECETA_ITEMS.filter(m => m.id.startsWith('ad'));
+
+  const buildCards = (lista) => lista.map(m => {
+    const rec = recetas[m.id];
+    const bloqueada = rec?.bloqueado;
+    const tieneRec = rec?.ingredientes?.length > 0;
+    const fotoStyle = m.img
+      ? `background-image:url('${m.img}')`
+      : `background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:2rem`;
+    const iconHtml = m.img ? '' : `<span>${m.icon || '📦'}</span>`;
+    return `<div class="receta-card ${bloqueada ? 'bloqueada' : ''}">
+      <div class="receta-photo" style="${fotoStyle}">${iconHtml}
+        ${bloqueada ? '<div class="receta-badge lock">🔒</div>' : tieneRec ? '<div class="receta-badge done">✓</div>' : ''}
+      </div>
+      <div class="receta-info">
+        <div class="receta-name">${m.name}</div>
+        <button class="btn-receta ${bloqueada ? 'lock' : tieneRec ? 'editar' : 'crear'}" onclick="${bloqueada ? `solicitarDesbloqueo('${m.id}')` : `abrirReceta('${m.id}')`}">
+          ${bloqueada ? '🔒 Desbloquear' : tieneRec ? '✏️ Editar receta' : '+ Crear receta'}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  let html = `
+  <div style="font-weight:900;font-size:.95rem;color:var(--or);margin:.5rem 0 .3rem">Recetas por Producto</div>
+  <div style="font-size:.78rem;color:var(--tx2);margin-bottom:1rem">Define qué lleva cada producto. Después de guardar se bloquea; usa el candado para editar.</div>
+  <div class="receta-grid">${buildCards(platos)}</div>
+  <div style="font-weight:900;font-size:.85rem;color:var(--tx2);margin:1.2rem 0 .6rem;text-transform:uppercase;letter-spacing:1px;border-top:1.5px solid #eee;padding-top:1rem">Adiciones</div>
+  <div class="receta-grid">${buildCards(adiciones)}</div>`;
+
+  body.innerHTML = html;
+}
+
+
+function abrirReceta(itemId) {
+  _recEditId = itemId;
+  const m = RECETA_ITEMS.find(x => x.id === itemId);
+  const rec = recetas[itemId];
+  const fotoEl = document.getElementById('recFoto');
+  if (m.img) {
+    fotoEl.style.backgroundImage = `url('${m.img}')`;
+    fotoEl.style.background = '';
+    fotoEl.textContent = '';
+  } else {
+    fotoEl.style.backgroundImage = 'none';
+    fotoEl.style.background = '#f0f0f0';
+    fotoEl.style.display = 'flex';
+    fotoEl.style.alignItems = 'center';
+    fotoEl.style.justifyContent = 'center';
+    fotoEl.style.fontSize = '1.6rem';
+    fotoEl.textContent = m.icon || '📦';
+  }
+  document.getElementById('recNombre').textContent = m.name;
+  const rowsDiv = document.getElementById('recRows');
+  rowsDiv.innerHTML = '';
+  const ings = rec?.ingredientes || [];
+  if (!ings.length) {
+    agregarFilaIngrediente('', '', '');
+  } else {
+    ings.forEach(ing => agregarFilaIngrediente(ing.ingrediente, ing.cantidad, ing.unidad));
+  }
+  document.getElementById('modalReceta').classList.add('open');
+}
+
+function agregarFilaIngrediente(ingr = '', cant = '', unid = '') {
+  const div = document.createElement('div');
+  div.className = 'rec-row';
+  div.innerHTML = `<input class="rec-inp" type="text" placeholder="Ej: Carne de res" value="${ingr}">
+    <input class="rec-inp" type="number" placeholder="1" value="${cant}" min="0" step="0.1">
+    <input class="rec-inp" type="text" placeholder="und" value="${unid}">
+    <button class="rec-del" onclick="this.closest('.rec-row').remove()">✕</button>`;
+  document.getElementById('recRows').appendChild(div);
+}
+
+async function guardarReceta() {
+  const rows = document.querySelectorAll('#recRows .rec-row');
+  const ingredientes = [];
+  rows.forEach(row => {
+    const inps = row.querySelectorAll('input');
+    const ingr = inps[0].value.trim();
+    const cant = parseFloat(inps[1].value) || 0;
+    const unid = inps[2].value.trim() || 'und';
+    if (ingr) ingredientes.push({ ingrediente: ingr, cantidad: cant, unidad: unid });
+  });
+  if (!ingredientes.length) { toast('Agrega al menos un ingrediente', 'err'); return; }
+  const existing = recetas[_recEditId];
+  const payload = { menu_item_id: _recEditId, ingredientes, bloqueado: true, updated_at: new Date().toISOString() };
+  if (existing) {
+    await sb.from('inventario_recetas').update(payload).eq('id', existing.id);
+  } else {
+    await sb.from('inventario_recetas').insert(payload);
+  }
+  cerrarModal('modalReceta');
+  await cargarRecetas();
+  renderRecetas();
+  toast('Receta guardada y bloqueada', 'ok');
+}
+
+function solicitarDesbloqueo(itemId) {
+  _recEditId = itemId;
+  _pinRecBuf = '';
+  actualizarPinRecDots();
+  document.getElementById('pinRecErr').textContent = '';
+  document.getElementById('modalPinReceta').classList.add('open');
+}
+
+function pinRecPress(d) {
+  if (_pinRecBuf.length >= 4) return;
+  _pinRecBuf += d;
+  actualizarPinRecDots();
+  if (_pinRecBuf.length === 4) {
+    if (_pinRecBuf === PIN_CORRECTO) {
+      cerrarModal('modalPinReceta');
+      sb.from('inventario_recetas').update({ bloqueado: false }).eq('menu_item_id', _recEditId).then(async () => {
+        await cargarRecetas();
+        abrirReceta(_recEditId);
+      });
+    } else {
+      document.getElementById('pinRecErr').textContent = 'Código incorrecto';
+      setTimeout(() => { _pinRecBuf = ''; actualizarPinRecDots(); document.getElementById('pinRecErr').textContent = ''; }, 900);
+    }
+  }
+}
+function pinRecBack() { _pinRecBuf = _pinRecBuf.slice(0, -1); actualizarPinRecDots(); }
+function pinRecClear() { _pinRecBuf = ''; actualizarPinRecDots(); }
+function actualizarPinRecDots() {
+  for (let i = 0; i < 4; i++) document.getElementById('prd' + i).classList.toggle('filled', i < _pinRecBuf.length);
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+let _toastT;
+function toast(msg, tipo) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast show ' + (tipo || '');
+  clearTimeout(_toastT);
+  _toastT = setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>

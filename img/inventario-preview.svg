@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Fondo -->
+  <rect width="1200" height="630" fill="#ffffff"/>
+  <!-- Acento naranja izquierdo -->
+  <rect width="12" height="630" fill="#E8641A"/>
+
+  <!-- Tarjeta central -->
+  <rect x="80" y="60" width="1040" height="510" rx="24" fill="#f9f9f9" stroke="#e8e8e8" stroke-width="2"/>
+
+  <!-- Header tarjeta -->
+  <rect x="80" y="60" width="1040" height="100" rx="24" fill="#E8641A"/>
+  <rect x="80" y="120" width="1040" height="40" fill="#E8641A"/>
+
+  <!-- Logo circular -->
+  <circle cx="150" cy="110" r="36" fill="white" opacity="0.2"/>
+  <text x="150" y="118" font-family="Arial Black, Arial" font-weight="900" font-size="28" fill="white" text-anchor="middle">🍔</text>
+
+  <!-- Título header -->
+  <text x="204" y="100" font-family="Arial Black, Arial" font-weight="900" font-size="32" fill="white" letter-spacing="4">KAN BURGER</text>
+  <text x="204" y="136" font-family="Arial, sans-serif" font-weight="600" font-size="18" fill="rgba(255,255,255,0.85)" letter-spacing="2">INVENTARIO INTERNO</text>
+
+  <!-- Filas de items -->
+  <!-- Item 1 -->
+  <rect x="110" y="188" width="960" height="56" rx="10" fill="white" stroke="#e8e8e8" stroke-width="1.5"/>
+  <rect x="110" y="188" width="6" height="56" rx="3" fill="#27AE60"/>
+  <text x="136" y="222" font-family="Arial, sans-serif" font-weight="800" font-size="17" fill="#111">Carne de res</text>
+  <text x="136" y="238" font-family="Arial, sans-serif" font-size="13" fill="#888">Insumos · mín: 40</text>
+  <rect x="900" y="202" width="80" height="28" rx="14" fill="rgba(39,174,96,0.12)" stroke="rgba(39,174,96,0.3)" stroke-width="1"/>
+  <text x="940" y="221" font-family="Arial Black" font-size="15" fill="#27AE60" text-anchor="middle" font-weight="900">68</text>
+
+  <!-- Item 2 -->
+  <rect x="110" y="254" width="960" height="56" rx="10" fill="white" stroke="#e8e8e8" stroke-width="1.5"/>
+  <rect x="110" y="254" width="6" height="56" rx="3" fill="#E74C3C"/>
+  <text x="136" y="288" font-family="Arial, sans-serif" font-weight="800" font-size="17" fill="#111">Pan de hamburguesa</text>
+  <text x="136" y="304" font-family="Arial, sans-serif" font-size="13" fill="#888">Insumos · mín: 25</text>
+  <rect x="900" y="268" width="80" height="28" rx="14" fill="rgba(231,76,60,0.08)" stroke="rgba(231,76,60,0.3)" stroke-width="1"/>
+  <text x="940" y="287" font-family="Arial Black" font-size="15" fill="#E74C3C" text-anchor="middle" font-weight="900">12 ⚠</text>
+
+  <!-- Item 3 -->
+  <rect x="110" y="320" width="960" height="56" rx="10" fill="white" stroke="#e8e8e8" stroke-width="1.5"/>
+  <rect x="110" y="320" width="6" height="56" rx="3" fill="#27AE60"/>
+  <text x="136" y="354" font-family="Arial, sans-serif" font-weight="800" font-size="17" fill="#111">Huevos</text>
+  <text x="136" y="370" font-family="Arial, sans-serif" font-size="13" fill="#888">Insumos · mín: 60</text>
+  <rect x="900" y="334" width="80" height="28" rx="14" fill="rgba(39,174,96,0.12)" stroke="rgba(39,174,96,0.3)" stroke-width="1"/>
+  <text x="940" y="353" font-family="Arial Black" font-size="15" fill="#27AE60" text-anchor="middle" font-weight="900">95</text>
+
+  <!-- Item 4 -->
+  <rect x="110" y="386" width="960" height="56" rx="10" fill="white" stroke="#e8e8e8" stroke-width="1.5"/>
+  <rect x="110" y="386" width="6" height="56" rx="3" fill="#F39C12"/>
+  <text x="136" y="420" font-family="Arial, sans-serif" font-weight="800" font-size="17" fill="#111">Pollo</text>
+  <text x="136" y="436" font-family="Arial, sans-serif" font-size="13" fill="#888">Producción · mín: 20</text>
+  <rect x="900" y="400" width="80" height="28" rx="14" fill="rgba(243,156,18,0.1)" stroke="rgba(243,156,18,0.3)" stroke-width="1"/>
+  <text x="940" y="419" font-family="Arial Black" font-size="15" fill="#F39C12" text-anchor="middle" font-weight="900">22</text>
+
+  <!-- Item 5 -->
+  <rect x="110" y="452" width="960" height="56" rx="10" fill="white" stroke="#e8e8e8" stroke-width="1.5"/>
+  <rect x="110" y="452" width="6" height="56" rx="3" fill="#27AE60"/>
+  <text x="136" y="486" font-family="Arial, sans-serif" font-weight="800" font-size="17" fill="#111">Coca-Cola</text>
+  <text x="136" y="502" font-family="Arial, sans-serif" font-size="13" fill="#888">Insumos · mín: 2</text>
+  <rect x="900" y="466" width="80" height="28" rx="14" fill="rgba(39,174,96,0.12)" stroke="rgba(39,174,96,0.3)" stroke-width="1"/>
+  <text x="940" y="485" font-family="Arial Black" font-size="15" fill="#27AE60" text-anchor="middle" font-weight="900">8</text>
+
+  <!-- Footer -->
+  <text x="600" y="580" font-family="Arial, sans-serif" font-size="13" fill="#bbb" text-anchor="middle">kan-burger-five.vercel.app/inventario.html</text>
+</svg>
