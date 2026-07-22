@@ -1173,26 +1173,36 @@ function resetOrder(){
   updateTotalDisplay();
 }
 
+// Revisa el estado del servicio y muestra/oculta la pantalla de cerrado en vivo
+async function aplicarEstadoServicioMesa(){
+  let cerrado = false;
+  try {
+    const { data } = await sb.from('config').select('valor').eq('clave','servicio_activo').single();
+    cerrado = !!(data && data.valor === 'false');
+  } catch(e) {}
+  document.getElementById('closedScreen').style.display = cerrado ? 'flex' : 'none';
+  document.getElementById('orderContent').style.display = cerrado ? 'none' : 'flex';
+}
+
 // ══ INIT ══
 (async function init(){
   if(!MESA_ACTUAL){
     document.getElementById('invalidScreen').style.display='flex';
     return;
   }
-  try {
-    const { data } = await sb.from('config').select('valor').eq('clave','servicio_activo').single();
-    if (data && data.valor === 'false') {
-      document.getElementById('closedScreen').style.display='flex';
-      return;
-    }
-  } catch(e) {}
   document.title=`KAN BURGER — Mesa ${MESA_ACTUAL}`;
   document.getElementById('mesaNumDisplay').textContent=`Mesa ${MESA_ACTUAL}`;
-  const content=document.getElementById('orderContent');
-  content.style.display='flex';
-  content.style.flexDirection='column';
+  document.getElementById('orderContent').style.flexDirection='column';
   await cargarProductosActivos();
   renderStep(0);
+  await aplicarEstadoServicioMesa();
+
+  // Realtime — si cocina abre/cierra el servicio mientras el cliente tiene la página abierta, se refleja al instante
+  sb.channel('config_rt_mesa')
+    .on('postgres_changes',
+      { event: '*', schema: 'public', table: 'config' },
+      () => { aplicarEstadoServicioMesa(); }
+    ).subscribe();
 })();
 </script>
 </body>

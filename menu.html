@@ -3093,6 +3093,13 @@ sb.channel('menu_config_rt')
       buildShowcase();
     }
   ).subscribe();
+
+// Realtime — refleja al instante cuando cocina abre/cierra el servicio o domicilios
+sb.channel('config_rt')
+  .on('postgres_changes',
+    { event: '*', schema: 'public', table: 'config' },
+    async () => { await cargarEstadoDomiciliosConfig(); }
+  ).subscribe();
 </script>
 </body>
 </html>
