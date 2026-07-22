@@ -1276,6 +1276,10 @@ function checkScrollHint(){
 }
 
 function openModal(){
+  if(servicioManualOff || new Date().getHours()<6){
+    alert('🌙 Lo sentimos, no estamos recibiendo pedidos en este momento.\n\nPara confirmar disponibilidad, llámanos al 311 758 0802.');
+    return;
+  }
   document.getElementById('orderModal').classList.add('open');
   document.body.style.overflow='hidden';
   renderStep(state.step);
