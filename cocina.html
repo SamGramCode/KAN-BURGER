@@ -393,6 +393,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
     <button class="tb-menu-btn" onclick="abrirCierre()" title="Cierre de caja" style="font-size:1rem">📊</button>
     <button class="tb-menu-btn" onclick="abrirMenuPanel()" title="Gestión de menú">☰</button>
     <button class="tb-menu-btn" id="btnDomicilioToggle" onclick="toggleDomicilios()" title="Activar/desactivar domicilios" style="font-size:.7rem;font-weight:900;min-width:64px;padding:0 6px">🛵 ...</button>
+    <button class="tb-menu-btn" id="btnServicioToggle" onclick="toggleServicio()" title="Cerrar/abrir todo el servicio (domicilio, recoger y mesa)" style="font-size:.7rem;font-weight:900;min-width:76px;padding:0 6px">⏳ ...</button>
     <button class="tb-logout" onclick="confirmarCerrarSesion()">Cerrar Sesión</button>
   </div>
 
@@ -777,6 +778,36 @@ async function toggleDomicilios() {
   await sb.from('config').upsert({ clave: 'domicilios_activo', valor: nuevoEstado ? 'true' : 'false' }, { onConflict: 'clave' });
 }
 
+// ── SERVICIO TOGGLE (cierre total: domicilio + recoger + mesa) ─────────
+async function cargarEstadoServicio() {
+  const { data } = await sb.from('config').select('valor').eq('clave','servicio_activo').single();
+  const activo = !data || data.valor !== 'false';
+  actualizarBtnServicio(activo);
+}
+function actualizarBtnServicio(activo) {
+  const btn = document.getElementById('btnServicioToggle');
+  if (!btn) return;
+  if (activo) {
+    btn.textContent = '🟢 Abierto';
+    btn.style.background = 'rgba(39,174,96,.25)';
+    btn.style.borderColor = '#27AE60';
+    btn.style.color = '#27AE60';
+  } else {
+    btn.textContent = '🔴 Cerrado';
+    btn.style.background = 'rgba(231,76,60,.2)';
+    btn.style.borderColor = '#E74C3C';
+    btn.style.color = '#E74C3C';
+  }
+}
+async function toggleServicio() {
+  const btn = document.getElementById('btnServicioToggle');
+  const estaAbierto = btn.textContent.includes('Abierto');
+  const nuevoEstado = !estaAbierto;
+  if (!nuevoEstado && !confirm('¿Cerrar todo el servicio?\n\nLos clientes no podrán pedir por domicilio, recoger ni mesa hasta que lo vuelvas a activar.')) return;
+  actualizarBtnServicio(nuevoEstado);
+  await sb.from('config').upsert({ clave: 'servicio_activo', valor: nuevoEstado ? 'true' : 'false' }, { onConflict: 'clave' });
+}
+
 // ── PANEL ─────────────────────────────────────────────────────────────
 async function iniciarPanel() {
   await registrarSW();
@@ -784,6 +815,7 @@ async function iniciarPanel() {
 
   await cargarMenuConfig();
   await cargarEstadoDomicilios();
+  await cargarEstadoServicio();
   setInterval(actualizarReloj, 1000);
   actualizarReloj();
 

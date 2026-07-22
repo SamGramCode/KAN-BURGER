@@ -235,6 +235,15 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit}
   </div>
 </div>
 
+<!-- Pantalla de servicio cerrado -->
+<div class="invalid-screen" id="closedScreen" style="display:none">
+  <div class="invalid-box">
+    <div style="font-size:3rem;margin-bottom:1rem">🌙</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--or);letter-spacing:2px;margin-bottom:.5rem">Servicio cerrado</div>
+    <div style="font-size:.85rem;color:var(--mt)">Por el momento no estamos recibiendo pedidos. Para confirmar disponibilidad, llámanos directamente.</div>
+  </div>
+</div>
+
 <!-- Contenido del pedido -->
 <div id="orderContent" style="display:none;flex:1;display:none;flex-direction:column">
 
@@ -1170,6 +1179,13 @@ function resetOrder(){
     document.getElementById('invalidScreen').style.display='flex';
     return;
   }
+  try {
+    const { data } = await sb.from('config').select('valor').eq('clave','servicio_activo').single();
+    if (data && data.valor === 'false') {
+      document.getElementById('closedScreen').style.display='flex';
+      return;
+    }
+  } catch(e) {}
   document.title=`KAN BURGER — Mesa ${MESA_ACTUAL}`;
   document.getElementById('mesaNumDisplay').textContent=`Mesa ${MESA_ACTUAL}`;
   const content=document.getElementById('orderContent');

@@ -1594,15 +1594,18 @@ function esFeriado(d){
   return FERIADOS_CO.includes(`${y}-${m}-${dd}`);
 }
 let domiciliosManualOff = false;
+let servicioManualOff = false;
 async function cargarEstadoDomiciliosConfig() {
   try {
-    const { data } = await sb.from('config').select('valor').eq('clave','domicilios_activo').single();
-    domiciliosManualOff = data && data.valor === 'false';
-  } catch(e) { domiciliosManualOff = false; }
+    const { data } = await sb.from('config').select('clave,valor').in('clave', ['domicilios_activo','servicio_activo']);
+    const map = Object.fromEntries((data||[]).map(r => [r.clave, r.valor]));
+    domiciliosManualOff = map.domicilios_activo === 'false';
+    servicioManualOff = map.servicio_activo === 'false';
+  } catch(e) { domiciliosManualOff = false; servicioManualOff = false; }
   aplicarEstadoDomicilio();
 }
 function isDomicilioDisponible(){
-  if (domiciliosManualOff) return false;
+  if (domiciliosManualOff || servicioManualOff) return false;
   const now=new Date();
   const dia=now.getDay();
   const mins=now.getHours()*60+now.getMinutes();
@@ -1629,8 +1632,8 @@ function aplicarEstadoDomicilio(){
   const antesDeApertura=mins2 < 18*60;
 
   const domDisponible=isDomicilioDisponible();
-  // Tienda cierra a medianoche — consideramos cerrado de 00:00 a 05:59
-  const tiendaCerrada=now.getHours()<6;
+  // Tienda cierra a medianoche — consideramos cerrado de 00:00 a 05:59, o si cocina cerró el servicio manualmente
+  const tiendaCerrada=servicioManualOff || now.getHours()<6;
 
   if(tiendaCerrada){
     // Ambos cerrados — ocultar grid y mostrar mensaje
