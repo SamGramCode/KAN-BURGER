@@ -627,7 +627,7 @@ function iniciarTimerInactividad() {
 }
 
 function mostrarRecordatorioPlan() {
-  const vence = new Date('2026-07-28T00:00:00');
+  const vence = new Date('2026-08-28T00:00:00');
   const hoy = new Date();
   hoy.setHours(0,0,0,0);
   vence.setHours(0,0,0,0);
@@ -636,7 +636,7 @@ function mostrarRecordatorioPlan() {
   if (!banner) return;
   if (dias > 0 && dias <= 3) {
     const txt = dias === 1 ? 'Te queda 1 día' : `Te quedan ${dias} días`;
-    banner.textContent = `⚠️ ${txt} para que se venza el plan — renueva antes del 28 de julio`;
+    banner.textContent = `⚠️ ${txt} para que se venza el plan — renueva antes del 28 de agosto`;
     banner.style.display = 'block';
   } else if (dias === 0) {
     banner.textContent = '🔴 El plan venció — contacta al administrador para renovar el servicio';
