@@ -2164,18 +2164,29 @@ async function placeOrder(){
       : state.comprobanteUrl||null
   };
 
-  // Mostrar confirmación INMEDIATAMENTE
+  // Guardar en Supabase PRIMERO — solo mostramos "en preparación" si de verdad se guardó
+  const btnConfirmar=document.getElementById('btnNext');
+  const btnTxtOriginal=btnConfirmar?btnConfirmar.textContent:'';
+  if(btnConfirmar){ btnConfirmar.disabled=true; btnConfirmar.textContent='Guardando pedido...'; }
+
+  const resultado=await _guardarOrden(order);
+
+  if(!resultado.ok){
+    if(btnConfirmar){ btnConfirmar.disabled=false; btnConfirmar.textContent=btnTxtOriginal||'Siguiente →'; }
+    state.enviandoPedido=false;
+    alert('⚠️ No se pudo guardar tu pedido:\n'+resultado.msg+'\n\nIntenta de nuevo o llama al restaurante: 311 758 0802');
+    return;
+  }
+
+  // Ya confirmado en Supabase — ahora sí mostrar la pantalla de éxito
   saveActiveOrder();
   checkHistBtn();
   showOrderBar(state.orderNum, state.entrega);
   renderStep(5);
   iniciarTracking(state.orderNum);
-
-  // Enviar a Supabase en segundo plano
-  _enviarOrdenBackground(order);
 }
 
-async function _enviarOrdenBackground(order){
+async function _guardarOrden(order){
   try{
     if(state.isSplit){
       // Subir comprobantes por slot si aún no subieron
@@ -2224,29 +2235,17 @@ async function _enviarOrdenBackground(order){
       const nuevoNum=await generarNumPedido();
       order.id=nuevoNum;
       state.orderNum=nuevoNum;
-      const numEl=document.getElementById('confirmNum');
-      if(numEl) numEl.textContent='#'+nuevoNum;
-      const obNumEl=document.getElementById('obNum');
-      if(obNumEl) obNumEl.textContent='#'+nuevoNum;
       const r2=await sb.from('ordenes').insert(order);
       error=r2.error;
     }
     if(error){
       console.error('Error Supabase:',error);
-      const el=document.getElementById('confirmErrorMsg');
-      if(el){
-        el.innerHTML='⚠️ Error al guardar pedido<br><small style="font-size:.72rem;word-break:break-all">'+
-          (error.message||error.code||JSON.stringify(error))+'</small><br>Llama al restaurante: 311 758 0802';
-        el.style.display='block';
-      }
+      return {ok:false, msg: error.message||error.code||JSON.stringify(error)};
     }
+    return {ok:true};
   }catch(e){
     console.error('Error de red:',e);
-    const el=document.getElementById('confirmErrorMsg');
-    if(el){
-      el.innerHTML='⚠️ Sin conexión<br><small style="font-size:.75rem">'+e.message+'</small><br>Llama al restaurante: 311 758 0802';
-      el.style.display='block';
-    }
+    return {ok:false, msg: e.message||'Sin conexión'};
   }
 }
 
