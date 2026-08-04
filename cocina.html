@@ -886,6 +886,10 @@ async function iniciarPanel() {
               data.comida = local.comida;
               data.total = local.total;
             }
+            if (local._pagoLocal) {
+              data.metodo_pago = local.metodo_pago;
+              data._pagoLocal = true;
+            }
             if (local.estado === 'listo' || local.estado === 'rechazado') {
               data.estado = local.estado;
               if (local.listo_en) data.listo_en = local.listo_en;
@@ -959,6 +963,11 @@ async function cargarOrdenes() {
         if (Array.isArray(local.comida) && local.comida.length >= (o.comida || []).length) {
           o.comida = local.comida;
           o.total = local.total;
+        }
+        // Si localmente se cambió el método de pago, mantenerlo
+        if (local._pagoLocal) {
+          o.metodo_pago = local.metodo_pago;
+          o._pagoLocal = true;
         }
         // Si localmente está listo/rechazado, mantenerlo
         if (local.estado === 'listo' || local.estado === 'rechazado') {
@@ -2101,10 +2110,11 @@ function abrirCambioPago(orderId,actual){
 function cerrarCambioPago(){document.getElementById('pagoOverlay').classList.remove('open');pagoOrderId=null;}
 async function confirmarCambioPago(metodo){
   if(!pagoOrderId) return;
-  const order=ordersCache.find(o=>o.id===pagoOrderId);
-  if(order){order.metodo_pago=metodo;renderizar();}
+  const orderId=pagoOrderId;
+  const order=ordersCache.find(o=>o.id===orderId);
+  if(order){order.metodo_pago=metodo;order._pagoLocal=true;renderizar();}
   cerrarCambioPago();
-  try{await sb.from('ordenes').update({metodo_pago:metodo}).eq('id',pagoOrderId);}catch(e){}
+  try{await sb.from('ordenes').update({metodo_pago:metodo}).eq('id',orderId);}catch(e){}
 }
 
 // ── ADICIONES DESDE COCINA ────────────────────────────────────────────
