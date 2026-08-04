@@ -309,6 +309,7 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 .adicion-qty button{width:26px;height:26px;border-radius:50%;background:rgba(232,100,26,.15);border:1px solid rgba(232,100,26,.3);color:var(--or);font-size:1rem;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1}
 .adicion-qty span{min-width:18px;text-align:center;font-weight:800;font-size:.9rem}
 .btn-add-adicion{background:none;border:none;color:var(--or);font-size:.72rem;font-weight:800;padding:2px 6px;border-radius:6px;border:1px solid rgba(232,100,26,.3);cursor:pointer;margin-left:4px;flex-shrink:0;line-height:1.4}
+.btn-del-plato{background:none;border:none;color:#E74C3C;font-size:.72rem;font-weight:800;padding:2px 6px;border-radius:6px;border:1px solid rgba(231,76,60,.35);cursor:pointer;margin-left:4px;flex-shrink:0;line-height:1.4}
 
 @media print{
   body *{visibility:hidden!important}
@@ -1079,6 +1080,7 @@ function buildCard(order, posIdx = 0) {
         ? ' <span style="background:#E74C3C;color:#fff;font-size:.65rem;font-weight:800;padding:1px 6px;border-radius:4px;margin-left:4px">SIN SALSA</span>'
         : '';
       const btnAdd = esTienda ? `<button class="btn-add-adicion" onclick="event.stopPropagation();abrirAdicionModal('${order.id}','${iid}','${displayName.replace(/'/g,"\\'")}',${u+1})">+</button>` : '';
+      const btnDel = order.estado === 'en_preparacion' ? `<button class="btn-del-plato" onclick="event.stopPropagation();eliminarPlato('${order.id}',${i},${u})">🗑️</button>` : '';
       let html = `<div class="check-item ${isChecked ? 'checked' : ''}" onclick="toggleCheck('${order.id}','${unitKey}')">
         <div class="check-box">${isChecked ? '✓' : ''}</div>
         <div style="flex:1">
@@ -1087,7 +1089,7 @@ function buildCard(order, posIdx = 0) {
           ${unitAdds.length ? `<div style="font-size:.78rem;padding-left:.3rem;color:var(--or)">➕ ${unitAdds.map(a=>`${a.qty}x ${esc(a.name)}`).join(', ')}</div>` : ''}
           ${unitSalsas.length ? `<div style="font-size:.78rem;padding-left:.3rem;color:#888">🥫 ${unitSalsas.map(s=>esc(s.name)).join(', ')}</div>` : ''}
         </div>
-        <span class="check-item-qty">x1</span>${btnAdd}
+        <span class="check-item-qty">x1</span>${btnAdd}${btnDel}
       </div>`;
       if(esCombo(item)){
         const isPapasChecked = !!checks[unitKey + '_papas'];
@@ -2242,6 +2244,37 @@ async function confirmarPlatos() {
   cerrarPlatoModal();
   const { error } = await sb.from('ordenes').update({ comida: merged, total: nuevoTotal }).eq('id', orderId);
   if(error) { console.error('Error platos:', error); toast('Error al guardar', 'err'); }
+}
+
+async function eliminarPlato(orderId, itemIndex, unitIndex) {
+  const order = ordersCache.find(o => o.id === orderId);
+  if (!order || order.estado !== 'en_preparacion') return;
+  const item = order.comida && order.comida[itemIndex];
+  if (!item) return;
+  if (!confirm(`¿Quitar "${item.name}" del pedido?`)) return;
+
+  const precioUnidad = item.price;
+  if ((item.qty || 1) <= 1) {
+    order.comida.splice(itemIndex, 1);
+  } else {
+    item.qty -= 1;
+    if (Array.isArray(item.salsaUnidades)) item.salsaUnidades.splice(unitIndex, 1);
+  }
+  order.total = Math.max(0, (order.total || 0) - precioUnidad);
+  // Se resetean las marcas de verificación: al quitar un plato, los índices
+  // del checklist cambian y podrían quedar desalineados con los platos restantes
+  order._checks = {};
+  order.verificaciones = {};
+
+  renderizar();
+
+  try {
+    await sb.from('ordenes').update({
+      comida: order.comida,
+      total: order.total,
+      verificaciones: {}
+    }).eq('id', orderId);
+  } catch(e) {}
 }
 
 // ── BEBIDAS DESDE COCINA ──────────────────────────────────────────────
