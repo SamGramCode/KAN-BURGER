@@ -480,6 +480,18 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 </div>
 
 
+<div class="adicion-overlay" id="platoOverlay" onclick="cerrarPlatoModal()">
+  <div class="adicion-modal" onclick="event.stopPropagation()">
+    <div class="adicion-title">🍔 Agregar Plato</div>
+    <div class="adicion-sub" id="platoSub"></div>
+    <div class="adicion-list" id="platoList"></div>
+    <div style="display:flex;gap:.7rem;margin-top:1rem">
+      <button onclick="cerrarPlatoModal()" style="flex:1;padding:.8rem;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--bd);color:var(--mt);font-size:.88rem;cursor:pointer">Cancelar</button>
+      <button onclick="confirmarPlatos()" style="flex:2;padding:.8rem;border-radius:10px;background:var(--or);border:none;color:#fff;font-size:.88rem;font-weight:800;cursor:pointer">✓ Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <div class="adicion-overlay" id="bebidaOverlay" onclick="cerrarBebidaModal()">
   <div class="adicion-modal" onclick="event.stopPropagation()">
     <div class="adicion-title">🥤 Agregar Bebida</div>
@@ -869,6 +881,10 @@ async function iniciarPanel() {
               data.bebidas = local.bebidas;
               data.total = local.total;
             }
+            if (Array.isArray(local.comida) && local.comida.length >= (data.comida || []).length) {
+              data.comida = local.comida;
+              data.total = local.total;
+            }
             if (local.estado === 'listo' || local.estado === 'rechazado') {
               data.estado = local.estado;
               if (local.listo_en) data.listo_en = local.listo_en;
@@ -936,6 +952,11 @@ async function cargarOrdenes() {
         // Si localmente hay bebidas agregadas que el servidor todavía no confirmó, mantenerlas
         if (Array.isArray(local.bebidas) && local.bebidas.length >= (o.bebidas || []).length) {
           o.bebidas = local.bebidas;
+          o.total = local.total;
+        }
+        // Si localmente hay platos agregados que el servidor todavía no confirmó, mantenerlos
+        if (Array.isArray(local.comida) && local.comida.length >= (o.comida || []).length) {
+          o.comida = local.comida;
           o.total = local.total;
         }
         // Si localmente está listo/rechazado, mantenerlo
@@ -1103,7 +1124,13 @@ function buildCard(order, posIdx = 0) {
       <div class="oc-progress-txt">${checked} de ${total} ítems confirmados</div>
     </div>
     <div class="oc-body">
-      <div class="oc-section"><div class="oc-sec-label">🍔 Comida</div>${foodHTML}</div>
+      <div class="oc-section">
+        <div class="oc-sec-label" style="display:flex;align-items:center;justify-content:space-between">
+          🍔 Comida
+          ${esTienda ? `<button class="btn-add-adicion" onclick="event.stopPropagation();abrirPlatoModal('${order.id}')">+</button>` : ''}
+        </div>
+        ${foodHTML}
+      </div>
       <div class="oc-section">
         <div class="oc-sec-label" style="display:flex;align-items:center;justify-content:space-between">
           🥤 Bebidas
@@ -2141,6 +2168,80 @@ async function confirmarAdiciones() {
   cerrarAdicionModal();
   const { error } = await sb.from('ordenes').update({ adiciones: merged, total: nuevoTotal }).eq('id', orderId);
   if(error) { console.error('Error adiciones:', error); toast('Error al guardar', 'err'); }
+}
+
+// ── PLATOS DESDE COCINA ────────────────────────────────────────────────
+const PLATOS_COCINA = [
+  {id:'v1',cat:'venezolano',name:'Perro Caliente Sencillo',price:9500},
+  {id:'v2',cat:'venezolano',name:'Perro Caliente Especial',price:13500},
+  {id:'b1',cat:'burger',name:'Sencilla Res',price:14000},
+  {id:'b3',cat:'burger',name:'Especial Res',price:21000},
+  {id:'b2',cat:'burger',name:'Sencilla Pollo',price:14000},
+  {id:'b4',cat:'burger',name:'Especial Pollo Crispy',price:17000},
+  {id:'b5',cat:'burger',name:'Mixta',price:23000},
+  {id:'v3',cat:'venezolano',name:'Arepa Cabimera Volcán',price:21000},
+  {id:'v4',cat:'venezolano',name:'Patacón',price:22000},
+  {id:'a1',cat:'plato',name:'Salchipapa',price:14000},
+  {id:'a2',cat:'plato',name:'Papa al Queso Cheddar',price:14000},
+  {id:'f1',cat:'burgerfries',name:'Sencilla Res + Francesas',price:17000},
+  {id:'f2',cat:'burgerfries',name:'Sencilla Pollo + Francesas',price:17000},
+  {id:'f3',cat:'burgerfries',name:'Especial Res + Francesas',price:24500},
+  {id:'f4',cat:'burgerfries',name:'Especial Pollo Crispy + Francesas',price:20000},
+  {id:'f5',cat:'burgerfries',name:'Mixta + Francesas',price:26000},
+  {id:'c1',cat:'acompanante',name:'Combo Sencilla Res',price:21000},
+  {id:'c2',cat:'acompanante',name:'Combo Sencilla Pollo',price:21000},
+  {id:'c3',cat:'acompanante',name:'Combo Especial Res',price:27500},
+  {id:'c4',cat:'acompanante',name:'Combo Especial Pollo Crispy',price:23000},
+  {id:'c5',cat:'acompanante',name:'Combo Mixta',price:29500},
+];
+let _platoOId = null, _platoQtys = {};
+
+function abrirPlatoModal(orderId) {
+  _platoOId = orderId; _platoQtys = {};
+  document.getElementById('platoSub').textContent = `Pedido #${orderId}`;
+  document.getElementById('platoList').innerHTML = PLATOS_COCINA.map(p => `
+    <div class="adicion-row">
+      <span style="font-size:1.1rem">🍔</span>
+      <div style="flex:1"><div class="adicion-row-name">${p.name}</div><div class="adicion-row-price">$${p.price.toLocaleString('es-CO')}</div></div>
+      <div class="adicion-qty">
+        <button onclick="cambiarPlato('${p.id}',-1)">−</button>
+        <span id="pq_${p.id}">0</span>
+        <button onclick="cambiarPlato('${p.id}',1)">+</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('platoOverlay').classList.add('open');
+}
+function cerrarPlatoModal() { document.getElementById('platoOverlay').classList.remove('open'); _platoOId = null; }
+function cambiarPlato(id, dir) {
+  _platoQtys[id] = Math.max(0, (_platoQtys[id]||0) + dir);
+  const el = document.getElementById('pq_'+id);
+  if(el) el.textContent = _platoQtys[id];
+}
+async function confirmarPlatos() {
+  if(!_platoOId) return;
+  const nuevas = PLATOS_COCINA.filter(p => (_platoQtys[p.id]||0) > 0).map(p => ({id:p.id, name:p.name, price:p.price, cat:p.cat, qty:_platoQtys[p.id]}));
+  if(!nuevas.length) { cerrarPlatoModal(); return; }
+  const order = ordersCache.find(o => o.id === _platoOId);
+  if(!order) { cerrarPlatoModal(); return; }
+  const orderId = _platoOId;
+  const actual = Array.isArray(order.comida) ? order.comida : [];
+  const merged = [...actual];
+  nuevas.forEach(n => {
+    const idx = merged.findIndex(c => c.id === n.id);
+    if(idx !== -1) {
+      merged[idx] = {...merged[idx], qty: merged[idx].qty + n.qty, salsaUnidades: [...(merged[idx].salsaUnidades||[]), ...Array(n.qty).fill(true)]};
+    } else {
+      merged.push({...n, salsaUnidades: Array(n.qty).fill(true)});
+    }
+  });
+  const extraCosto = nuevas.reduce((sum, p) => sum + (p.price * p.qty), 0);
+  const nuevoTotal = (order.total || 0) + extraCosto;
+  order.comida = merged;
+  order.total = nuevoTotal;
+  renderizar();
+  cerrarPlatoModal();
+  const { error } = await sb.from('ordenes').update({ comida: merged, total: nuevoTotal }).eq('id', orderId);
+  if(error) { console.error('Error platos:', error); toast('Error al guardar', 'err'); }
 }
 
 // ── BEBIDAS DESDE COCINA ──────────────────────────────────────────────
