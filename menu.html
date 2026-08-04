@@ -694,6 +694,11 @@ body.light .salsa-wrap{border-top-color:rgba(0,0,0,.1)}
         <div class="step-title">Elige tu <span>Comida</span></div>
         <div id="foodGrid"></div>
 
+        <div id="vegSection" style="margin-top:1.2rem">
+          <div style="font-weight:900;font-size:.95rem;color:var(--or);margin-bottom:.6rem">🥬 Vegetales</div>
+          <div id="vegPerItemGrid"></div>
+        </div>
+
       </div>
 
 
@@ -821,6 +826,7 @@ body.light .salsa-wrap{border-top-color:rgba(0,0,0,.1)}
           </label>
           <img id="uploadPreview" class="upload-preview">
           <div class="upload-ok" id="uploadOk" style="display:none">✅ Foto lista — ya puedes confirmar tu pedido</div>
+          <div class="upload-err" id="uploadErr" style="display:none"></div>
         </div>
         <textarea class="notes-field" id="orderNotes" placeholder="Nota especial para tu pedido (alergias, indicaciones, etc.)" maxlength="300"></textarea>
         <p style="font-size:.82rem;font-weight:700;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt)">📱 Teléfono de contacto</p>
@@ -911,7 +917,7 @@ body.light .salsa-wrap{border-top-color:rgba(0,0,0,.1)}
 
           <div style="margin-top:1.5rem">
             <div style="font-weight:900;font-size:.9rem;text-transform:uppercase;letter-spacing:1px;color:var(--mt);margin-bottom:.8rem;cursor:pointer" onclick="const h=document.getElementById('historialWrap');h.style.display=h.style.display==='none'?'block':'none'">📋 Mis pedidos anteriores ▾</div>
-            <div id="historialWrap" style="display:none" id="historialWrap"></div>
+            <div id="historialWrap" style="display:none"></div>
           </div>
         </div>
       </div>
