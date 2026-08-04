@@ -855,7 +855,22 @@ async function iniciarPanel() {
         const { data } = await sb.from('ordenes').select('*').eq('id', payload.new.id).single();
         if (data) {
           const idx = ordersCache.findIndex(o => o.id === payload.new.id);
-          if (idx !== -1) ordersCache[idx] = data;
+          if (idx !== -1) {
+            const local = ordersCache[idx];
+            if (local._checks) {
+              data._checks = local._checks;
+              data.verificaciones = local._checks;
+            }
+            if (local.estado === 'listo' || local.estado === 'rechazado') {
+              data.estado = local.estado;
+              if (local.listo_en) data.listo_en = local.listo_en;
+              if (local.tiempo_preparacion) data.tiempo_preparacion = local.tiempo_preparacion;
+            }
+            if (local.estado === 'en_preparacion' && data.estado === 'pendiente') {
+              data.estado = 'en_preparacion';
+            }
+            ordersCache[idx] = data;
+          }
           else ordersCache.push(data);
         } else {
           await cargarOrdenes();
