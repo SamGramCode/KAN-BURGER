@@ -865,6 +865,10 @@ async function iniciarPanel() {
               data.adiciones = local.adiciones;
               data.total = local.total;
             }
+            if (Array.isArray(local.bebidas) && local.bebidas.length >= (data.bebidas || []).length) {
+              data.bebidas = local.bebidas;
+              data.total = local.total;
+            }
             if (local.estado === 'listo' || local.estado === 'rechazado') {
               data.estado = local.estado;
               if (local.listo_en) data.listo_en = local.listo_en;
@@ -927,6 +931,11 @@ async function cargarOrdenes() {
         // Si localmente hay adiciones agregadas que el servidor todavía no confirmó, mantenerlas
         if (Array.isArray(local.adiciones) && local.adiciones.length >= (o.adiciones || []).length) {
           o.adiciones = local.adiciones;
+          o.total = local.total;
+        }
+        // Si localmente hay bebidas agregadas que el servidor todavía no confirmó, mantenerlas
+        if (Array.isArray(local.bebidas) && local.bebidas.length >= (o.bebidas || []).length) {
+          o.bebidas = local.bebidas;
           o.total = local.total;
         }
         // Si localmente está listo/rechazado, mantenerlo
