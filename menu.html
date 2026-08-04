@@ -2160,7 +2160,7 @@ async function placeOrder(){
     tipo_entrega: state.entrega,
     notas: state.notes,
     direccion: state.entrega==='domicilio'?state.direccion:null,
-    telefono: state.entrega==='domicilio'?state.telefono:null,
+    telefono: state.telefono,
     total: grandTotal(),
     estado: 'pendiente',
     verificaciones: {},
