@@ -861,6 +861,10 @@ async function iniciarPanel() {
               data._checks = local._checks;
               data.verificaciones = local._checks;
             }
+            if (Array.isArray(local.adiciones) && local.adiciones.length >= (data.adiciones || []).length) {
+              data.adiciones = local.adiciones;
+              data.total = local.total;
+            }
             if (local.estado === 'listo' || local.estado === 'rechazado') {
               data.estado = local.estado;
               if (local.listo_en) data.listo_en = local.listo_en;
@@ -919,6 +923,11 @@ async function cargarOrdenes() {
         if (local._checks) {
           o._checks = local._checks;
           o.verificaciones = local._checks;
+        }
+        // Si localmente hay adiciones agregadas que el servidor todavía no confirmó, mantenerlas
+        if (Array.isArray(local.adiciones) && local.adiciones.length >= (o.adiciones || []).length) {
+          o.adiciones = local.adiciones;
+          o.total = local.total;
         }
         // Si localmente está listo/rechazado, mantenerlo
         if (local.estado === 'listo' || local.estado === 'rechazado') {
