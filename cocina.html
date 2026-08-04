@@ -1379,10 +1379,26 @@ function toggleCompleted() {
 }
 
 // ── SELECTOR DE IMPRESORA ─────────────────────────────────────────────
+function _fontScale() {
+  return (parseInt(localStorage.getItem('kb_print_font_scale') || '100', 10) || 100) / 100;
+}
+function _guardarFontScale(v) {
+  localStorage.setItem('kb_print_font_scale', v);
+  const label = document.getElementById('printFontLabel');
+  if (label) label.textContent = v + '%';
+}
+function _cargarFontScale() {
+  const v = parseInt(localStorage.getItem('kb_print_font_scale') || '100', 10) || 100;
+  const range = document.getElementById('printFontRange');
+  const label = document.getElementById('printFontLabel');
+  if (range) range.value = v;
+  if (label) label.textContent = v + '%';
+}
 function mostrarSelectorImpresora(callback) {
   const saved = localStorage.getItem('kb_printer_type');
   if (saved) { callback(saved); return; }
   const m = document.getElementById('printModal');
+  _cargarFontScale();
   document.getElementById('btnPrintTermica').onclick = () => {
     localStorage.setItem('kb_printer_type', 'termica');
     _actualizarBtnImpresora();
@@ -1403,6 +1419,7 @@ function cambiarImpresora() {
   localStorage.removeItem('kb_printer_type');
   _actualizarBtnImpresora();
   document.getElementById('printModal').style.display = 'flex';
+  _cargarFontScale();
   document.getElementById('btnPrintTermica').onclick = () => {
     localStorage.setItem('kb_printer_type', 'termica');
     _actualizarBtnImpresora();
@@ -1572,7 +1589,7 @@ function _ticketTermico(order, { dt, payLbl, esDOM, entregaTxt, foodR, drinkR })
     ? order.metodo_pago.split('|').map(p=>{const[m,a]=p.split(':');return `${fmt(Number(a))} en ${payLbl[m]||m}`;}).join(' + ')
     : (payLbl[order.metodo_pago]||order.metodo_pago||'');
   _setPrintPage('58mm auto','0 1mm');
-  document.getElementById('printTicketContent').innerHTML = `<div style="font-family:'Courier New',monospace;font-size:12px;padding:4px 2px;width:100%;max-width:56mm;margin:0;color:#000;word-break:break-word">
+  document.getElementById('printTicketContent').innerHTML = `<div style="font-family:'Courier New',monospace;font-size:12px;padding:4px 2px;width:100%;max-width:${(56/_fontScale()).toFixed(1)}mm;margin:0;color:#000;word-break:break-word;zoom:${_fontScale()}">
 <div style="text-align:center;border-bottom:2px dashed #000;padding-bottom:6px;margin-bottom:6px"><div style="font-size:18px;font-weight:bold;letter-spacing:2px">KAN BURGER</div><div style="font-size:10px">100% Artesanal</div></div>
 <div style="text-align:center;font-size:16px;font-weight:bold;margin:4px 0;padding-bottom:4px;border-bottom:1px dashed #000">Pedido ${order.id}</div>
 <div style="text-align:center;font-size:10px;margin:4px 0">${dt}</div>
@@ -1594,7 +1611,7 @@ function _ticketNormal(order, { dt, payLbl, esDOM, entregaTxt, foodR, drinkR }) 
     ? order.metodo_pago.split('|').map(p=>{const[m,a]=p.split(':');return `${fmt(Number(a))} en ${payLbl[m]||m}`;}).join(' + ')
     : (payLbl[order.metodo_pago]||order.metodo_pago||'');
   _setPrintPage('A4','15mm 20mm');
-  document.getElementById('printTicketContent').innerHTML = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;max-width:560px;margin:0 auto">
+  document.getElementById('printTicketContent').innerHTML = `<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;max-width:${Math.round(560/_fontScale())}px;margin:0 auto;zoom:${_fontScale()}">
 <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #E8641A;padding-bottom:12px;margin-bottom:14px">
   <div><div style="font-size:26px;font-weight:900;letter-spacing:3px;color:#E8641A">KAN BURGER</div><div style="font-size:11px;color:#888;margin-top:2px">100% Artesanal</div></div>
   <div style="text-align:right;font-size:11px;color:#666">Pedido<br><b style="font-size:18px;color:#111">${order.id}</b><br>${dt}</div>
@@ -2569,6 +2586,10 @@ function renderGanMes(orders, inicioMes) {
     <button type="button" id="btnPrintNormal" style="width:100%;background:rgba(232,100,26,.12);border:1.5px solid rgba(232,100,26,.5);color:#E8641A;border-radius:12px;padding:.85rem 1rem;font-weight:800;cursor:pointer;font-size:.9rem;letter-spacing:.3px">
       Impresora Normal (A4 / Carta)
     </button>
+    <div style="margin-top:1.1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.1);text-align:left">
+      <div style="font-size:.78rem;color:#aaa;margin-bottom:.5rem">Tamaño de letra al imprimir: <span id="printFontLabel" style="color:#E8641A;font-weight:800">100%</span></div>
+      <input type="range" id="printFontRange" min="100" max="160" step="10" value="100" oninput="_guardarFontScale(this.value)" style="width:100%">
+    </div>
     <button type="button" id="btnPrintCancelar" style="width:100%;background:none;border:none;color:#666;cursor:pointer;margin-top:.9rem;font-size:.85rem">Cancelar</button>
   </div>
 </div>
