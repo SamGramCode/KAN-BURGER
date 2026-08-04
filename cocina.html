@@ -2125,6 +2125,7 @@ async function confirmarAdiciones() {
   if(!nuevas.length){ cerrarAdicionModal(); return; }
   const order = ordersCache.find(o=>o.id===_adOId);
   if(!order){ cerrarAdicionModal(); return; }
+  const orderId = _adOId;
   const adicionesActuales = Array.isArray(order.adiciones) ? order.adiciones : [];
   const merged = [...adicionesActuales];
   nuevas.forEach(n => {
@@ -2138,7 +2139,7 @@ async function confirmarAdiciones() {
   order.total = nuevoTotal;
   renderizar();
   cerrarAdicionModal();
-  const { error } = await sb.from('ordenes').update({ adiciones: merged, total: nuevoTotal }).eq('id', _adOId);
+  const { error } = await sb.from('ordenes').update({ adiciones: merged, total: nuevoTotal }).eq('id', orderId);
   if(error) { console.error('Error adiciones:', error); toast('Error al guardar', 'err'); }
 }
 
@@ -2179,6 +2180,7 @@ async function confirmarBebidas() {
   if(!nuevas.length) { cerrarBebidaModal(); return; }
   const order = ordersCache.find(o => o.id === _bebOId);
   if(!order) { cerrarBebidaModal(); return; }
+  const orderId = _bebOId;
   const actual = Array.isArray(order.bebidas) ? order.bebidas : [];
   const merged = [...actual];
   nuevas.forEach(n => {
@@ -2192,7 +2194,7 @@ async function confirmarBebidas() {
   order.total = nuevoTotal;
   renderizar();
   cerrarBebidaModal();
-  const { error } = await sb.from('ordenes').update({ bebidas: merged, total: nuevoTotal }).eq('id', _bebOId);
+  const { error } = await sb.from('ordenes').update({ bebidas: merged, total: nuevoTotal }).eq('id', orderId);
   if(error) { console.error('Error bebidas:', error); toast('Error al guardar', 'err'); }
 }
 
