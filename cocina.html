@@ -1380,7 +1380,7 @@ function toggleCompleted() {
 
 // ── SELECTOR DE IMPRESORA ─────────────────────────────────────────────
 function _fontScale() {
-  return (parseInt(localStorage.getItem('kb_print_font_scale') || '100', 10) || 100) / 100;
+  return (parseInt(localStorage.getItem('kb_print_font_scale') || '120', 10) || 120) / 100;
 }
 function _guardarFontScale(v) {
   localStorage.setItem('kb_print_font_scale', v);
@@ -1388,7 +1388,7 @@ function _guardarFontScale(v) {
   if (label) label.textContent = v + '%';
 }
 function _cargarFontScale() {
-  const v = parseInt(localStorage.getItem('kb_print_font_scale') || '100', 10) || 100;
+  const v = parseInt(localStorage.getItem('kb_print_font_scale') || '120', 10) || 120;
   const range = document.getElementById('printFontRange');
   const label = document.getElementById('printFontLabel');
   if (range) range.value = v;
@@ -2587,8 +2587,8 @@ function renderGanMes(orders, inicioMes) {
       Impresora Normal (A4 / Carta)
     </button>
     <div style="margin-top:1.1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.1);text-align:left">
-      <div style="font-size:.78rem;color:#aaa;margin-bottom:.5rem">Tamaño de letra al imprimir: <span id="printFontLabel" style="color:#E8641A;font-weight:800">100%</span></div>
-      <input type="range" id="printFontRange" min="100" max="160" step="10" value="100" oninput="_guardarFontScale(this.value)" style="width:100%">
+      <div style="font-size:.78rem;color:#aaa;margin-bottom:.5rem">Tamaño de letra al imprimir: <span id="printFontLabel" style="color:#E8641A;font-weight:800">120%</span></div>
+      <input type="range" id="printFontRange" min="120" max="140" step="10" value="120" oninput="_guardarFontScale(this.value)" style="width:100%">
     </div>
     <button type="button" id="btnPrintCancelar" style="width:100%;background:none;border:none;color:#666;cursor:pointer;margin-top:.9rem;font-size:.85rem">Cancelar</button>
   </div>
