@@ -361,13 +361,6 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 </div>
 
 <div id="dashboard">
-  <div id="planBanner" style="display:none;background:#E74C3C;color:#fff;padding:.75rem 1.2rem;font-size:.88rem;font-weight:800;text-align:center;position:sticky;top:0;z-index:201;letter-spacing:.3px"></div>
-  <div id="pagoBanner" style="display:none;background:#F39C12;color:#fff;padding:.75rem 1.2rem;font-size:.88rem;font-weight:800;text-align:center;position:sticky;top:0;z-index:202;letter-spacing:.3px"></div>
-  <div id="pagoBloqueo" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.95);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:2rem">
-    <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
-    <div style="color:#fff;font-size:1.4rem;font-weight:900;margin-bottom:.8rem">Acceso bloqueado</div>
-    <div style="color:rgba(255,255,255,.7);font-size:.9rem">Hoy es día de pago del servicio.<br>Contacta al administrador para desbloquear.</div>
-  </div>
   <div id="notifBanner" style="display:none;align-items:center;gap:.8rem;background:#E8641A;color:#fff;padding:.7rem 1.2rem;font-size:.85rem;font-weight:700;position:sticky;top:0;z-index:200">
     <span>🔔 Activa las notificaciones para recibir alertas aunque cambies de app</span>
     <button onclick="activarNotificaciones()" style="background:#fff;color:#E8641A;border:none;border-radius:8px;padding:.35rem .9rem;font-weight:900;font-size:.82rem;cursor:pointer;white-space:nowrap">Activar ahora</button>
@@ -617,7 +610,6 @@ function mostrarDashboard() {
   dash.style.display = 'flex';
   dash.style.flexDirection = 'column';
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  mostrarRecordatorioPlan();
   iniciarTimerInactividad();
   iniciarPanel();
 }
@@ -639,24 +631,6 @@ function iniciarTimerInactividad() {
   resetInactividad();
 }
 
-function mostrarRecordatorioPlan() {
-  const vence = new Date('2026-08-28T00:00:00');
-  const hoy = new Date();
-  hoy.setHours(0,0,0,0);
-  vence.setHours(0,0,0,0);
-  const dias = Math.round((vence - hoy) / 86400000);
-  const banner = document.getElementById('planBanner');
-  if (!banner) return;
-  if (dias > 0 && dias <= 3) {
-    const txt = dias === 1 ? 'Te queda 1 día' : `Te quedan ${dias} días`;
-    banner.textContent = `⚠️ ${txt} para que se venza el plan — renueva antes del 28 de agosto`;
-    banner.style.display = 'block';
-  } else if (dias === 0) {
-    banner.textContent = '🔴 El plan venció — contacta al administrador para renovar el servicio';
-    banner.style.display = 'block';
-    banner.style.background = '#7B0000';
-  }
-}
 
 // ── NOTIFICACIONES / SERVICE WORKER ──────────────────────────────────
 async function registrarSW() {
@@ -874,17 +848,27 @@ async function iniciarPanel() {
               data._checks = local._checks;
               data.verificaciones = local._checks;
             }
-            if (Array.isArray(local.adiciones) && local.adiciones.length >= (data.adiciones || []).length) {
+            if (local._localEditado) {
+              // Orden editada manualmente en cocina: el local siempre manda
+              data.comida    = local.comida;
+              data.bebidas   = local.bebidas;
               data.adiciones = local.adiciones;
-              data.total = local.total;
-            }
-            if (Array.isArray(local.bebidas) && local.bebidas.length >= (data.bebidas || []).length) {
-              data.bebidas = local.bebidas;
-              data.total = local.total;
-            }
-            if (Array.isArray(local.comida) && local.comida.length >= (data.comida || []).length) {
-              data.comida = local.comida;
-              data.total = local.total;
+              data.total     = local.total;
+              data._localEditado = true;
+            } else {
+              // Sin edición manual: preservar sólo si localmente hay MÁS ítems
+              if (Array.isArray(local.adiciones) && local.adiciones.length > (data.adiciones || []).length) {
+                data.adiciones = local.adiciones;
+                data.total = local.total;
+              }
+              if (Array.isArray(local.bebidas) && local.bebidas.length > (data.bebidas || []).length) {
+                data.bebidas = local.bebidas;
+                data.total = local.total;
+              }
+              if (Array.isArray(local.comida) && local.comida.length > (data.comida || []).length) {
+                data.comida = local.comida;
+                data.total = local.total;
+              }
             }
             if (local._pagoLocal) {
               data.metodo_pago = local.metodo_pago;
@@ -949,20 +933,27 @@ async function cargarOrdenes() {
           o._checks = local._checks;
           o.verificaciones = local._checks;
         }
-        // Si localmente hay adiciones agregadas que el servidor todavía no confirmó, mantenerlas
-        if (Array.isArray(local.adiciones) && local.adiciones.length >= (o.adiciones || []).length) {
+        // Si localmente hay cambios editados (agregar/eliminar platos), el total local manda
+        if (local._localEditado) {
+          o.comida    = local.comida;
+          o.bebidas   = local.bebidas;
           o.adiciones = local.adiciones;
-          o.total = local.total;
-        }
-        // Si localmente hay bebidas agregadas que el servidor todavía no confirmó, mantenerlas
-        if (Array.isArray(local.bebidas) && local.bebidas.length >= (o.bebidas || []).length) {
-          o.bebidas = local.bebidas;
-          o.total = local.total;
-        }
-        // Si localmente hay platos agregados que el servidor todavía no confirmó, mantenerlos
-        if (Array.isArray(local.comida) && local.comida.length >= (o.comida || []).length) {
-          o.comida = local.comida;
-          o.total = local.total;
+          o.total     = local.total;
+          o._localEditado = true;
+        } else {
+          // Sin edición manual: preservar sólo si localmente hay MÁS ítems (confirmación pendiente de Supabase)
+          if (Array.isArray(local.adiciones) && local.adiciones.length > (o.adiciones || []).length) {
+            o.adiciones = local.adiciones;
+            o.total = local.total;
+          }
+          if (Array.isArray(local.bebidas) && local.bebidas.length > (o.bebidas || []).length) {
+            o.bebidas = local.bebidas;
+            o.total = local.total;
+          }
+          if (Array.isArray(local.comida) && local.comida.length > (o.comida || []).length) {
+            o.comida = local.comida;
+            o.total = local.total;
+          }
         }
         // Si localmente se cambió el método de pago, mantenerlo
         if (local._pagoLocal) {
@@ -1547,7 +1538,28 @@ function _generarTicket(order, tipo) {
       return rows;
     });
   }).join('');
-  const drinkR = (order.bebidas || []).map(d => `<tr><td>${d.qty}x ${d.name}</td><td style="text-align:right">${fmt(d.price * d.qty)}</td></tr>`).join('');
+  // Combos incluyen una bebida gratis (igual que grandTotal en menu.html)
+  const comboCount = (order.comida || []).reduce((s, i) => s + (esCombo(i) ? (i.qty || 1) : 0), 0);
+  const bebidasFlat = (order.bebidas || []).flatMap(d => Array(d.qty || 1).fill(d.price)).sort((a, b) => a - b);
+  const bebidasGratis = bebidasFlat.slice(0, comboCount); // las más baratas son gratis
+  const bebidasPagadas = bebidasFlat.slice(comboCount);
+  const drinkR = (order.bebidas || []).map(d => {
+    // Mostrar precio de cada drink; los gratis se marcan sólo visualmente
+    return `<tr><td>${d.qty}x ${d.name}</td><td style="text-align:right">${fmt(d.price * d.qty)}</td></tr>`;
+  }).join('');
+
+  // Recalcular total desde los ítems del ticket (más confiable que order.total que puede quedar desfasado)
+  const _comidaTotal   = (order.comida    || []).reduce((s, i) => s + i.price * (i.qty || 1), 0);
+  const _bebidaTotal   = bebidasPagadas.reduce((s, p) => s + p, 0);
+  const _adicionTotal  = (order.adiciones || []).reduce((s, a) => s + a.price * (a.qty || 1), 0);
+  const _domTotal      = esDOM ? 2500 : 0;
+  const totalRecalc    = _comidaTotal + _bebidaTotal + _adicionTotal + _domTotal;
+
+  // Si el total guardado difiere, corregirlo en Supabase silenciosamente
+  if (Math.abs(totalRecalc - (order.total || 0)) > 0) {
+    order.total = totalRecalc;
+    sb.from('ordenes').update({ total: totalRecalc }).eq('id', order.id).catch(() => {});
+  }
 
   if (tipo === 'termica') {
     _ticketTermico(order, { dt, payLbl, esDOM, entregaTxt, foodR, drinkR });
@@ -2267,10 +2279,12 @@ async function confirmarPlatos() {
   const nuevoTotal = (order.total || 0) + extraCosto;
   order.comida = merged;
   order.total = nuevoTotal;
+  order._localEditado = true;
   renderizar();
   cerrarPlatoModal();
   const { error } = await sb.from('ordenes').update({ comida: merged, total: nuevoTotal }).eq('id', orderId);
-  if(error) { console.error('Error platos:', error); toast('Error al guardar', 'err'); }
+  if (!error) { order._localEditado = false; } // Supabase confirmó: ya no hay riesgo de revert
+  else { console.error('Error platos:', error); toast('Error al guardar', 'err'); }
 }
 
 async function eliminarPlato(orderId, itemIndex, unitIndex) {
@@ -2288,6 +2302,8 @@ async function eliminarPlato(orderId, itemIndex, unitIndex) {
     if (Array.isArray(item.salsaUnidades)) item.salsaUnidades.splice(unitIndex, 1);
   }
   order.total = Math.max(0, (order.total || 0) - precioUnidad);
+  // Marcar como modificado localmente para que la sincronización no revierta el cambio
+  order._localEditado = true;
   // Se resetean las marcas de verificación: al quitar un plato, los índices
   // del checklist cambian y podrían quedar desalineados con los platos restantes
   order._checks = {};
@@ -2301,6 +2317,7 @@ async function eliminarPlato(orderId, itemIndex, unitIndex) {
       total: order.total,
       verificaciones: {}
     }).eq('id', orderId);
+    order._localEditado = false; // Supabase confirmó el cambio
   } catch(e) {}
 }
 
@@ -2353,10 +2370,12 @@ async function confirmarBebidas() {
   const nuevoTotal = (order.total || 0) + extraCosto;
   order.bebidas = merged;
   order.total = nuevoTotal;
+  order._localEditado = true;
   renderizar();
   cerrarBebidaModal();
   const { error } = await sb.from('ordenes').update({ bebidas: merged, total: nuevoTotal }).eq('id', orderId);
-  if(error) { console.error('Error bebidas:', error); toast('Error al guardar', 'err'); }
+  if (!error) { order._localEditado = false; }
+  else { console.error('Error bebidas:', error); toast('Error al guardar', 'err'); }
 }
 
 // ── TEMA ──────────────────────────────────────────────────────────────
