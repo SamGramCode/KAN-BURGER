@@ -1066,7 +1066,7 @@ body.light .salsa-wrap{border-top-color:rgba(0,0,0,.1)}
     <p class="reveal" style="color:var(--mt);text-align:center;max-width:430px">¿Se te antojó? Contáctanos por WhatsApp o haz tu pedido directamente aquí</p>
     <a href="https://wa.me/573117580802" class="wa-btn reveal" target="_blank">📱 WhatsApp</a>
     <div class="con-info reveal">
-      <div class="citem"><div class="citem-ic">🕐</div><div class="citem-lb">Horario</div><div class="citem-v" style="font-size:.85rem;line-height:1.7">Lun–Sáb: 6:00 p.m. – 11:50 p.m.<br>Dom: 5:30 p.m. – 11:00 p.m.</div></div>
+      <div class="citem"><div class="citem-ic">🕐</div><div class="citem-lb">Horario</div><div class="citem-v" style="font-size:.85rem;line-height:1.7">Todos los días: 5:00 p.m. – 11:00 p.m.</div></div>
       <div class="citem"><div class="citem-ic">📍</div><div class="citem-lb">Ubicación</div><div class="citem-v"><a href="https://www.google.com/maps/search/Calle+10B+%2386-81+Colombia" target="_blank" style="color:var(--or)">Calle 10B #86-81</a></div></div>
       <div class="citem"><div class="citem-ic">📱</div><div class="citem-lb">Teléfono</div><div class="citem-v"><a href="tel:+573117580802" style="color:inherit">311 758 0802</a></div></div>
       <div class="citem"><div class="citem-ic"><svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ig-grad" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#f09433"/><stop offset="25%" stop-color="#e6683c"/><stop offset="50%" stop-color="#dc2743"/><stop offset="75%" stop-color="#cc2366"/><stop offset="100%" stop-color="#bc1888"/></linearGradient></defs><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="url(#ig-grad)"/><circle cx="12" cy="12" r="5" fill="none" stroke="white" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.5" fill="white"/></svg></div><div class="citem-lb">Instagram</div><div class="citem-v"><a href="https://www.instagram.com/kanburger_1?igsh=MXMxenVhZWt5aTc0Nw==" target="_blank" style="color:var(--or)">@kanburger_1</a></div></div>
@@ -1620,7 +1620,7 @@ function isDomicilioDisponible(){
   const dia=now.getDay();
   const mins=now.getHours()*60+now.getMinutes();
   const esDomOrFeriado=dia===0||esFeriado(now);
-  const inicio=18*60; // 6:00 PM
+  const inicio=17*60; // 5:00 PM
   const limite=esDomOrFeriado ? 22*60 : 23*60; // dom/feriado→10PM, lun-sab→11PM
   return mins >= inicio && mins < limite;
 }
@@ -1639,7 +1639,7 @@ function aplicarEstadoDomicilio(){
   const esDomOrFeriado=dia===0||esFeriado(now);
   const cierreHora=esDomOrFeriado?'10:00 PM':'11:00 PM';
   const mins2=now.getHours()*60+now.getMinutes();
-  const antesDeApertura=mins2 < 18*60;
+  const antesDeApertura=mins2 < 17*60;
 
   const domDisponible=isDomicilioDisponible();
   // Tienda cierra a medianoche — consideramos cerrado de 00:00 a 05:59, o si cocina cerró el servicio manualmente
@@ -1663,7 +1663,7 @@ function aplicarEstadoDomicilio(){
       if(sub) sub.textContent='+ $2.500';
     } else {
       btnDom.classList.add('closed');
-      if(sub) sub.textContent=antesDeApertura ? 'Disponible desde las 6:00 PM' : `Cerrado · hasta las ${cierreHora}`;
+      if(sub) sub.textContent=antesDeApertura ? 'Disponible desde las 5:00 PM' : `Cerrado · hasta las ${cierreHora}`;
       if(state.entrega==='domicilio'){
         state.entrega=null;
         document.querySelectorAll('.entrega-btn').forEach(b=>b.classList.remove('selected'));
@@ -2297,7 +2297,7 @@ function buildConfirmation(){
   const payLabel=state.isSplit
     ? state.splitPayments.map(p=>`${fmt(p.amount)} en ${payLabels[p.method]||p.method}`).join(' + ')
     : (payLabels[state.payment]||'—');
-  const totalMostrar=grandTotal()||state._savedTotal||0;
+  const totalMostrar=grandTotal();
   const comprobanteImg=state.comprobanteUrl||(state.comprobanteFile?URL.createObjectURL(state.comprobanteFile):null);
 
   document.getElementById('confirmReceipt').innerHTML=`
