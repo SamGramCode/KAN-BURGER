@@ -2631,6 +2631,7 @@ function renderGanMes(orders, inicioMes) {
 
 // ── MODALES DE ÓRDENES CANCELADAS ──────────────────────────────
 let _diaSeleccionadoCanceladas = null;
+let _canceladasTemp = {};
 
 async function abrirCanceladas(fecha) {
   _diaSeleccionadoCanceladas = fecha;
@@ -2648,10 +2649,10 @@ async function cargarCanceladasDelDia(fecha) {
   const body = document.getElementById('canceladasBody');
   body.innerHTML = '<div style="color:var(--mt);text-align:center;padding:2rem">Cargando...</div>';
 
-  const diaInicio = new Date(fecha);
-  diaInicio.setHours(0, 0, 0, 0);
-  const diaFin = new Date(fecha);
-  diaFin.setHours(23, 59, 59, 999);
+  const diaInicio = new Date(fecha + 'T00:00:00');
+  diaInicio.setHours(diaInicio.getHours() + 5);
+  const diaFin = new Date(fecha + 'T23:59:59');
+  diaFin.setHours(diaFin.getHours() + 5);
 
   try {
     const { data } = await sb
@@ -2663,9 +2664,13 @@ async function cargarCanceladasDelDia(fecha) {
       .order('fecha_hora', { ascending: false });
 
     if (!data || data.length === 0) {
+      _canceladasTemp = {};
       body.innerHTML = '<div style="color:var(--mt);text-align:center;padding:2rem;opacity:.6">Sin órdenes canceladas en este día</div>';
       return;
     }
+
+    _canceladasTemp = {};
+    data.forEach(o => _canceladasTemp[o.id] = o);
 
     body.innerHTML = data.map(o => `
       <div class="cancelada-line" onclick="mostrarCanceladaTicket('${o.id}')">
@@ -2677,12 +2682,13 @@ async function cargarCanceladasDelDia(fecha) {
       </div>
     `).join('');
   } catch (e) {
+    _canceladasTemp = {};
     body.innerHTML = '<div style="color:#E74C3C;text-align:center;padding:2rem">Error al cargar órdenes</div>';
   }
 }
 
 function mostrarCanceladaTicket(ordenId) {
-  const orden = ordersCache.find(o => o.id === ordenId);
+  const orden = _canceladasTemp[ordenId];
   if (!orden) return;
 
   document.getElementById('canceladaTicketOverlay').classList.add('open');
@@ -2705,7 +2711,7 @@ function buildTicketCanceladaHTML(orden) {
         <div><span style="color:var(--mt)">Total:</span> <span style="color:var(--or);font-weight:900">${fmt(orden.total || 0)}</span></div>
       </div>
     </div>
-
+    
     ${orden.comida && orden.comida.length > 0 ? `
       <div style="margin-bottom:1.2rem">
         <div style="font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">🍔 Comida</div>
@@ -2717,7 +2723,7 @@ function buildTicketCanceladaHTML(orden) {
         `).join('')}
       </div>
     ` : ''}
-
+    
     ${orden.bebidas && orden.bebidas.length > 0 ? `
       <div style="margin-bottom:1.2rem">
         <div style="font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">🥤 Bebidas</div>
@@ -2729,7 +2735,7 @@ function buildTicketCanceladaHTML(orden) {
         `).join('')}
       </div>
     ` : ''}
-
+    
     ${orden.adiciones && orden.adiciones.length > 0 ? `
       <div style="margin-bottom:1.2rem">
         <div style="font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">➕ Adiciones</div>
@@ -2741,7 +2747,7 @@ function buildTicketCanceladaHTML(orden) {
         `).join('')}
       </div>
     ` : ''}
-
+    
     ${orden.notas ? `
       <div style="padding:.8rem;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.2);border-radius:10px;font-size:.85rem">
         <div style="color:var(--mt);margin-bottom:.4rem">📝 Notas:</div>
@@ -2762,6 +2768,7 @@ function volverCanceladas() {
     abrirCanceladas(_diaSeleccionadoCanceladas);
   }, 300);
 }
+
 </script>
 
 <!-- Modal selector de impresora -->
