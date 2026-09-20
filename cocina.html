@@ -247,6 +247,25 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 .cr-total-label{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px}
 .cr-total-val{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--or);letter-spacing:1px}
 
+/* MODAL CANCELADAS - LISTADO */
+.canceladas-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;backdrop-filter:blur(4px)}
+.canceladas-overlay.open{display:block}
+.canceladas-panel{position:fixed;top:0;right:-520px;width:500px;max-width:97vw;height:100vh;background:var(--dk2);border-left:1px solid var(--bd);z-index:301;display:flex;flex-direction:column;transition:right .35s cubic-bezier(.4,0,.2,1);box-shadow:-10px 0 50px rgba(0,0,0,.6)}
+.canceladas-panel.open{right:0}
+.canceladas-body{flex:1;overflow-y:auto;padding:1.2rem}
+.cancelada-line{display:flex;align-items:center;justify-content:space-between;padding:.65rem .8rem;border-radius:10px;margin-bottom:.3rem;background:var(--dk3);border:1px solid var(--bd);cursor:pointer;transition:all .2s}
+.cancelada-line:hover{background:rgba(232,100,26,.1);border-color:var(--or)}
+.cancelada-line-info{flex:1;display:flex;flex-direction:column;gap:.2rem}
+.cancelada-line-num{font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--or);letter-spacing:1px}
+.cancelada-line-name{font-size:.8rem;color:var(--mt)}
+
+/* MODAL CANCELADA - TICKET DETALLADO */
+.cancelada-ticket-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;backdrop-filter:blur(4px)}
+.cancelada-ticket-overlay.open{display:block}
+.cancelada-ticket-panel{position:fixed;top:0;right:-520px;width:500px;max-width:97vw;height:100vh;background:var(--dk2);border-left:1px solid var(--bd);z-index:301;display:flex;flex-direction:column;transition:right .35s cubic-bezier(.4,0,.2,1);box-shadow:-10px 0 50px rgba(0,0,0,.6)}
+.cancelada-ticket-panel.open{right:0}
+.cancelada-ticket-body{flex:1;overflow-y:auto;padding:1.2rem}
+
 /* PANEL GANANCIAS */
 .gan-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;backdrop-filter:blur(4px)}
 .gan-overlay.open{display:block}
@@ -412,6 +431,31 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
     </div>
   </div>
   <div id="printCierre" style="display:none"></div>
+
+  <!-- MODAL LISTADO ÓRDENES CANCELADAS -->
+  <div class="canceladas-overlay" id="canceladasOverlay" onclick="cerrarCanceladas()"></div>
+  <div class="canceladas-panel" id="canceladasPanel">
+    <div class="cp-head">
+      <div class="cp-title">❌ Órdenes Canceladas</div>
+      <button class="cp-close" onclick="cerrarCanceladas()">✕</button>
+    </div>
+    <div class="canceladas-body" id="canceladasBody">
+      <div style="color:var(--mt);text-align:center;padding:2rem">Cargando...</div>
+    </div>
+  </div>
+
+  <!-- MODAL TICKET ORDEN CANCELADA -->
+  <div class="cancelada-ticket-overlay" id="canceladaTicketOverlay" onclick="cerrarCanceladaTicket()"></div>
+  <div class="cancelada-ticket-panel" id="canceladaTicketPanel">
+    <div class="cp-head">
+      <button class="cp-nav-btn" onclick="volverCanceladas()" title="Volver">◀</button>
+      <div class="cp-title" id="canceladaTicketTitle">Orden Cancelada</div>
+      <button class="cp-close" onclick="cerrarCanceladaTicket()">✕</button>
+    </div>
+    <div class="cancelada-ticket-body" id="canceladaTicketBody">
+      <div style="color:var(--mt);text-align:center;padding:2rem">Cargando...</div>
+    </div>
+  </div>
 
   <!-- LOCK GANANCIAS -->
   <div class="gan-lock-overlay" id="ganLockOverlay">
@@ -1881,7 +1925,7 @@ function renderCierre() {
       <div class="cr-stat"><div class="cr-stat-val">${done.length}</div><div class="cr-stat-lbl">✅ Completadas</div></div>
       <div class="cr-stat"><div class="cr-stat-val">${fmt(totalVentas)}</div><div class="cr-stat-lbl">💰 Total ventas</div></div>
       <div class="cr-stat"><div class="cr-stat-val">${cierreData.length}</div><div class="cr-stat-lbl">📋 Total órdenes</div></div>
-      <div class="cr-stat"><div class="cr-stat-val">${canceladas.length}</div><div class="cr-stat-lbl">❌ Canceladas</div></div>
+      <div class="cr-stat" onclick="abrirCanceladas('${fechaStr}')" style="cursor:pointer" title="Click para ver órdenes canceladas"><div class="cr-stat-val">${canceladas.length}</div><div class="cr-stat-lbl">❌ Canceladas</div></div>
     </div>`;
 
   const porMetodo = Object.entries(payMethods).map(([key, label]) => {
@@ -2583,6 +2627,140 @@ function renderGanMes(orders, inicioMes) {
     <div style="font-size:.72rem;color:var(--mt);margin-top:.4rem">${orders.length} orden${orders.length !== 1 ? 'es' : ''} completada${orders.length !== 1 ? 's' : ''}</div>
   </div>`;
   document.getElementById('ganBody').innerHTML = html || '<div style="color:var(--mt);text-align:center;padding:2rem">Sin órdenes este mes</div>';
+}
+
+// ── MODALES DE ÓRDENES CANCELADAS ──────────────────────────────
+let _diaSeleccionadoCanceladas = null;
+
+async function abrirCanceladas(fecha) {
+  _diaSeleccionadoCanceladas = fecha;
+  document.getElementById('canceladasOverlay').classList.add('open');
+  document.getElementById('canceladasPanel').classList.add('open');
+  await cargarCanceladasDelDia(fecha);
+}
+
+function cerrarCanceladas() {
+  document.getElementById('canceladasOverlay').classList.remove('open');
+  document.getElementById('canceladasPanel').classList.remove('open');
+}
+
+async function cargarCanceladasDelDia(fecha) {
+  const body = document.getElementById('canceladasBody');
+  body.innerHTML = '<div style="color:var(--mt);text-align:center;padding:2rem">Cargando...</div>';
+
+  const diaInicio = new Date(fecha);
+  diaInicio.setHours(0, 0, 0, 0);
+  const diaFin = new Date(fecha);
+  diaFin.setHours(23, 59, 59, 999);
+
+  try {
+    const { data } = await sb
+      .from('ordenes')
+      .select('*')
+      .eq('estado', 'rechazado')
+      .gte('fecha_hora', diaInicio.toISOString())
+      .lte('fecha_hora', diaFin.toISOString())
+      .order('fecha_hora', { ascending: false });
+
+    if (!data || data.length === 0) {
+      body.innerHTML = '<div style="color:var(--mt);text-align:center;padding:2rem;opacity:.6">Sin órdenes canceladas en este día</div>';
+      return;
+    }
+
+    body.innerHTML = data.map(o => `
+      <div class="cancelada-line" onclick="mostrarCanceladaTicket('${o.id}')">
+        <div class="cancelada-line-info">
+          <div class="cancelada-line-num">KN-${String(o.id).slice(-4).padStart(4,'0')}</div>
+          <div class="cancelada-line-name">${o.telefono || 'Sin nombre'} • ${new Date(o.fecha_hora).toLocaleTimeString('es-CO', {hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--or);text-align:right">${fmt(o.total || 0)}</div>
+      </div>
+    `).join('');
+  } catch (e) {
+    body.innerHTML = '<div style="color:#E74C3C;text-align:center;padding:2rem">Error al cargar órdenes</div>';
+  }
+}
+
+function mostrarCanceladaTicket(ordenId) {
+  const orden = ordersCache.find(o => o.id === ordenId);
+  if (!orden) return;
+
+  document.getElementById('canceladaTicketOverlay').classList.add('open');
+  document.getElementById('canceladaTicketPanel').classList.add('open');
+  document.getElementById('canceladaTicketTitle').textContent = `KN-${String(ordenId).slice(-4).padStart(4,'0')}`;
+
+  const ticketHTML = buildTicketCanceladaHTML(orden);
+  document.getElementById('canceladaTicketBody').innerHTML = ticketHTML;
+}
+
+function buildTicketCanceladaHTML(orden) {
+  const ts = new Date(orden.fecha_hora);
+  return `
+    <div style="margin-bottom:1.2rem">
+      <div style="font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">Datos de la orden</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;padding:.8rem;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;font-size:.85rem">
+        <div><span style="color:var(--mt)">Fecha:</span> ${ts.toLocaleDateString('es-CO')}</div>
+        <div><span style="color:var(--mt)">Hora:</span> ${ts.toLocaleTimeString('es-CO', {hour:'2-digit',minute:'2-digit'})}</div>
+        <div><span style="color:var(--mt)">Teléfono:</span> ${orden.telefono || '—'}</div>
+        <div><span style="color:var(--mt)">Total:</span> <span style="color:var(--or);font-weight:900">${fmt(orden.total || 0)}</span></div>
+      </div>
+    </div>
+
+    ${orden.comida && orden.comida.length > 0 ? `
+      <div style="margin-bottom:1.2rem">
+        <div style="font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">🍔 Comida</div>
+        ${orden.comida.map((c, i) => `
+          <div style="padding:.6rem .8rem;background:var(--dk3);border:1px solid var(--bd);border-radius:8px;margin-bottom:.3rem;font-size:.85rem">
+            <div><strong>${c.name}</strong> x${c.qty}</div>
+            <div style="color:var(--mt);font-size:.75rem">${fmt(c.price * c.qty)}</div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+
+    ${orden.bebidas && orden.bebidas.length > 0 ? `
+      <div style="margin-bottom:1.2rem">
+        <div style="font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">🥤 Bebidas</div>
+        ${orden.bebidas.map(b => `
+          <div style="padding:.6rem .8rem;background:var(--dk3);border:1px solid var(--bd);border-radius:8px;margin-bottom:.3rem;font-size:.85rem">
+            <div><strong>${b.name}</strong> x${b.qty}</div>
+            <div style="color:var(--mt);font-size:.75rem">${fmt(b.price * b.qty)}</div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+
+    ${orden.adiciones && orden.adiciones.length > 0 ? `
+      <div style="margin-bottom:1.2rem">
+        <div style="font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">➕ Adiciones</div>
+        ${orden.adiciones.map(a => `
+          <div style="padding:.6rem .8rem;background:var(--dk3);border:1px solid var(--bd);border-radius:8px;margin-bottom:.3rem;font-size:.85rem">
+            <div><strong>${a.name}</strong> x${a.qty}</div>
+            <div style="color:var(--mt);font-size:.75rem">${fmt(a.price * a.qty)}</div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+
+    ${orden.notas ? `
+      <div style="padding:.8rem;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.2);border-radius:10px;font-size:.85rem">
+        <div style="color:var(--mt);margin-bottom:.4rem">📝 Notas:</div>
+        <div>${orden.notas}</div>
+      </div>
+    ` : ''}
+  `;
+}
+
+function cerrarCanceladaTicket() {
+  document.getElementById('canceladaTicketOverlay').classList.remove('open');
+  document.getElementById('canceladaTicketPanel').classList.remove('open');
+}
+
+function volverCanceladas() {
+  cerrarCanceladaTicket();
+  setTimeout(() => {
+    abrirCanceladas(_diaSeleccionadoCanceladas);
+  }, 300);
 }
 </script>
 
