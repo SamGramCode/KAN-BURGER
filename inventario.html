@@ -225,7 +225,7 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
       <div style="font-size:.78rem;color:var(--mt);margin-bottom:.5rem">Stock actual: <span id="ajusteActual" style="color:var(--or);font-weight:800"></span></div>
       <div class="cant-row-modal">
         <button class="cant-btn-modal" onclick="ajusteCant(-1)">−</button>
-        <div class="cant-val-modal" id="ajusteCantVal">1</div>
+        <input type="number" class="cant-val-modal" id="ajusteCantVal" value="1" min="1" onchange="ajusteCantUpdate(this.value)" style="border:1px solid #ddd;cursor:text;font-size:1.2rem;text-align:center;width:50px">
         <button class="cant-btn-modal" onclick="ajusteCant(1)">+</button>
       </div>
     </div>
@@ -247,7 +247,7 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
     <label class="modal-label">Cantidad a transferir</label>
     <div class="cant-row-modal">
       <button class="cant-btn-modal" onclick="transferCant(-1)">−</button>
-      <div class="cant-val-modal" id="transferCantVal">1</div>
+      <input type="number" class="cant-val-modal" id="transferCantVal" value="1" min="1" onchange="transferCantUpdate(this.value)" style="border:1px solid #ddd;cursor:text;font-size:1.2rem;text-align:center;width:50px">
       <button class="cant-btn-modal" onclick="transferCant(1)">+</button>
     </div>
     <label class="modal-label">Destino</label>
@@ -667,14 +667,18 @@ function abrirAjuste(id, tipo) {
   const item = items.find(i => i.id === id);
   document.getElementById('ajusteTitulo').textContent = tipo === 'entrada' ? '📥 Entrada de Stock' : '📤 Salida de Stock';
   document.getElementById('ajusteActual').textContent = `${item.stock} ${item.unidad}`;
-  document.getElementById('ajusteCantVal').textContent = 1;
+  document.getElementById('ajusteCantVal').value = 1;
   document.getElementById('ajusteBtn').textContent = tipo === 'entrada' ? '✓ Agregar al stock' : '✓ Descontar del stock';
   document.getElementById('ajusteNota').value = '';
   document.getElementById('modalAjuste').classList.add('open');
 }
 function ajusteCant(d) {
   _ajusteCant = Math.max(1, _ajusteCant + d);
-  document.getElementById('ajusteCantVal').textContent = _ajusteCant;
+  document.getElementById('ajusteCantVal').value = _ajusteCant;
+}
+function ajusteCantUpdate(val) {
+  _ajusteCant = Math.max(1, parseInt(val) || 1);
+  document.getElementById('ajusteCantVal').value = _ajusteCant;
 }
 async function confirmarAjuste() {
   const item = items.find(i => i.id === _ajusteId);
@@ -701,7 +705,7 @@ function abrirTransfer(id) {
   const catIdx = CATS.indexOf(item.categoria);
   document.getElementById('transferItemNombre').textContent = item.nombre;
   document.getElementById('transferDisponible').textContent = `${item.stock} ${item.unidad}`;
-  document.getElementById('transferCantVal').textContent = 1;
+  document.getElementById('transferCantVal').value = 1;
   document.getElementById('transferNota').value = '';
   const sel = document.getElementById('transferDestino');
   sel.innerHTML = '';
@@ -712,7 +716,11 @@ function abrirTransfer(id) {
 }
 function transferCant(d) {
   _transferCant = Math.max(1, _transferCant + d);
-  document.getElementById('transferCantVal').textContent = _transferCant;
+  document.getElementById('transferCantVal').value = _transferCant;
+}
+function transferCantUpdate(val) {
+  _transferCant = Math.max(1, parseInt(val) || 1);
+  document.getElementById('transferCantVal').value = _transferCant;
 }
 async function confirmarTransfer() {
   const item = items.find(i => i.id === _transferId);
