@@ -358,6 +358,15 @@ const PIN_CORRECTO = '3087';
 let sb, items = [], tabActual = 0;
 
 // Verificar sesión al cargar la página
+function verificarSesion() {
+  if (localStorage.getItem('inv_autenticado') === 'true') {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('app').style.flexDirection = 'column';
+    iniciar();
+  }
+}
+
 window.addEventListener('DOMContentLoaded', verificarSesion);
 let _ajusteId = null, _ajusteTipo = null, _ajusteCant = 1;
 let _transferId = null, _transferCant = 1;
@@ -438,16 +447,6 @@ function logout() {
   actualizarDots();
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
-}
-
-// ── VERIFICAR SESIÓN AL CARGAR ──
-function verificarSesion() {
-  if (localStorage.getItem('inv_autenticado') === 'true') {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    document.getElementById('app').style.flexDirection = 'column';
-    iniciar();
-  }
 }
 
 // ── NOTIFICACIONES Y SONIDO ───────────────────────────────────────────────────
