@@ -208,7 +208,7 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
   <div class="tabs">
     <button class="tab active" id="tab0" onclick="cambiarTab(0)">🛒 Insumos<span class="tab-badge" id="badge0" style="display:none"></span></button>
     <button class="tab" id="tab1" onclick="cambiarTab(1)">🔧 Producción<span class="tab-badge" id="badge1" style="display:none"></span></button>
-    <button class="tab" id="tab2" onclick="cambiarTab(2)">🏪 Venta<span class="tab-badge" id="badge2" style="display:none"></span></button>
+    <button class="tab" id="tab2" onclick="cambiarTab(2)">🏪 Productos a vender<span class="tab-badge" id="badge2" style="display:none"></span></button>
     <button class="tab" id="tab3" onclick="cambiarTab(3)">📋 Recetas</button>
   </div>
 
@@ -279,7 +279,7 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
     <select class="modal-select" id="itemCategoria">
       <option value="insumos">🛒 Insumos</option>
       <option value="produccion">🔧 Producción</option>
-      <option value="venta">🏪 Venta diaria</option>
+      <option value="venta">🏪 Productos a vender</option>
     </select>
     <label class="modal-label">Stock inicial</label>
     <input class="modal-input" type="number" id="itemStock" placeholder="0">
@@ -585,9 +585,9 @@ async function cargarItems() {
 
 // ── TABS ─────────────────────────────────────────────────────────────────────
 const CATS = ['insumos', 'produccion', 'venta'];
-const CAT_LABEL = ['Insumos', 'Producción', 'Venta diaria'];
+const CAT_LABEL = ['Insumos', 'Producción', 'Productos a vender'];
 const CAT_NEXT = ['produccion', 'venta', null];
-const CAT_NEXT_LABEL = ['Producción', 'Venta diaria', null];
+const CAT_NEXT_LABEL = ['Producción', 'Productos a vender', null];
 
 function cambiarTab(n) {
   tabActual = n;
