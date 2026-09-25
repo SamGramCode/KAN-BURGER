@@ -800,7 +800,7 @@ async function guardarItem() {
   const nombre = document.getElementById('itemNombre').value.trim();
   if (!nombre) { toast('Escribe un nombre', 'err'); return; }
   const stockMinimo = parseFloat(document.getElementById('itemMinimo').value) || 0;
-  if (stockMinimo <= 0) { toast('Stock mínimo es obligatorio (debe ser > 0)', 'err'); return; }
+  if (stockMinimo <= 0) { toast('Stock mínimo obligatorio', 'err'); return; }
   const data = {
     nombre,
     unidad: document.getElementById('itemUnidad').value.trim() || 'unidades',
