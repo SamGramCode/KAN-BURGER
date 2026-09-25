@@ -271,8 +271,8 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
         <input class="modal-input" id="itemUnidad" placeholder="Ej: unidades, kg, gr">
       </div>
       <div>
-        <label class="modal-label">Stock mínimo (alerta)</label>
-        <input class="modal-input" type="number" id="itemMinimo" placeholder="0">
+        <label class="modal-label" style="color: var(--err); font-weight: 900;">Stock mínimo (alerta) *</label>
+        <input class="modal-input" type="number" id="itemMinimo" placeholder="0" required>
       </div>
     </div>
     <label class="modal-label">Flujo</label>
@@ -280,8 +280,10 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
       <option value="directo_venta">Directo a venta (Refrescos, Agua, etc)</option>
       <option value="con_preparacion">Con preparación (Pan, Carne, Pollo, etc)</option>
     </select>
-    <label class="modal-label">Stock inicial</label>
-    <input class="modal-input" type="number" id="itemStock" placeholder="0">
+    <div id="stockInicialDiv" style="display: none;">
+      <label class="modal-label">Stock inicial</label>
+      <input class="modal-input" type="number" id="itemStock" placeholder="0">
+    </div>
     <label class="modal-label">Proveedor (opcional)</label>
     <input class="modal-input" id="itemProvNombre" placeholder="Nombre del proveedor">
     <label class="modal-label">Teléfono proveedor</label>
@@ -772,6 +774,9 @@ function abrirModalNuevo(cat) {
   document.getElementById('itemProvNombre').value = '';
   document.getElementById('itemProvTel').value = '';
   document.getElementById('btnEliminar').style.display = 'none';
+  // Mostrar/ocultar Stock inicial según categoría
+  const mostrarStock = categoriaAutomatica !== 'venta';
+  document.getElementById('stockInicialDiv').style.display = mostrarStock ? 'block' : 'none';
   // Guardar la categoría en un campo oculto
   _itemCategoriaAutomatica = categoriaAutomatica;
   document.getElementById('modalItem').classList.add('open');
@@ -794,10 +799,12 @@ function abrirEditar(id) {
 async function guardarItem() {
   const nombre = document.getElementById('itemNombre').value.trim();
   if (!nombre) { toast('Escribe un nombre', 'err'); return; }
+  const stockMinimo = parseFloat(document.getElementById('itemMinimo').value) || 0;
+  if (stockMinimo <= 0) { toast('Stock mínimo es obligatorio (debe ser > 0)', 'err'); return; }
   const data = {
     nombre,
     unidad: document.getElementById('itemUnidad').value.trim() || 'unidades',
-    stock_minimo: parseFloat(document.getElementById('itemMinimo').value) || 0,
+    stock_minimo: stockMinimo,
     stock: parseFloat(document.getElementById('itemStock').value) || 0,
     categoria: _itemCategoriaAutomatica,
     flujo: document.getElementById('itemFlujo').value || 'directo_venta',
