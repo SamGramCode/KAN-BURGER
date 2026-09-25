@@ -1516,7 +1516,6 @@ function buildSummary(){
     return m?{id:m.id,name:m.name,price:m.price,qty:q,cat:m.cat}:null;
   }).filter(Boolean);
   const burgers=allItems.filter(i=>i.cat==='burger');
-  const perroscal=allItems.filter(i=>i.cat==='perrocal');
   const venezolanos=allItems.filter(i=>i.cat==='venezolano');
   const platos=allItems.filter(i=>i.cat==='plato');
   const combos=allItems.filter(i=>i.cat==='burgerfries');
@@ -1539,8 +1538,7 @@ function buildSummary(){
     });
   }
   renderFoodGroup(burgers,'Hamburguesas');
-  renderFoodGroup(perroscal,'Perros Calientes');
-  renderFoodGroup(venezolanos,'Venezolanos');
+  renderFoodGroup(venezolanos,'Perros Calientes');
   renderFoodGroup(platos,'Platos');
   renderFoodGroup(combos,'Hamburguesas + Francesas',it=>{
     html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
