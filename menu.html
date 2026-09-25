@@ -1110,7 +1110,9 @@ async function cargarProductosActivos() {
   try {
     const { data } = await sb.from('menu_config').select('*');
     if (data) data.forEach(r => productosActivos[r.id] = r.activo);
-  } catch(e) {}
+  } catch(e) {
+    console.warn('Supabase fallo, mostrando todos los productos');
+  }
 }
 
 // ══════════════════════════════════════════════
