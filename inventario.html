@@ -657,7 +657,7 @@ function renderTab() {
         <div class="item-actions">
           <button class="btn-mas" onclick="abrirAjuste('${item.id}','entrada')">+</button>
           <button class="btn-menos" onclick="abrirAjuste('${item.id}','salida')">−</button>
-          ${canTransfer ? `<button class="btn-transfer" onclick="abrirTransfer('${item.id}')">→</button>` : ''}
+          ${tabActual === 1 ? `<button class="btn-transfer" onclick="abrirTransfer('${item.id}')">→</button>` : ''}
           ${item.proveedor_telefono ? `<a href="tel:${item.proveedor_telefono}" title="${item.proveedor_nombre||'Proveedor'}" style="background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.3);color:var(--ok);border-radius:8px;padding:.35rem .65rem;font-size:.9rem;text-decoration:none;display:flex;align-items:center">📞</a>` : ''}
           <button class="btn-edit-item" onclick="abrirEditar('${item.id}')">✎</button>
         </div>
