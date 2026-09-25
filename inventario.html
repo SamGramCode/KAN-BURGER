@@ -265,16 +265,10 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
     <div class="modal-title" id="itemModalTitulo">Nuevo Item</div>
     <label class="modal-label">Nombre</label>
     <input class="modal-input" id="itemNombre" placeholder="Ej: Carne de res">
-    <div class="modal-row">
-      <div>
-        <label class="modal-label">Unidad</label>
-        <input class="modal-input" id="itemUnidad" placeholder="Ej: unidades, kg, gr">
-      </div>
-      <div>
-        <label class="modal-label" style="color: var(--err); font-weight: 900;">Stock mínimo (alerta) *</label>
-        <input class="modal-input" type="number" id="itemMinimo" placeholder="0" required>
-      </div>
-    </div>
+    <label class="modal-label">Unidad</label>
+    <input class="modal-input" id="itemUnidad" placeholder="Ej: unidades, kg, gr">
+    <label class="modal-label" style="color: var(--err); font-weight: 900;">Stock mínimo (alerta) *</label>
+    <input class="modal-input" type="number" id="itemMinimo" placeholder="0" required>
     <label class="modal-label">Flujo</label>
     <select class="modal-select" id="itemFlujo">
       <option value="directo_venta">Directo a venta (Refrescos, Agua, etc)</option>
@@ -283,6 +277,19 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
     <div id="stockInicialDiv" style="display: none;">
       <label class="modal-label">Stock inicial</label>
       <input class="modal-input" type="number" id="itemStock" placeholder="0">
+    </div>
+    <div id="pesoUnitarioDiv" style="display: none;">
+      <label class="modal-label" style="color: var(--err); font-weight: 900;">Peso unitario *</label>
+      <input class="modal-input" type="number" id="itemPeso" placeholder="130" step="0.1" required>
+    </div>
+    <div id="unidadPesoDiv" style="display: none;">
+      <label class="modal-label" style="color: var(--err); font-weight: 900;">Unidad de peso *</label>
+      <select class="modal-select" id="itemUnidadPeso" required>
+        <option value="gramos">Gramos (gr)</option>
+        <option value="kg">Kilogramos (kg)</option>
+        <option value="libras">Libras (lb)</option>
+        <option value="oz">Onzas (oz)</option>
+      </select>
     </div>
     <label class="modal-label">Proveedor (opcional)</label>
     <input class="modal-input" id="itemProvNombre" placeholder="Nombre del proveedor">
@@ -703,7 +710,19 @@ async function confirmarAjuste() {
     origen: item.categoria, nota: nota || null
   });
 
-  // DESCUENTO AUTOMÁTICO EN CASCADA
+  // DESCUENTO AUTOMÁTICO: Producción → Insumos (por peso unitario)
+  if (item.categoria === 'produccion' && item.peso_unitario) {
+    const cantidadConPeso = _ajusteCant * item.peso_unitario;
+    if (_ajusteTipo === 'entrada') {
+      // Sumo en Producción → resto de Insumos
+      await descontarDelInsumo(item.nombre, cantidadConPeso, item.unidad_peso);
+    } else if (_ajusteTipo === 'salida') {
+      // Resto en Producción → sumo a Insumos
+      await sumarAlInsumo(item.nombre, cantidadConPeso, item.unidad_peso);
+    }
+  }
+
+  // DESCUENTO AUTOMÁTICO EN CASCADA: Venta → Producción/Insumos
   if (_ajusteTipo === 'entrada' && (item.categoria === 'produccion' || item.categoria === 'venta')) {
     await descontarRecursivo(item.nombre, _ajusteCant);
   }
@@ -769,6 +788,8 @@ function abrirModalNuevo(cat) {
   document.getElementById('itemUnidad').value = 'unidades';
   document.getElementById('itemMinimo').value = '0';
   document.getElementById('itemStock').value = '0';
+  document.getElementById('itemPeso').value = '';
+  document.getElementById('itemUnidadPeso').value = 'gramos';
   // Asigna automáticamente según el tab (sin mostrar en modal)
   const categoriaAutomatica = cat || CATS[tabActual];
   document.getElementById('itemProvNombre').value = '';
@@ -777,6 +798,10 @@ function abrirModalNuevo(cat) {
   // Mostrar/ocultar Stock inicial según categoría
   const mostrarStock = categoriaAutomatica !== 'venta';
   document.getElementById('stockInicialDiv').style.display = mostrarStock ? 'block' : 'none';
+  // Mostrar/ocultar Peso unitario solo en Producción
+  const mostrarPeso = categoriaAutomatica === 'produccion';
+  document.getElementById('pesoUnitarioDiv').style.display = mostrarPeso ? 'block' : 'none';
+  document.getElementById('unidadPesoDiv').style.display = mostrarPeso ? 'block' : 'none';
   // Guardar la categoría en un campo oculto
   _itemCategoriaAutomatica = categoriaAutomatica;
   document.getElementById('modalItem').classList.add('open');
@@ -789,10 +814,16 @@ function abrirEditar(id) {
   document.getElementById('itemUnidad').value = item.unidad;
   document.getElementById('itemMinimo').value = item.stock_minimo;
   document.getElementById('itemStock').value = item.stock;
+  document.getElementById('itemPeso').value = item.peso_unitario || '';
+  document.getElementById('itemUnidadPeso').value = item.unidad_peso || 'gramos';
   document.getElementById('itemFlujo').value = item.flujo || 'directo_venta';
   document.getElementById('itemProvNombre').value = item.proveedor_nombre || '';
   document.getElementById('itemProvTel').value = item.proveedor_telefono || '';
   _itemCategoriaAutomatica = item.categoria;
+  // Mostrar/ocultar Peso unitario solo en Producción
+  const mostrarPeso = item.categoria === 'produccion';
+  document.getElementById('pesoUnitarioDiv').style.display = mostrarPeso ? 'block' : 'none';
+  document.getElementById('unidadPesoDiv').style.display = mostrarPeso ? 'block' : 'none';
   document.getElementById('btnEliminar').style.display = 'block';
   document.getElementById('modalItem').classList.add('open');
 }
@@ -801,6 +832,13 @@ async function guardarItem() {
   if (!nombre) { toast('Escribe un nombre', 'err'); return; }
   const stockMinimo = parseFloat(document.getElementById('itemMinimo').value) || 0;
   if (stockMinimo <= 0) { toast('Stock mínimo obligatorio', 'err'); return; }
+
+  // Validar Peso unitario solo si es Producción
+  if (_itemCategoriaAutomatica === 'produccion') {
+    const peso = parseFloat(document.getElementById('itemPeso').value) || 0;
+    if (peso <= 0) { toast('Peso unitario obligatorio y debe ser > 0', 'err'); return; }
+  }
+
   const data = {
     nombre,
     unidad: document.getElementById('itemUnidad').value.trim() || 'unidades',
@@ -811,6 +849,13 @@ async function guardarItem() {
     proveedor_nombre: document.getElementById('itemProvNombre').value.trim() || null,
     proveedor_telefono: document.getElementById('itemProvTel').value.trim() || null
   };
+
+  // Agregar peso solo si es Producción
+  if (_itemCategoriaAutomatica === 'produccion') {
+    data.peso_unitario = parseFloat(document.getElementById('itemPeso').value) || 0;
+    data.unidad_peso = document.getElementById('itemUnidadPeso').value || 'gramos';
+  }
+
   if (_editId) {
     await sb.from('inventario').update(data).eq('id', _editId);
     toast('Item actualizado', 'ok');
@@ -829,6 +874,35 @@ async function eliminarItem() {
   await cargarItems();
   renderTab();
   toast('Item eliminado', 'ok');
+}
+
+// ── DESCUENTO/SUMA AUTOMÁTICO DE PRODUCCIÓN A INSUMOS ──────────────────────────
+async function descontarDelInsumo(nombreInsumo, cantidadConPeso, unidadPeso) {
+  const insumo = items.find(i => i.nombre.toLowerCase() === nombreInsumo.toLowerCase() && i.categoria === 'insumos');
+  if (!insumo) return;
+  const nuevoStock = Math.max(0, insumo.stock - cantidadConPeso);
+  await sb.from('inventario').update({ stock: nuevoStock }).eq('id', insumo.id);
+  await sb.from('inventario_movimientos').insert({
+    item_id: insumo.id,
+    tipo: 'salida',
+    cantidad: cantidadConPeso,
+    origen: 'insumos',
+    nota: `Descuento automático de Producción (${cantidadConPeso} ${unidadPeso})`
+  });
+}
+
+async function sumarAlInsumo(nombreInsumo, cantidadConPeso, unidadPeso) {
+  const insumo = items.find(i => i.nombre.toLowerCase() === nombreInsumo.toLowerCase() && i.categoria === 'insumos');
+  if (!insumo) return;
+  const nuevoStock = insumo.stock + cantidadConPeso;
+  await sb.from('inventario').update({ stock: nuevoStock }).eq('id', insumo.id);
+  await sb.from('inventario_movimientos').insert({
+    item_id: insumo.id,
+    tipo: 'entrada',
+    cantidad: cantidadConPeso,
+    origen: 'insumos',
+    nota: `Reposición automática a Insumos (${cantidadConPeso} ${unidadPeso})`
+  });
 }
 
 // ── DESCUENTO AUTOMÁTICO EN CASCADA ───────────────────────────────────────────
