@@ -3094,18 +3094,19 @@ window.addEventListener('hashchange',handleHash);
 
 // ── INIT ──
 (async function(){
-  const savedBadge=localStorage.getItem('kan_cart_badge');
-  if(savedBadge){const e=document.getElementById('cartBadgeNav');if(e)e.textContent=savedBadge;}
-  await cargarProductosActivos();
-  await cargarEstadoDomiciliosConfig();
-  buildShowcase();
-  filterMenu(document.querySelector('.menu-filter .fbtn.active'));
-  initReveal();
-  handleHash();
-  checkActiveOrder();
-  checkHistBtn();
-  // Re-verificar estado domicilios cada 2 minutos
-  setInterval(cargarEstadoDomiciliosConfig, 120000);
+  try {
+    const savedBadge=localStorage.getItem('kan_cart_badge');
+    if(savedBadge){const e=document.getElementById('cartBadgeNav');if(e)e.textContent=savedBadge;}
+    await cargarProductosActivos();
+    await cargarEstadoDomiciliosConfig();
+    buildShowcase();
+    try { filterMenu(document.querySelector('.menu-filter .fbtn.active')||document.querySelector('.menu-filter .fbtn')); } catch(e) {}
+    try { initReveal(); } catch(e) {}
+    try { handleHash(); } catch(e) {}
+    try { checkActiveOrder(); } catch(e) {}
+    try { checkHistBtn(); } catch(e) {}
+    setInterval(cargarEstadoDomiciliosConfig, 120000);
+  } catch(e) { console.error('Init error:', e); }
 })();
 
 // Realtime — actualiza vitrina al instante cuando cocina activa/desactiva productos
