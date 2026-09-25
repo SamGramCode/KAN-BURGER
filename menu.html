@@ -3093,7 +3093,7 @@ window.addEventListener('hashchange',handleHash);
 })();
 
 // ── INIT ──
-(async function(){
+document.addEventListener('DOMContentLoaded', async function(){
   try {
     const savedBadge=localStorage.getItem('kan_cart_badge');
     if(savedBadge){const e=document.getElementById('cartBadgeNav');if(e)e.textContent=savedBadge;}
@@ -3107,7 +3107,7 @@ window.addEventListener('hashchange',handleHash);
     try { checkHistBtn(); } catch(e) {}
     setInterval(cargarEstadoDomiciliosConfig, 120000);
   } catch(e) { console.error('Init error:', e); }
-})();
+});
 
 // Realtime — actualiza vitrina al instante cuando cocina activa/desactiva productos
 sb.channel('menu_config_rt')
