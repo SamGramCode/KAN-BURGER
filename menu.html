@@ -2846,11 +2846,13 @@ function updateFloatCart(){
     btn.onclick=()=>openModal();
     document.getElementById('cartBadge').textContent='🔥';
     document.getElementById('cartBadgeNav').textContent='🔥';
+    localStorage.setItem('kan_cart_badge','🔥');
     document.getElementById('cartTotalFloat').textContent='Ver mi pedido';
   } else {
     if(total===0) btn.classList.add('empty');
     document.getElementById('cartBadge').textContent=total||'';
     document.getElementById('cartBadgeNav').textContent=total||'';
+    localStorage.setItem('kan_cart_badge',total||'0');
     document.getElementById('cartTotalFloat').textContent=total>0?fmt(grandTotal()):'Mi pedido';
     btn.onclick=()=>openModal();
   }
@@ -3090,6 +3092,8 @@ window.addEventListener('hashchange',handleHash);
 
 // ── INIT ──
 (async function(){
+  const savedBadge=localStorage.getItem('kan_cart_badge');
+  if(savedBadge){const e=document.getElementById('cartBadgeNav');if(e)e.textContent=savedBadge;}
   await cargarProductosActivos();
   await cargarEstadoDomiciliosConfig();
   buildShowcase();
