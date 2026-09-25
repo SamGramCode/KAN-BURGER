@@ -1323,7 +1323,7 @@ async function descontarInventario(order) {
       if (!nombreIngrediente || cantidad <= 0) return;
       const nl = nombreIngrediente.toLowerCase();
       invData.forEach(item => {
-        if (item.nombre.toLowerCase().includes(nl) || nl.includes(item.nombre.toLowerCase())) {
+        if (item.categoria === 'venta' && (item.nombre.toLowerCase().includes(nl) || nl.includes(item.nombre.toLowerCase()))) {
           const real = Math.min(cantidad, stockLocal[item.id]);
           if (real <= 0) return;
           stockLocal[item.id] -= real;
