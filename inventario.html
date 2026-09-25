@@ -281,6 +281,11 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
       <option value="produccion">🔧 Producción</option>
       <option value="venta">🏪 Productos a vender</option>
     </select>
+    <label class="modal-label">Flujo</label>
+    <select class="modal-select" id="itemFlujo">
+      <option value="directo_venta">Directo a venta (Refrescos, Agua, etc)</option>
+      <option value="con_preparacion">Con preparación (Pan, Carne, Pollo, etc)</option>
+    </select>
     <label class="modal-label">Stock inicial</label>
     <input class="modal-input" type="number" id="itemStock" placeholder="0">
     <label class="modal-label">Proveedor (opcional)</label>
@@ -658,6 +663,7 @@ function renderTab() {
           <button class="btn-mas" onclick="abrirAjuste('${item.id}','entrada')">+</button>
           <button class="btn-menos" onclick="abrirAjuste('${item.id}','salida')">−</button>
           ${tabActual === 1 ? `<button class="btn-transfer" onclick="abrirTransfer('${item.id}')">→</button>` : ''}
+          ${tabActual === 1 ? `<button class="btn-edit-item" onclick="abrirRecetaProduccion('${item.id}')" title="Agregar/editar receta">📋</button>` : ''}
           ${item.proveedor_telefono ? `<a href="tel:${item.proveedor_telefono}" title="${item.proveedor_nombre||'Proveedor'}" style="background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.3);color:var(--ok);border-radius:8px;padding:.35rem .65rem;font-size:.9rem;text-decoration:none;display:flex;align-items:center">📞</a>` : ''}
           <button class="btn-edit-item" onclick="abrirEditar('${item.id}')">✎</button>
         </div>
@@ -699,6 +705,12 @@ async function confirmarAjuste() {
     item_id: _ajusteId, tipo: _ajusteTipo, cantidad: _ajusteCant,
     origen: item.categoria, nota: nota || null
   });
+
+  // DESCUENTO AUTOMÁTICO EN CASCADA
+  if (_ajusteTipo === 'entrada' && (item.categoria === 'produccion' || item.categoria === 'venta')) {
+    await descontarRecursivo(item.nombre, _ajusteCant);
+  }
+
   cerrarModal('modalAjuste');
   await cargarItems();
   renderTab();
@@ -775,6 +787,7 @@ function abrirEditar(id) {
   document.getElementById('itemMinimo').value = item.stock_minimo;
   document.getElementById('itemStock').value = item.stock;
   document.getElementById('itemCategoria').value = item.categoria;
+  document.getElementById('itemFlujo').value = item.flujo || 'directo_venta';
   document.getElementById('itemProvNombre').value = item.proveedor_nombre || '';
   document.getElementById('itemProvTel').value = item.proveedor_telefono || '';
   document.getElementById('btnEliminar').style.display = 'block';
@@ -789,6 +802,7 @@ async function guardarItem() {
     stock_minimo: parseFloat(document.getElementById('itemMinimo').value) || 0,
     stock: parseFloat(document.getElementById('itemStock').value) || 0,
     categoria: document.getElementById('itemCategoria').value,
+    flujo: document.getElementById('itemFlujo').value || 'directo_venta',
     proveedor_nombre: document.getElementById('itemProvNombre').value.trim() || null,
     proveedor_telefono: document.getElementById('itemProvTel').value.trim() || null
   };
@@ -810,6 +824,43 @@ async function eliminarItem() {
   await cargarItems();
   renderTab();
   toast('Item eliminado', 'ok');
+}
+
+// ── DESCUENTO AUTOMÁTICO EN CASCADA ───────────────────────────────────────────
+async function descontarRecursivo(nombreProducto, cantidad) {
+  if (!nombreProducto || cantidad <= 0) return { ok: true, descuentos: 0 };
+
+  let descuentos = 0;
+
+  // Busca la receta del producto
+  const receta = Object.values(recetas).find(r =>
+    items.find(i => i.id === r.menu_item_id && i.nombre.toLowerCase() === nombreProducto.toLowerCase())
+  );
+
+  if (!receta || !receta.ingredientes?.length) {
+    // No tiene receta = es insumo final, descuenta directo
+    const item = items.find(i => i.nombre.toLowerCase() === nombreProducto.toLowerCase());
+    if (!item) return { ok: true, descuentos: 0 };
+
+    const nuevoStock = Math.max(0, item.stock - cantidad);
+    await sb.from('inventario').update({ stock: nuevoStock }).eq('id', item.id);
+    await sb.from('inventario_movimientos').insert({
+      item_id: item.id,
+      tipo: 'salida',
+      cantidad: cantidad,
+      origen: item.categoria,
+      nota: 'Descuento automático por agregación a inventario'
+    });
+    return { ok: true, descuentos: 1 };
+  }
+
+  // Tiene receta = es producto de Producción, descuenta cada ingrediente
+  for (const ing of receta.ingredientes) {
+    const result = await descontarRecursivo(ing.ingrediente, ing.cantidad * cantidad);
+    if (result.ok) descuentos += result.descuentos;
+  }
+
+  return { ok: true, descuentos };
 }
 
 // ── HISTORIAL ─────────────────────────────────────────────────────────────────
@@ -883,6 +934,33 @@ function renderRecetas() {
   body.innerHTML = html;
 }
 
+
+function abrirRecetaProduccion(itemId) {
+  _recEditId = itemId;
+  const item = items.find(i => i.id === itemId);
+  if (!item) return;
+  const rec = recetas[itemId];
+
+  const fotoEl = document.getElementById('recFoto');
+  fotoEl.style.backgroundImage = 'none';
+  fotoEl.style.background = '#f0f0f0';
+  fotoEl.style.display = 'flex';
+  fotoEl.style.alignItems = 'center';
+  fotoEl.style.justifyContent = 'center';
+  fotoEl.style.fontSize = '1.6rem';
+  fotoEl.textContent = '🔧';
+
+  document.getElementById('recNombre').textContent = item.nombre + ' (Producción)';
+  const rowsDiv = document.getElementById('recRows');
+  rowsDiv.innerHTML = '';
+  const ings = rec?.ingredientes || [];
+  if (!ings.length) {
+    agregarFilaIngrediente('', '', '');
+  } else {
+    ings.forEach(ing => agregarFilaIngrediente(ing.ingrediente, ing.cantidad, ing.unidad));
+  }
+  document.getElementById('modalReceta').classList.add('open');
+}
 
 function abrirReceta(itemId) {
   _recEditId = itemId;
