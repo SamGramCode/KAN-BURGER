@@ -275,12 +275,6 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
         <input class="modal-input" type="number" id="itemMinimo" placeholder="0">
       </div>
     </div>
-    <label class="modal-label">Inventario</label>
-    <select class="modal-select" id="itemCategoria">
-      <option value="insumos">🛒 Insumos</option>
-      <option value="produccion">🔧 Producción</option>
-      <option value="venta">🏪 Productos a vender</option>
-    </select>
     <label class="modal-label">Flujo</label>
     <select class="modal-select" id="itemFlujo">
       <option value="directo_venta">Directo a venta (Refrescos, Agua, etc)</option>
@@ -376,6 +370,7 @@ window.addEventListener('DOMContentLoaded', verificarSesion);
 let _ajusteId = null, _ajusteTipo = null, _ajusteCant = 1;
 let _transferId = null, _transferCant = 1;
 let recetas = {}, _recEditId = null, _pinRecBuf = '';
+let _itemCategoriaAutomatica = 'insumos';
 
 const RECETA_ITEMS = [
   {id:'v1',name:'Perro Caliente Sencillo',img:'img/perro-sencillo.jpg'},
@@ -772,10 +767,13 @@ function abrirModalNuevo(cat) {
   document.getElementById('itemUnidad').value = 'unidades';
   document.getElementById('itemMinimo').value = '0';
   document.getElementById('itemStock').value = '0';
-  document.getElementById('itemCategoria').value = cat || CATS[tabActual];
+  // Asigna automáticamente según el tab (sin mostrar en modal)
+  const categoriaAutomatica = cat || CATS[tabActual];
   document.getElementById('itemProvNombre').value = '';
   document.getElementById('itemProvTel').value = '';
   document.getElementById('btnEliminar').style.display = 'none';
+  // Guardar la categoría en un campo oculto
+  _itemCategoriaAutomatica = categoriaAutomatica;
   document.getElementById('modalItem').classList.add('open');
 }
 function abrirEditar(id) {
@@ -786,10 +784,10 @@ function abrirEditar(id) {
   document.getElementById('itemUnidad').value = item.unidad;
   document.getElementById('itemMinimo').value = item.stock_minimo;
   document.getElementById('itemStock').value = item.stock;
-  document.getElementById('itemCategoria').value = item.categoria;
   document.getElementById('itemFlujo').value = item.flujo || 'directo_venta';
   document.getElementById('itemProvNombre').value = item.proveedor_nombre || '';
   document.getElementById('itemProvTel').value = item.proveedor_telefono || '';
+  _itemCategoriaAutomatica = item.categoria;
   document.getElementById('btnEliminar').style.display = 'block';
   document.getElementById('modalItem').classList.add('open');
 }
@@ -801,7 +799,7 @@ async function guardarItem() {
     unidad: document.getElementById('itemUnidad').value.trim() || 'unidades',
     stock_minimo: parseFloat(document.getElementById('itemMinimo').value) || 0,
     stock: parseFloat(document.getElementById('itemStock').value) || 0,
-    categoria: document.getElementById('itemCategoria').value,
+    categoria: _itemCategoriaAutomatica,
     flujo: document.getElementById('itemFlujo').value || 'directo_venta',
     proveedor_nombre: document.getElementById('itemProvNombre').value.trim() || null,
     proveedor_telefono: document.getElementById('itemProvTel').value.trim() || null
