@@ -2249,6 +2249,9 @@ async function _guardarOrden(order){
         }catch(e){}
       }
       if(state.comprobanteUrl) order.comprobante_url=state.comprobanteUrl;
+      else if(state.payment && state.payment!=='efectivo'){
+        return {ok:false, msg:'⚠️ El comprobante no se cargó correctamente. Por favor, intenta subir la foto nuevamente.'};
+      }
     }
 
     let {error}=await sb.from('ordenes').insert(order);
@@ -2465,10 +2468,10 @@ async function previewComprobante(input){
       state.comprobanteUrl=urlData.publicUrl;
       if(ok) ok.textContent='✅ Foto lista — ya puedes confirmar tu pedido';
     } else {
-      if(ok) ok.textContent='✅ Foto lista — ya puedes confirmar tu pedido';
+      if(ok) ok.textContent='⚠️ Error al subir la foto, intenta de nuevo';
     }
   }catch(e){
-    if(ok) ok.textContent='✅ Foto lista — ya puedes confirmar tu pedido';
+    if(ok) ok.textContent='⚠️ Error al subir la foto, intenta de nuevo';
   }
 }
 
