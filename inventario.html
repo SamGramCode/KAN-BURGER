@@ -884,7 +884,7 @@ async function guardarItem() {
     stock_minimo: stockMinimo,
     stock: parseFloat(document.getElementById('itemStock').value) || 0,
     categoria: _itemCategoriaAutomatica,
-    flujo: 'directo_venta',
+    flujo: (_itemCategoriaAutomatica.includes('produccion') ? 'con_preparacion' : 'directo_venta'),
     proveedor_nombre: document.getElementById('itemProvNombre').value.trim() || null,
     proveedor_telefono: document.getElementById('itemProvTel').value.trim() || null
   };
