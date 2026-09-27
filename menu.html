@@ -1519,7 +1519,6 @@ function buildSummary(){
     return m?{id:m.id,name:m.name,price:m.price,qty:q,cat:m.cat}:null;
   }).filter(Boolean);
   const burgers=allItems.filter(i=>i.cat==='burger');
-  const combos=allItems.filter(i=>i.cat==='acompanante');
   const burgerfries=allItems.filter(i=>i.cat==='burgerfries');
   const perrocales=allItems.filter(i=>i.cat==='perrocal');
   const venezolanos=allItems.filter(i=>i.cat==='venezolano');
