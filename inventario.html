@@ -266,7 +266,10 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
     <label class="modal-label">Nombre</label>
     <input class="modal-input" id="itemNombre" placeholder="Ej: Carne de res">
     <label class="modal-label">Unidad</label>
-    <input class="modal-input" id="itemUnidad" placeholder="Ej: unidades, kg, gr">
+    <select class="modal-input" id="itemUnidad" style="cursor:pointer">
+      <option value="unidades">Unidad</option>
+      <option value="gramos">Gramo</option>
+    </select>
     <label class="modal-label" style="color: var(--err); font-weight: 900;">Stock mínimo (alerta) *</label>
     <input class="modal-input" type="number" id="itemMinimo" placeholder="0" required>
     <label class="modal-label">Flujo</label>
