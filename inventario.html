@@ -273,10 +273,6 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
     <label class="modal-label" style="color: var(--err); font-weight: 900;">Stock mínimo (alerta) *</label>
     <input class="modal-input" type="number" id="itemMinimo" placeholder="0" required>
     <label class="modal-label">Flujo</label>
-    <select class="modal-select" id="itemFlujo">
-      <option value="directo_venta">Directo a venta (Refrescos, Agua, etc)</option>
-      <option value="con_preparacion">Con preparación (Pan, Carne, Pollo, etc)</option>
-    </select>
     <div id="stockInicialDiv" style="display: none;">
       <label class="modal-label">Stock inicial</label>
       <input class="modal-input" type="number" id="itemStock" placeholder="0">
@@ -860,7 +856,6 @@ function abrirEditar(id) {
   document.getElementById('itemStock').value = item.stock;
   document.getElementById('itemPeso').value = item.peso_unitario || '';
   document.getElementById('itemUnidadPeso').value = item.unidad_peso || 'gramos';
-  document.getElementById('itemFlujo').value = item.flujo || 'directo_venta';
   document.getElementById('itemProvNombre').value = item.proveedor_nombre || '';
   document.getElementById('itemProvTel').value = item.proveedor_telefono || '';
   _itemCategoriaAutomatica = item.categoria;
@@ -889,7 +884,7 @@ async function guardarItem() {
     stock_minimo: stockMinimo,
     stock: parseFloat(document.getElementById('itemStock').value) || 0,
     categoria: _itemCategoriaAutomatica,
-    flujo: document.getElementById('itemFlujo').value || 'directo_venta',
+    flujo: 'directo_venta',
     proveedor_nombre: document.getElementById('itemProvNombre').value.trim() || null,
     proveedor_telefono: document.getElementById('itemProvTel').value.trim() || null
   };
