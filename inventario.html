@@ -588,9 +588,9 @@ const INSUMOS_INICIALES = [
 ];
 
 async function sembrarInsumos() {
-  const existentes = items.filter(i => i.categoria === 'insumos');
+  const existentes = items.filter(i => i.categoria === 'insumos_produccion' || i.categoria === 'insumos_venta');
   if (existentes.length > 0) return;
-  const filas = INSUMOS_INICIALES.map(i => ({...i, categoria:'insumos', stock:0}));
+  const filas = INSUMOS_INICIALES.map(i => ({...i, categoria:'insumos_produccion', stock:0}));
   await sb.from('inventario').insert(filas);
 }
 
@@ -600,10 +600,11 @@ async function cargarItems() {
 }
 
 // ── TABS ─────────────────────────────────────────────────────────────────────
-const CATS = ['insumos', 'produccion', 'venta'];
-const CAT_LABEL = ['Insumos', 'Producción', 'Productos a vender'];
-const CAT_NEXT = ['produccion', 'venta', null];
-const CAT_NEXT_LABEL = ['Producción', 'Productos a vender', null];
+const CATS = ['insumos_produccion', 'insumos_venta', 'produccion', 'venta'];
+const CAT_LABEL = ['Insumos Producción', 'Insumos Productos a Vender', 'Producción', 'Productos a vender'];
+const CAT_NEXT = ['produccion', 'venta', 'venta', null];
+const CAT_NEXT_LABEL = ['Producción', 'Producción', 'Venta', null];
+let subTabInsumos = "produccion"; // Subcategoría de Insumos: "produccion" o "venta"
 
 function cambiarTab(n) {
   tabActual = n;
@@ -614,16 +615,49 @@ function cambiarTab(n) {
 
 function renderTab() {
   if (tabActual === 3) { renderRecetas(); return; }
-  const cat = CATS[tabActual];
+  
+  // Determinar categoría según tab
+  let cat;
+  if (tabActual === 0) {
+    // Tab Insumos: usar subTabInsumos
+    cat = 'insumos_' + subTabInsumos;
+  } else if (tabActual === 1) {
+    cat = 'produccion';
+  } else if (tabActual === 2) {
+    cat = 'venta';
+  }
+  
   const lista = items.filter(i => i.categoria === cat);
   const alertas = items.filter(i => i.stock <= i.stock_minimo);
 
-  // badges
-  CATS.forEach((c, i) => {
-    const cnt = items.filter(x => x.categoria === c && x.stock <= x.stock_minimo).length;
-    const badge = document.getElementById('badge' + i);
-    badge.textContent = cnt; badge.style.display = cnt ? 'flex' : 'none';
-  });
+  // badges - Tab 0 (Insumos) cuenta AMBAS categorías
+  if (tabActual === 0) {
+    const cntProd = items.filter(x => x.categoria === 'insumos_produccion' && x.stock <= x.stock_minimo).length;
+    const cntVta = items.filter(x => x.categoria === 'insumos_venta' && x.stock <= x.stock_minimo).length;
+    const badge0 = document.getElementById('badge0');
+    const cnt0 = cntProd + cntVta;
+    badge0.textContent = cnt0; badge0.style.display = cnt0 ? 'flex' : 'none';
+    
+    const badge1 = document.getElementById('badge1');
+    const cntProd2 = items.filter(x => x.categoria === 'produccion' && x.stock <= x.stock_minimo).length;
+    badge1.textContent = cntProd2; badge1.style.display = cntProd2 ? 'flex' : 'none';
+    
+    const badge2 = document.getElementById('badge2');
+    const cntVta2 = items.filter(x => x.categoria === 'venta' && x.stock <= x.stock_minimo).length;
+    badge2.textContent = cntVta2; badge2.style.display = cntVta2 ? 'flex' : 'none';
+  } else {
+    const badge1 = document.getElementById('badge1');
+    const cntProd = items.filter(x => x.categoria === 'produccion' && x.stock <= x.stock_minimo).length;
+    badge1.textContent = cntProd; badge1.style.display = cntProd ? 'flex' : 'none';
+    
+    const badge2 = document.getElementById('badge2');
+    const cntVta = items.filter(x => x.categoria === 'venta' && x.stock <= x.stock_minimo).length;
+    badge2.textContent = cntVta; badge2.style.display = cntVta ? 'flex' : 'none';
+    
+    const badge0 = document.getElementById('badge0');
+    const cntIns = items.filter(x => (x.categoria === 'insumos_produccion' || x.categoria === 'insumos_venta') && x.stock <= x.stock_minimo).length;
+    badge0.textContent = cntIns; badge0.style.display = cntIns ? 'flex' : 'none';
+  }
 
   // banner global
   const banner = document.getElementById('alertBanner');
@@ -636,10 +670,21 @@ function renderTab() {
 
   const body = document.getElementById('invBody');
   const canTransfer = CAT_NEXT[tabActual] !== null;
-  let html = `
+  
+  let html = '';
+  
+  // Mostrar subtabs si estamos en Insumos
+  if (tabActual === 0) {
+    html += `<div style="display:flex;gap:0;border-bottom:2px solid #eee;margin-bottom:1.5rem">
+      <button style="flex:1;padding:.6rem;font-weight:800;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;border:none;background:transparent;color:#999;border-bottom:3px solid transparent;cursor:pointer;${subTabInsumos === 'produccion' ? 'color:var(--or);border-bottom-color:var(--or);background:rgba(232,100,26,.04)' : ''}" onclick="cambiarSubTab('produccion')">Insumos Producción</button>
+      <button style="flex:1;padding:.6rem;font-weight:800;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;border:none;background:transparent;color:#999;border-bottom:3px solid transparent;cursor:pointer;${subTabInsumos === 'venta' ? 'color:var(--or);border-bottom-color:var(--or);background:rgba(232,100,26,.04)' : ''}" onclick="cambiarSubTab('venta')">Insumos Productos a Vender</button>
+    </div>`;
+  }
+  
+  html += `
     <div class="section-header">
       <div>
-        <div style="font-weight:900;font-size:.95rem;color:var(--or)">${CAT_LABEL[tabActual]}</div>
+        <div style="font-weight:900;font-size:.95rem;color:var(--or)">${tabActual === 0 ? (subTabInsumos === 'produccion' ? 'Insumos Producción' : 'Insumos Productos a Vender') : (tabActual === 1 ? 'Producción' : 'Productos a vender')}</div>
         <div class="section-desc">${lista.length} items · ${lista.filter(i=>i.stock<=i.stock_minimo).length} alertas</div>
       </div>
       <button class="btn-add-item" onclick="abrirModalNuevo('${cat}')">+ Nuevo</button>
@@ -678,14 +723,10 @@ function renderTab() {
   body.innerHTML = html;
 }
 
-// ── AJUSTE STOCK ─────────────────────────────────────────────────────────────
-function abrirAjuste(id, tipo) {
-  _ajusteId = id; _ajusteTipo = tipo; _ajusteCant = 1;
-  const item = items.find(i => i.id === id);
-  document.getElementById('ajusteTitulo').textContent = tipo === 'entrada' ? '📥 Entrada de Stock' : '📤 Salida de Stock';
-  document.getElementById('ajusteActual').textContent = `${item.stock} ${item.unidad}`;
-  document.getElementById('ajusteCantVal').value = 1;
-  document.getElementById('ajusteBtn').textContent = tipo === 'entrada' ? '✓ Agregar al stock' : '✓ Descontar del stock';
+function cambiarSubTab(tipo) {
+  subTabInsumos = tipo;
+  renderTab();
+}
   document.getElementById('ajusteNota').value = '';
   document.getElementById('modalAjuste').classList.add('open');
 }
@@ -878,29 +919,33 @@ async function eliminarItem() {
 
 // ── DESCUENTO/SUMA AUTOMÁTICO DE PRODUCCIÓN A INSUMOS ──────────────────────────
 async function descontarDelInsumo(nombreInsumo, cantidadConPeso, unidadPeso) {
-  const insumo = items.find(i => i.nombre.toLowerCase() === nombreInsumo.toLowerCase() && i.categoria === 'insumos');
+  // Buscar en insumos_produccion
+  let insumo = items.find(i => i.nombre.toLowerCase() === nombreInsumo.toLowerCase() && i.categoria === 'insumos_produccion');
   if (!insumo) return;
+  
   const nuevoStock = Math.max(0, insumo.stock - cantidadConPeso);
   await sb.from('inventario').update({ stock: nuevoStock }).eq('id', insumo.id);
   await sb.from('inventario_movimientos').insert({
     item_id: insumo.id,
     tipo: 'salida',
     cantidad: cantidadConPeso,
-    origen: 'insumos',
+    origen: 'insumos_produccion',
     nota: `Descuento automático de Producción (${cantidadConPeso} ${unidadPeso})`
   });
 }
 
 async function sumarAlInsumo(nombreInsumo, cantidadConPeso, unidadPeso) {
-  const insumo = items.find(i => i.nombre.toLowerCase() === nombreInsumo.toLowerCase() && i.categoria === 'insumos');
+  // Buscar en insumos_produccion
+  let insumo = items.find(i => i.nombre.toLowerCase() === nombreInsumo.toLowerCase() && i.categoria === 'insumos_produccion');
   if (!insumo) return;
+  
   const nuevoStock = insumo.stock + cantidadConPeso;
   await sb.from('inventario').update({ stock: nuevoStock }).eq('id', insumo.id);
   await sb.from('inventario_movimientos').insert({
     item_id: insumo.id,
     tipo: 'entrada',
     cantidad: cantidadConPeso,
-    origen: 'insumos',
+    origen: 'insumos_produccion',
     nota: `Reposición automática a Insumos (${cantidadConPeso} ${unidadPeso})`
   });
 }
@@ -918,7 +963,15 @@ async function descontarRecursivo(nombreProducto, cantidad) {
 
   if (!receta || !receta.ingredientes?.length) {
     // No tiene receta = es insumo final, descuenta directo
-    const item = items.find(i => i.nombre.toLowerCase() === nombreProducto.toLowerCase());
+    // Buscar en ambas categorías de insumos
+    let item = items.find(i => i.nombre.toLowerCase() === nombreProducto.toLowerCase() && i.categoria === 'insumos_produccion');
+    if (!item) {
+      item = items.find(i => i.nombre.toLowerCase() === nombreProducto.toLowerCase() && i.categoria === 'insumos_venta');
+    }
+    if (!item) {
+      // Si no es insumo, buscar en Producción
+      item = items.find(i => i.nombre.toLowerCase() === nombreProducto.toLowerCase() && i.categoria === 'produccion');
+    }
     if (!item) return { ok: true, descuentos: 0 };
 
     const nuevoStock = Math.max(0, item.stock - cantidad);
@@ -941,9 +994,6 @@ async function descontarRecursivo(nombreProducto, cantidad) {
 
   return { ok: true, descuentos };
 }
-
-// ── HISTORIAL ─────────────────────────────────────────────────────────────────
-async function abrirHistorial(cat) {
   const { data } = await sb.from('inventario_movimientos')
     .select('*, inventario(nombre,unidad)')
     .eq('origen', cat)
