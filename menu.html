@@ -1119,8 +1119,8 @@ async function cargarProductosActivos() {
 // DATA
 // ══════════════════════════════════════════════
 const MENU_ITEMS = [
-  {id:'v1',cat:'venezolano',name:'Perro Caliente Sencillo',price:9500,badge:'🌭 Venezolano',img:'img/perro-sencillo.jpg',bgSize:'cover',bgPos:'50% 50%',vegs:['Cebolla','Repollo y Zanahoria'],desc:'Pan brioche artesanal, salchicha americana, cebolla, papas ripio, queso rallado "Costeño", salsa de la casa'},
-  {id:'v2',cat:'venezolano',name:'Perro Caliente Especial',price:13500,badge:'🌭 Venezolano',img:'img/perro-especial-2.jpg',bgSize:'96%',bgPos:'50% 68%',vegs:['Cebolla','Repollo y Zanahoria'],desc:'Pan brioche artesanal, salchicha americana, cebolla, papas ripio, queso rallado "Costeño", tocineta, huevo, queso cheddar y salsas de la casa'},
+  {id:'v1',cat:'perrocal',name:'Perro Caliente Sencillo',price:9500,badge:'🌭 Venezolano',img:'img/perro-sencillo.jpg',bgSize:'cover',bgPos:'50% 50%',vegs:['Cebolla','Repollo y Zanahoria'],desc:'Pan brioche artesanal, salchicha americana, cebolla, papas ripio, queso rallado "Costeño", salsa de la casa'},
+  {id:'v2',cat:'perrocal',name:'Perro Caliente Especial',price:13500,badge:'🌭 Venezolano',img:'img/perro-especial-2.jpg',bgSize:'96%',bgPos:'50% 68%',vegs:['Cebolla','Repollo y Zanahoria'],desc:'Pan brioche artesanal, salchicha americana, cebolla, papas ripio, queso rallado "Costeño", tocineta, huevo, queso cheddar y salsas de la casa'},
   {id:'b1',cat:'burger',name:'Sencilla Res',price:14000,badge:'🍔 Burger',img:'img/sencilla-res.jpg',bgSize:'101%',bgPos:'100% 54%',vegs:['Tomate','Lechuga'],desc:'Carne artesanal de res 130gr, queso cheddar, huevo, tocineta, tomate, lechuga, salsa de la casa, pan brioche artesanal'},
   {id:'b3',cat:'burger',name:'Especial Res',price:21000,badge:'🔥 Especial',img:'img/especial-res.jpg',bgSize:'cover',bgPos:'40% 73%',vegs:['Tomate','Lechuga'],desc:'Doble carne artesanal de 130gr cada una, doble queso cheddar, huevo, doble tocineta, tomate, lechuga, salsa de la casa, pan brioche artesanal'},
   {id:'b2',cat:'burger',name:'Sencilla Pollo',price:14000,badge:'🍔 Burger',img:'img/sencilla-pollo.jpg',bgSize:'110%',bgPos:'87% 54%',vegs:['Tomate','Lechuga'],desc:'Pechuga a la plancha 130gr, queso cheddar, huevo, tocineta, tomate, lechuga, salsa de la casa, pan brioche artesanal'},
@@ -1327,7 +1327,8 @@ function buildFoodGrid(){
   const secciones=[
     {cat:'burger',label:'🍔 Hamburguesas'},
     {cat:'burgerfries',label:'🍔🍟 Hamburguesas + Francesas'},
-    {cat:'venezolano',label:'🌭 Venezolanos'},
+    {cat:'perrocal',label:'🌭 Perros Calientes'},
+    {cat:'venezolano',label:'🇻🇪 Venezolanos'},
     {cat:'plato',label:'🍟 Platos'},
     {cat:'acompanante',label:'💥 Combos'}
   ];
@@ -1517,9 +1518,11 @@ function buildSummary(){
     return m?{id:m.id,name:m.name,price:m.price,qty:q,cat:m.cat}:null;
   }).filter(Boolean);
   const burgers=allItems.filter(i=>i.cat==='burger');
+  const combos=allItems.filter(i=>i.cat==='acompanante');
+  const burgerfries=allItems.filter(i=>i.cat==='burgerfries');
+  const perrocales=allItems.filter(i=>i.cat==='perrocal');
   const venezolanos=allItems.filter(i=>i.cat==='venezolano');
   const platos=allItems.filter(i=>i.cat==='plato');
-  const combos=allItems.filter(i=>i.cat==='burgerfries');
   const acompanantes=allItems.filter(i=>i.cat==='acompanante');
   const drinks=Object.entries(state.drinks).map(([id,q])=>{
     const d=DRINKS.find(x=>x.id===id);
@@ -1539,14 +1542,15 @@ function buildSummary(){
     });
   }
   renderFoodGroup(burgers,'Hamburguesas');
-  renderFoodGroup(venezolanos,'Perros Calientes');
-  renderFoodGroup(platos,'Platos');
-  renderFoodGroup(combos,'Hamburguesas + Francesas',it=>{
-    html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
-  });
   renderFoodGroup(acompanantes,'Combos',it=>{
     html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr + bebida x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
   });
+  renderFoodGroup(burgerfries,'Hamburguesas + Francesas',it=>{
+    html+=`<div class="summary-row" style="padding-left:.8rem;opacity:.8"><span style="font-size:.78rem">🍟 Papas 140gr x${it.qty}</span><span style="font-size:.75rem;color:var(--ef)">Incluido</span></div>`;
+  });
+  renderFoodGroup(perrocales,'Perros Calientes');
+  renderFoodGroup(venezolanos,'Venezolanos');
+  renderFoodGroup(platos,'Platos');
   if(drinks.length){
     html+=`<div style="font-size:.72rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin:.5rem 0 .3rem">Bebidas</div>`;
     drinks.forEach(d=>{
