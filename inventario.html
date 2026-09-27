@@ -615,16 +615,31 @@ function cambiarTab(n) {
 
 function renderTab() {
   if (tabActual === 3) { renderRecetas(); return; }
-  const cat = CATS[tabActual];
+  
+  // Determinar categoría según tab y subtab
+  let cat;
+  if (tabActual === 0) {
+    cat = 'insumos_' + subTabInsumos;
+  } else if (tabActual === 1) {
+    cat = 'produccion';
+  } else if (tabActual === 2) {
+    cat = 'venta';
+  }
+  
   const lista = items.filter(i => i.categoria === cat);
   const alertas = items.filter(i => i.stock <= i.stock_minimo);
 
-  // badges
-  CATS.forEach((c, i) => {
-    const cnt = items.filter(x => x.categoria === c && x.stock <= x.stock_minimo).length;
-    const badge = document.getElementById('badge' + i);
-    badge.textContent = cnt; badge.style.display = cnt ? 'flex' : 'none';
-  });
+  // Actualizar badges
+  const cntIns = items.filter(x => (x.categoria === 'insumos_produccion' || x.categoria === 'insumos_venta') && x.stock <= x.stock_minimo).length;
+  const cntProd = items.filter(x => x.categoria === 'produccion' && x.stock <= x.stock_minimo).length;
+  const cntVta = items.filter(x => x.categoria === 'venta' && x.stock <= x.stock_minimo).length;
+  
+  const badge0 = document.getElementById('badge0');
+  badge0.textContent = cntIns; badge0.style.display = cntIns ? 'flex' : 'none';
+  const badge1 = document.getElementById('badge1');
+  badge1.textContent = cntProd; badge1.style.display = cntProd ? 'flex' : 'none';
+  const badge2 = document.getElementById('badge2');
+  badge2.textContent = cntVta; badge2.style.display = cntVta ? 'flex' : 'none';
 
   // banner global
   const banner = document.getElementById('alertBanner');
@@ -637,10 +652,21 @@ function renderTab() {
 
   const body = document.getElementById('invBody');
   const canTransfer = CAT_NEXT[tabActual] !== null;
-  let html = `
+  
+  let html = '';
+  
+  // Mostrar subtabs si estamos en Insumos
+  if (tabActual === 0) {
+    html += `<div style="display:flex;gap:0;border-bottom:2px solid #eee;margin-bottom:1.5rem">
+      <button style="flex:1;padding:.6rem;font-weight:800;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;border:none;background:transparent;color:#999;border-bottom:3px solid transparent;cursor:pointer;transition:all .2s;${subTabInsumos === 'produccion' ? 'color:var(--or);border-bottom-color:var(--or);background:rgba(232,100,26,.04)' : ''}" onclick="cambiarSubTab('produccion')">Insumos Producción</button>
+      <button style="flex:1;padding:.6rem;font-weight:800;font-size:.75rem;text-transform:uppercase;letter-spacing:.5px;border:none;background:transparent;color:#999;border-bottom:3px solid transparent;cursor:pointer;transition:all .2s;${subTabInsumos === 'venta' ? 'color:var(--or);border-bottom-color:var(--or);background:rgba(232,100,26,.04)' : ''}" onclick="cambiarSubTab('venta')">Insumos Productos a Vender</button>
+    </div>`;
+  }
+  
+  html += `
     <div class="section-header">
       <div>
-        <div style="font-weight:900;font-size:.95rem;color:var(--or)">${CAT_LABEL[tabActual]}</div>
+        <div style="font-weight:900;font-size:.95rem;color:var(--or)">${tabActual === 0 ? (subTabInsumos === 'produccion' ? 'Insumos Producción' : 'Insumos Productos a Vender') : (tabActual === 1 ? 'Producción' : 'Productos a vender')}</div>
         <div class="section-desc">${lista.length} items · ${lista.filter(i=>i.stock<=i.stock_minimo).length} alertas</div>
       </div>
       <button class="btn-add-item" onclick="abrirModalNuevo('${cat}')">+ Nuevo</button>
@@ -677,6 +703,11 @@ function renderTab() {
     html += `</div>`;
   }
   body.innerHTML = html;
+}
+
+function cambiarSubTab(tipo) {
+  subTabInsumos = tipo;
+  renderTab();
 }
 
 // ── AJUSTE STOCK ─────────────────────────────────────────────────────────────
@@ -792,7 +823,16 @@ function abrirModalNuevo(cat) {
   document.getElementById('itemPeso').value = '';
   document.getElementById('itemUnidadPeso').value = 'gramos';
   // Asigna automáticamente según el tab (sin mostrar en modal)
-  const categoriaAutomatica = cat || CATS[tabActual];
+  // Determinar categoría según tab actual y subtab si aplica
+  let categoriaAutomatica;
+  if (tabActual === 0) {
+    categoriaAutomatica = 'insumos_' + subTabInsumos;
+  } else if (tabActual === 1) {
+    categoriaAutomatica = 'produccion';
+  } else if (tabActual === 2) {
+    categoriaAutomatica = 'venta';
+  }
+  categoriaAutomatica = cat || categoriaAutomatica;
   document.getElementById('itemProvNombre').value = '';
   document.getElementById('itemProvTel').value = '';
   document.getElementById('btnEliminar').style.display = 'none';
