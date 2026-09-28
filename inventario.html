@@ -1005,6 +1005,19 @@ async function guardarItem() {
   } else {
     await sb.from('inventario').insert(data);
     toast('Item agregado', 'ok');
+    if (_itemCategoriaAutomatica === 'produccion') {
+      const descontarDeValue = document.getElementById('itemDescontarDe').value;
+      const stock = parseFloat(document.getElementById('itemStockActual').value) || 0;
+      const peso = parseFloat(document.getElementById('itemPeso').value) || 0;
+      if (descontarDeValue && stock > 0 && peso > 0) {
+        const cantidadADescontar = stock * peso;
+        const { data: insumo } = await sb.from('inventario').select('stock').eq('id', descontarDeValue).single();
+        if (insumo) {
+          const nuevoStockInsumo = Math.max(0, insumo.stock - cantidadADescontar);
+          await sb.from('inventario').update({ stock: nuevoStockInsumo }).eq('id', descontarDeValue);
+        }
+      }
+    }
   }
   cerrarModal('modalItem');
   await cargarItems();
