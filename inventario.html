@@ -651,7 +651,6 @@ let subTabInsumos = 'produccion';
 function cambiarTab(n) {
   tabActual = n;
   document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === n));
-  document.querySelector('.fab').style.display = n === 3 ? 'none' : 'flex';
   renderTab();
 }
 
