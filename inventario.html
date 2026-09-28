@@ -346,7 +346,7 @@ const progressText = document.getElementById('progressText');
 const loadingScreen = document.getElementById('loadingScreen');
 
 function updateProgress(value) {
-  loadingProgress = Math.min(value, 99);
+  loadingProgress = Math.round(Math.min(value, 100));
   progressBar.style.width = loadingProgress + '%';
   progressText.textContent = loadingProgress;
 }
