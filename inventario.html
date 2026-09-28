@@ -977,7 +977,8 @@ async function guardarItem() {
   if (_itemCategoriaAutomatica === 'produccion') {
     data.peso_unitario = parseFloat(document.getElementById('itemPeso').value) || 0;
     data.unidad_peso = document.getElementById('itemUnidadPeso').value || 'gramos';
-    data.descontar_de = document.getElementById('itemDescontarDe').value || null;
+    const descontarDeValue = document.getElementById('itemDescontarDe').value;
+    if (descontarDeValue) data.descontar_de = descontarDeValue;
   }
 
   if (_editId) {
