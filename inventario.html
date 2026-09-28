@@ -530,8 +530,8 @@ async function iniciar() {
 
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   await pedirPermisoNotificaciones();
-  await sembrarInsumos();
   await cargarItems();
+  await sembrarInsumos();
   await cargarRecetas();
   renderTab();
   escucharCambios();
