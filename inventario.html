@@ -246,11 +246,6 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
     <div class="modal-title" id="itemModalTitulo">Nuevo Item</div>
     <label class="modal-label">Nombre</label>
     <input class="modal-input" id="itemNombre" placeholder="Ej: Carne de res">
-    <label class="modal-label">Unidad</label>
-    <select class="modal-input" id="itemUnidad" style="cursor:pointer">
-      <option value="unidades">Unidad</option>
-      <option value="gramos">Gramo</option>
-    </select>
     <label class="modal-label">Stock</label>
     <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
       <input class="modal-input" type="number" id="itemStockActual" placeholder="0" style="flex: 1;">
@@ -869,7 +864,6 @@ function abrirModalNuevo(cat) {
   _editId = null;
   document.getElementById('itemModalTitulo').textContent = 'Nuevo Item';
   document.getElementById('itemNombre').value = '';
-  document.getElementById('itemUnidad').value = 'unidades';
   document.getElementById('itemMinimo').value = '0';
   document.getElementById('itemMinimoUnidadSelect').value = 'unidades';
   document.getElementById('itemStockActual').value = '0';
@@ -907,7 +901,6 @@ function abrirEditar(id) {
   const item = items.find(i => i.id === id);
   document.getElementById('itemModalTitulo').textContent = 'Editar Item';
   document.getElementById('itemNombre').value = item.nombre;
-  document.getElementById('itemUnidad').value = item.unidad;
   document.getElementById('itemMinimo').value = item.stock_minimo;
   document.getElementById('itemMinimoUnidadSelect').value = item.unidad || 'unidades';
   document.getElementById('itemStockActual').value = item.stock || 0;
