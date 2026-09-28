@@ -991,6 +991,14 @@ async function guardarItem() {
   }
 
   if (_editId) {
+      if (_itemCategoriaAutomatica === 'produccion') {
+        const descontarDeValue = document.getElementById('itemDescontarDe').value;
+        const nuevoStock = parseFloat(document.getElementById('itemStockActual').value) || 0;
+        const peso = parseFloat(document.getElementById('itemPeso').value) || 0;
+        if (descontarDeValue && nuevoStock > 0 && peso > 0) {
+          await ajustarInsumoAlEditarProducto(_editId, nuevoStock, peso, descontarDeValue);
+        }
+      }
     await sb.from('inventario').update(data).eq('id', _editId);
     toast('Item actualizado', 'ok');
   } else {
