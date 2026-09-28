@@ -362,13 +362,17 @@ function finishLoading() {
 
 // Simular progreso mientras carga
 // Progreso lineal: 0% a 100% en 3 segundos
-const startTime = Date.now();
-let progressInterval = setInterval(() => {
-  const elapsed = Date.now() - startTime;
-  const progress = Math.min((elapsed / 3000) * 100, 100);
-  updateProgress(progress);
-  if (progress >= 100) clearInterval(progressInterval);
-}, 30);
+const progressStartTime = Date.now();
+const progressTimer = setInterval(() => {
+  const elapsed = Math.floor(Date.now() - progressStartTime);
+  const pct = Math.floor((elapsed / 3000) * 100);
+  if (pct >= 100) {
+    clearInterval(progressTimer);
+    updateProgress(100);
+  } else {
+    updateProgress(pct);
+  }
+}, 50);
 
 // Timeout de seguridad: completa la carga después de 10 segundos
 setTimeout(() => {
