@@ -987,7 +987,7 @@ async function guardarItem() {
     data.peso_unitario = parseFloat(document.getElementById('itemPeso').value) || 0;
     data.unidad_peso = document.getElementById('itemUnidadPeso').value || 'gramos';
     const descontarDeValue = document.getElementById('itemDescontarDe').value;
-    // if (descontarDeValue) data.descontar_de = descontarDeValue;
+    if (descontarDeValue) data.descontar_de = descontarDeValue;
   }
 
   if (_editId) {
