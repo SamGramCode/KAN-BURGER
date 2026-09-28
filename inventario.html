@@ -360,22 +360,10 @@ function finishLoading() {
   }, 500);
 }
 
-// Simular progreso mientras carga
-// Progreso lineal: 0% a 100% en 3 segundos
-const progressStartTime = Date.now();
-const progressTimer = setInterval(() => {
-  const elapsed = Math.floor(Date.now() - progressStartTime);
-  const pct = Math.floor((elapsed / 3000) * 100);
-  if (pct >= 100) {
-    clearInterval(progressTimer);
-    updateProgress(100);
-  } else {
-    updateProgress(pct);
-  }
-}, 50);
+let progressStartTime, progressTimer;
 
-// Timeout de seguridad: completa la carga después de 10 segundos
-setTimeout(() => {
+// Timeout de seguridad: completa la carga después de 3 segundos
+let safetyTimeout = setTimeout(() => {
   if (document.getElementById('loadingScreen').style.display !== 'none') {
     finishLoading();
   }
@@ -520,6 +508,18 @@ function notificarItems(alertas) {
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 async function iniciar() {
+  progressStartTime = Date.now();
+  progressTimer = setInterval(() => {
+    const elapsed = Math.floor(Date.now() - progressStartTime);
+    const pct = Math.floor((elapsed / 3000) * 100);
+    if (pct >= 100) {
+      clearInterval(progressTimer);
+      updateProgress(100);
+    } else {
+      updateProgress(pct);
+    }
+  }, 50);
+
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   await pedirPermisoNotificaciones();
   await sembrarInsumos();
@@ -527,7 +527,7 @@ async function iniciar() {
   await cargarRecetas();
   renderTab();
   escucharCambios();
-  clearInterval(progressInterval);
+  clearInterval(progressTimer);
   finishLoading();
 }
 
