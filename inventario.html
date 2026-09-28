@@ -251,14 +251,6 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
       <option value="unidades">Unidad</option>
       <option value="gramos">Gramo</option>
     </select>
-    <label class="modal-label" style="color: var(--err); font-weight: 900;">Stock mínimo (alerta) *</label>
-    <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
-      <input class="modal-input" type="number" id="itemMinimo" placeholder="0" required style="flex: 1;">
-      <select class="modal-input" id="itemMinimoUnidadSelect" style="flex: 0.8; cursor:pointer">
-        <option value="unidades">Unidad</option>
-        <option value="gramos">Gramo</option>
-      </select>
-    </div>
     <label class="modal-label">Stock</label>
     <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
       <input class="modal-input" type="number" id="itemStockActual" placeholder="0" style="flex: 1;">
@@ -267,7 +259,14 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
         <option value="gramos">Gramo</option>
       </select>
     </div>
-    <label class="modal-label">Flujo</label>
+    <label class="modal-label" style="color: var(--err); font-weight: 900;">Stock mínimo (alerta) *</label>
+    <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+      <input class="modal-input" type="number" id="itemMinimo" placeholder="0" required style="flex: 1;">
+      <select class="modal-input" id="itemMinimoUnidadSelect" style="flex: 0.8; cursor:pointer">
+        <option value="unidades">Unidad</option>
+        <option value="gramos">Gramo</option>
+      </select>
+    </div>
     <div id="stockInicialDiv" style="display: none;">
       <label class="modal-label">Stock inicial</label>
       <input class="modal-input" type="number" id="itemStock" placeholder="0">
