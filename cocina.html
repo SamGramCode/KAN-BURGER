@@ -667,6 +667,9 @@ function mostrarDashboard() {
 let _inactividadTimer = null;
 const _INACTIVIDAD_MS = 4 * 60 * 60 * 1000; // 4 horas
 
+// Verificar vencimiento al cargar la página
+verificarVencimientoPlan();
+
 function resetInactividad() {
   if (_inactividadTimer) clearTimeout(_inactividadTimer);
   _inactividadTimer = setTimeout(() => {
