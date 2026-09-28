@@ -253,6 +253,14 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
     </select>
     <label class="modal-label" style="color: var(--err); font-weight: 900;">Stock mínimo (alerta) *</label>
     <input class="modal-input" type="number" id="itemMinimo" placeholder="0" required>
+    <label class="modal-label">Stock</label>
+    <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+      <input class="modal-input" type="number" id="itemStockActual" placeholder="0" style="flex: 1;">
+      <select class="modal-input" id="itemStockUnidadSelect" style="flex: 0.8; cursor:pointer">
+        <option value="unidades">Unidad</option>
+        <option value="gramos">Gramo</option>
+      </select>
+    </div>
     <label class="modal-label">Flujo</label>
     <div id="stockInicialDiv" style="display: none;">
       <label class="modal-label">Stock inicial</label>
@@ -858,6 +866,8 @@ function abrirModalNuevo(cat) {
   document.getElementById('itemNombre').value = '';
   document.getElementById('itemUnidad').value = 'unidades';
   document.getElementById('itemMinimo').value = '0';
+  document.getElementById('itemStockActual').value = '0';
+  document.getElementById('itemStockUnidadSelect').value = 'unidades';
   document.getElementById('itemStock').value = '0';
   document.getElementById('itemPeso').value = '';
   document.getElementById('itemUnidadPeso').value = 'gramos';
@@ -893,6 +903,8 @@ function abrirEditar(id) {
   document.getElementById('itemNombre').value = item.nombre;
   document.getElementById('itemUnidad').value = item.unidad;
   document.getElementById('itemMinimo').value = item.stock_minimo;
+  document.getElementById('itemStockActual').value = item.stock || 0;
+  document.getElementById('itemStockUnidadSelect').value = item.unidad || 'unidades';
   document.getElementById('itemStock').value = item.stock;
   document.getElementById('itemPeso').value = item.peso_unitario || '';
   document.getElementById('itemUnidadPeso').value = item.unidad_peso || 'gramos';
@@ -920,9 +932,9 @@ async function guardarItem() {
 
   const data = {
     nombre,
-    unidad: document.getElementById('itemUnidad').value.trim() || 'unidades',
+    unidad: document.getElementById('itemStockUnidadSelect').value.trim() || 'unidades',
     stock_minimo: stockMinimo,
-    stock: parseFloat(document.getElementById('itemStock').value) || 0,
+    stock: parseFloat(document.getElementById('itemStockActual').value) || 0,
     categoria: _itemCategoriaAutomatica,
     flujo: (_itemCategoriaAutomatica.includes('produccion') ? 'con_preparacion' : 'directo_venta'),
     proveedor_nombre: document.getElementById('itemProvNombre').value.trim() || null,
