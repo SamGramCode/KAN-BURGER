@@ -505,9 +505,9 @@ function notificarItems(alertas) {
 async function iniciar() {
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   await pedirPermisoNotificaciones();
-  await cargarItems();
   await sembrarInsumos();
-  await Promise.all([cargarItems(), cargarRecetas()]);
+  await cargarItems();
+  await cargarRecetas();
   renderTab();
   escucharCambios();
 }
@@ -759,8 +759,8 @@ async function confirmarAjuste() {
     }
   }
 
-  // DESCUENTO AUTOMÁTICO EN CASCADA: Venta → Producción/Insumos
-  if (_ajusteTipo === 'entrada' && (item.categoria === 'produccion' || item.categoria === 'venta')) {
+  // DESCUENTO AUTOMÁTICO EN CASCADA: Entrada en Producción descuenta ingredientes
+  if (_ajusteTipo === 'entrada' && item.categoria === 'produccion') {
     await descontarRecursivo(item.nombre, _ajusteCant);
   }
 
@@ -945,7 +945,7 @@ async function descontarDelInsumo(nombreInsumo, cantidadConPeso, unidadPeso) {
 }
 
 async function sumarAlInsumo(nombreInsumo, cantidadConPeso, unidadPeso) {
-  let insumo = items.find(i => i.nombre.toLowerCase() === nombreInsumo.toLowerCase() && i.categoria === 'insumos_produccion');
+  let insumo = items.find(i => i.nombre.toLowerCase() === nombreInsumo.toLowerCase() && (i.categoria === 'insumos_produccion' || i.categoria === 'insumos_venta'));
   const nuevoStock = insumo.stock + cantidadConPeso;
   await sb.from('inventario').update({ stock: nuevoStock }).eq('id', insumo.id);
   await sb.from('inventario_movimientos').insert({
@@ -960,7 +960,7 @@ async function sumarAlInsumo(nombreInsumo, cantidadConPeso, unidadPeso) {
 // ── DESCUENTO AUTOMÁTICO EN CASCADA ───────────────────────────────────────────
 async function descontarRecursivo(nombreProducto, cantidad) {
   if (!nombreProducto || cantidad <= 0) return { ok: true, descuentos: 0 };
-
+// DESCUENTO AUTOMÁTICO EN CASCADA: Entrada en Producción descuenta ingredientes
   let descuentos = 0;
 
   // Busca la receta del producto
