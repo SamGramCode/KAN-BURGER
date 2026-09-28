@@ -341,22 +341,24 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
 <script>
 // ── PANTALLA DE CARGA ─────────────────────────────────────────────────────────
 let loadingProgress = 0;
-const progressBar = document.getElementById('progressBar');
-const progressText = document.getElementById('progressText');
-const loadingScreen = document.getElementById('loadingScreen');
 
 function updateProgress(value) {
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
   loadingProgress = Math.round(Math.min(value, 100));
-  progressBar.style.width = loadingProgress + '%';
-  progressText.textContent = loadingProgress;
+  if (progressBar) progressBar.style.width = loadingProgress + '%';
+  if (progressText) progressText.textContent = loadingProgress;
 }
 
 function finishLoading() {
+  const loadingScreen = document.getElementById('loadingScreen');
   updateProgress(100);
   setTimeout(() => {
-    loadingScreen.style.opacity = '0';
-    loadingScreen.style.transition = 'opacity 0.5s ease';
-    setTimeout(() => loadingScreen.style.display = 'none', 500);
+    if (loadingScreen) {
+      loadingScreen.style.opacity = '0';
+      loadingScreen.style.transition = 'opacity 0.5s ease';
+      setTimeout(() => loadingScreen.style.display = 'none', 500);
+    }
   }, 500);
 }
 
