@@ -530,28 +530,34 @@ async function iniciar() {
   clearInterval(progressInterval);
   finishLoading();
 }
-  finishLoading();
-      if (idx !== -1) items[idx] = nuevo;
+
+function escucharCambios() {
+  sb.channel('inventario_changes').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventario' }, (payload) => {
+    const nuevo = payload.new;
+    const idx = items.findIndex(i => i.id === nuevo.id);
+    if (idx !== -1) {
+      const anterior = items[idx];
+      items[idx] = nuevo;
       renderTab();
-      // Solo notifica si ACABA de cruzar el mínimo (no estaba en alerta antes)
-      if (anterior && anterior.stock > anterior.stock_minimo && nuevo.stock <= nuevo.stock_minimo) {
+      if (anterior.stock > anterior.stock_minimo && nuevo.stock <= nuevo.stock_minimo) {
         notificarItems([nuevo]);
       }
-    })
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'inventario' }, (payload) => {
-      if (!items.find(i => i.id === payload.new.id)) {
-        items.push(payload.new);
-        renderTab();
-      }
-    })
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'inventario' }, (payload) => {
-      const idx = items.findIndex(i => i.id === payload.old.id);
-      if (idx !== -1) {
-        items.splice(idx, 1);
-        renderTab();
-      }
-    })
-    .subscribe();
+    }
+  })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'inventario' }, (payload) => {
+    if (!items.find(i => i.id === payload.new.id)) {
+      items.push(payload.new);
+      renderTab();
+    }
+  })
+  .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'inventario' }, (payload) => {
+    const idx = items.findIndex(i => i.id === payload.old.id);
+    if (idx !== -1) {
+      items.splice(idx, 1);
+      renderTab();
+    }
+  })
+  .subscribe();
 }
 
 const INSUMOS_INICIALES = [
