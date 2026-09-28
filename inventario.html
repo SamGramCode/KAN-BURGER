@@ -276,14 +276,16 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
         <option value="oz">Onzas (oz)</option>
       </select>
     </div>
-    <label class="modal-label" style="color: var(--err); font-weight: 900;">Stock mínimo (alerta) *</label>
-    <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
-      <input class="modal-input" type="number" id="itemMinimo" placeholder="0" required style="flex: 1;">
-      <select class="modal-input" id="itemMinimoUnidadSelect" style="flex: 0.8; cursor:pointer">
-        <option value="unidades">Unidad</option>
-        <option value="gramos">Gramo</option>
-        <option value="litros">Litro</option>
-      </select>
+    <div id="stockMinimoDiv">
+      <label class="modal-label" style="color: var(--err); font-weight: 900;">Stock mínimo (alerta) *</label>
+      <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+        <input class="modal-input" type="number" id="itemMinimo" placeholder="0" required style="flex: 1;">
+        <select class="modal-input" id="itemMinimoUnidadSelect" style="flex: 0.8; cursor:pointer">
+          <option value="unidades">Unidad</option>
+          <option value="gramos">Gramo</option>
+          <option value="litros">Litro</option>
+        </select>
+      </div>
     </div>
     <button class="btn-modal-ok" onclick="guardarItem()">✓ Guardar</button>
     <button class="btn-modal-delete" id="btnEliminar" style="display:none" onclick="eliminarItem()">🗑 Eliminar item</button>
@@ -899,6 +901,9 @@ function abrirModalNuevo(cat) {
   // Mostrar/ocultar Stock inicial según categoría
   const mostrarStock = !categoriaAutomatica.includes('produccion') && categoriaAutomatica !== 'venta';
   document.getElementById('stockInicialDiv').style.display = mostrarStock ? 'block' : 'none';
+  // Ocultar Stock mínimo en VENTA
+  const mostrarMinimo = categoriaAutomatica !== 'venta';
+  document.getElementById('stockMinimoDiv').style.display = mostrarMinimo ? 'block' : 'none';
   // Mostrar/ocultar Peso unitario solo en Producción
   const mostrarPeso = categoriaAutomatica === 'produccion';
   document.getElementById('pesoUnitarioDiv').style.display = mostrarPeso ? 'block' : 'none';
@@ -939,6 +944,9 @@ function abrirEditar(id) {
   // Mostrar/ocultar Stock inicial según categoría
   const mostrarStockEdit = !item.categoria.includes('produccion') && item.categoria !== 'venta';
   document.getElementById('stockInicialDiv').style.display = mostrarStockEdit ? 'block' : 'none';
+  // Ocultar Stock mínimo en VENTA
+  const mostrarMinimoEdit = item.categoria !== 'venta';
+  document.getElementById('stockMinimoDiv').style.display = mostrarMinimoEdit ? 'block' : 'none';
   // Mostrar/ocultar Peso unitario solo en Producción
   const mostrarPeso = item.categoria === 'produccion';
   document.getElementById('pesoUnitarioDiv').style.display = mostrarPeso ? 'block' : 'none';
