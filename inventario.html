@@ -366,7 +366,8 @@ let progressStartTime, progressTimer;
 
 // Timeout de seguridad: completa la carga después de 3 segundos
 let safetyTimeout = setTimeout(() => {
-  if (document.getElementById('loadingScreen').style.display !== 'none') {
+  const loadingScreen = document.getElementById('loadingScreen');
+  if (loadingScreen && loadingScreen.style.display !== 'none') {
     finishLoading();
   }
 }, 3000);
@@ -379,8 +380,11 @@ let sb, items = [], tabActual = 0;
 
 // Verificar sesión al cargar la página
 function verificarSesion() {
-  document.getElementById("app").style.display = "flex";
-  document.getElementById("app").style.flexDirection = "column";
+  const app = document.getElementById("app");
+  if (app) {
+    app.style.display = "flex";
+    app.style.flexDirection = "column";
+  }
   iniciar();
 }
 window.addEventListener('DOMContentLoaded', verificarSesion);
