@@ -359,6 +359,11 @@ body.light .login-input{background:rgba(0,0,0,.05);color:#1A0800}
 </head>
 <body>
 
+<!-- BANNER DE VENCIMIENTO -->
+<div id="vencimientoBanner" style="display:none;position:sticky;top:0;z-index:1000;background:#E74C3C;color:#fff;padding:1rem 1.2rem;text-align:center;font-weight:700;font-size:1rem;box-shadow:0 4px 12px rgba(231,76,60,0.4)">
+  ⚠️ Su servicio vence hoy. Por favor comuniquese con su proveedor
+</div>
+
 <div id="loginScreen">
   <div class="login-box">
     <img src="img/logo.jpg" alt="KAN BURGER" class="login-logo">
@@ -654,6 +659,7 @@ function mostrarDashboard() {
   dash.style.display = 'flex';
   dash.style.flexDirection = 'column';
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  verificarVencimientoPlan();
   iniciarTimerInactividad();
   iniciarPanel();
 }
@@ -675,6 +681,22 @@ function iniciarTimerInactividad() {
   resetInactividad();
 }
 
+// ── VERIFICAR VENCIMIENTO DE PLAN ──────────────────────────────────────
+function verificarVencimientoPlan() {
+  const hoy = new Date();
+  const diaActual = hoy.getDate();
+
+  // Mostrar banner si es día 28, 29 o 30
+  const mostrarVencimiento = (diaActual >= 28 && diaActual <= 30);
+
+  if (mostrarVencimiento) {
+    const banner = document.getElementById('vencimientoBanner');
+    banner.style.display = 'block';
+    // Guardar en localStorage para no repetir múltiples veces el mismo día
+    const hoyKey = hoy.toDateString();
+    localStorage.setItem('kb_vencimiento_mostrado', hoyKey);
+  }
+}
 
 // ── NOTIFICACIONES / SERVICE WORKER ──────────────────────────────────
 async function registrarSW() {
