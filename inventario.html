@@ -162,6 +162,18 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
 </style>
 </head>
 <body>
+<!-- PANTALLA DE CARGA -->
+<div id="loadingScreen" style="position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:2rem">
+  <img src="img/logo.jpg" alt="KAN BURGER" style="width:120px;height:120px;object-fit:cover;border-radius:16px">
+  <div style="text-align:center">
+    <div style="font-size:1.2rem;font-weight:700;color:#111;margin-bottom:1.5rem">Cargando inventario</div>
+    <div style="width:300px;height:8px;background:#f5f5f5;border-radius:10px;overflow:hidden">
+      <div id="progressBar" style="width:0%;height:100%;background:#E8641A;border-radius:10px;transition:width 0.3s ease"></div>
+    </div>
+    <div style="font-size:0.85rem;color:#999;margin-top:1rem"><span id="progressText">0</span>%</div>
+  </div>
+</div>
+
 
 <!-- LOGIN -->
 <div id="app">
@@ -327,6 +339,32 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
 <div class="toast" id="toast"></div>
 
 <script>
+// ── PANTALLA DE CARGA ─────────────────────────────────────────────────────────
+let loadingProgress = 0;
+const progressBar = document.getElementById('progressBar');
+const progressText = document.getElementById('progressText');
+const loadingScreen = document.getElementById('loadingScreen');
+
+function updateProgress(value) {
+  loadingProgress = Math.min(value, 99);
+  progressBar.style.width = loadingProgress + '%';
+  progressText.textContent = loadingProgress;
+}
+
+function finishLoading() {
+  updateProgress(100);
+  setTimeout(() => {
+    loadingScreen.style.opacity = '0';
+    loadingScreen.style.transition = 'opacity 0.5s ease';
+    setTimeout(() => loadingScreen.style.display = 'none', 500);
+  }, 500);
+}
+
+// Simular progreso mientras carga
+let progressInterval = setInterval(() => {
+  updateProgress(loadingProgress + Math.random() * 15);
+}, 300);
+
 const SUPABASE_URL = 'https://enjlbusizeospzadndwj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_sUXpKKZgEDbE7r77VRjFpQ_z815AhOd';
 const PIN_CORRECTO = '3087';
@@ -475,14 +513,10 @@ async function iniciar() {
   await cargarRecetas();
   renderTab();
   escucharCambios();
+  clearInterval(progressInterval);
+  finishLoading();
 }
-
-function escucharCambios() {
-  sb.channel('inventario-realtime')
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventario' }, async (payload) => {
-      const anterior = items.find(i => i.id === payload.new.id);
-      const nuevo = payload.new;
-      const idx = items.findIndex(i => i.id === nuevo.id);
+  finishLoading();
       if (idx !== -1) items[idx] = nuevo;
       renderTab();
       // Solo notifica si ACABA de cruzar el mínimo (no estaba en alerta antes)
