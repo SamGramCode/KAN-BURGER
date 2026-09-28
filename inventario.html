@@ -195,7 +195,7 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
 
   <div class="inv-body" id="invBody"></div>
 
-  <button class="fab" onclick="abrirModalNuevo()" title="Agregar item">+</button>
+  <button class="fab" onclick="addItemFromFAB()"
 </div>
 
 <!-- MODAL AJUSTE DE STOCK -->
@@ -864,6 +864,18 @@ async function confirmarTransfer() {
 }
 
 // ── NUEVO / EDITAR ITEM ───────────────────────────────────────────────────────
+function addItemFromFAB() {
+  let cat;
+  if (tabActual === 0) {
+    cat = 'insumos_' + subTabInsumos;
+  } else if (tabActual === 1) {
+    cat = 'produccion';
+  } else if (tabActual === 2) {
+    cat = 'venta';
+  }
+  abrirModalNuevo(cat);
+}
+
 function abrirModalNuevo(cat) {
   _editId = null;
   document.getElementById('itemModalTitulo').textContent = 'Nuevo Item';
