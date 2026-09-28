@@ -366,6 +366,13 @@ let progressInterval = setInterval(() => {
 }, 300);
 
 const SUPABASE_URL = 'https://enjlbusizeospzadndwj.supabase.co';
+
+// Timeout de seguridad: completa la carga después de 10 segundos
+setTimeout(() => {
+  if (document.getElementById('loadingScreen').style.display !== 'none') {
+    finishLoading();
+  }
+}, 10000);
 const SUPABASE_KEY = 'sb_publishable_sUXpKKZgEDbE7r77VRjFpQ_z815AhOd';
 const PIN_CORRECTO = '3087';
 
