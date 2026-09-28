@@ -888,7 +888,7 @@ function abrirModalNuevo(cat) {
   categoriaAutomatica = cat || categoriaAutomatica;
   document.getElementById('btnEliminar').style.display = 'none';
   // Mostrar/ocultar Stock inicial según categoría
-  const mostrarStock = categoriaAutomatica !== 'venta';
+  const mostrarStock = !categoriaAutomatica.includes('produccion') && categoriaAutomatica !== 'venta';
   document.getElementById('stockInicialDiv').style.display = mostrarStock ? 'block' : 'none';
   // Mostrar/ocultar Peso unitario solo en Producción
   const mostrarPeso = categoriaAutomatica === 'produccion';
@@ -927,6 +927,9 @@ function abrirEditar(id) {
   document.getElementById('itemPeso').value = item.peso_unitario || '';
   document.getElementById('itemUnidadPeso').value = item.unidad_peso || 'gramos';
   _itemCategoriaAutomatica = item.categoria;
+  // Mostrar/ocultar Stock inicial según categoría
+  const mostrarStockEdit = !item.categoria.includes('produccion') && item.categoria !== 'venta';
+  document.getElementById('stockInicialDiv').style.display = mostrarStockEdit ? 'block' : 'none';
   // Mostrar/ocultar Peso unitario solo en Producción
   const mostrarPeso = item.categoria === 'produccion';
   document.getElementById('pesoUnitarioDiv').style.display = mostrarPeso ? 'block' : 'none';
