@@ -1009,6 +1009,22 @@ async function guardarItem() {
   await cargarItems();
   renderTab();
 }
+async function ajustarInsumoAlEditarProducto(itemId, nuevoStock, pesoUnitario, descontarDeId) {
+  if (!descontarDeId || !pesoUnitario) return;
+  try {
+    const { data: itemAnterior } = await sb.from('inventario').select('stock').eq('id', itemId).single();
+    if (!itemAnterior) return;
+    const stockAnterior = itemAnterior.stock || 0;
+    const diferencia = nuevoStock - stockAnterior;
+    const cantidadAjuste = diferencia * pesoUnitario;
+    if (cantidadAjuste === 0) return;
+    const { data: insumo } = await sb.from('inventario').select('stock').eq('id', descontarDeId).single();
+    if (!insumo) return;
+    const nuevoStockInsumo = Math.max(0, insumo.stock - cantidadAjuste);
+    await sb.from('inventario').update({ stock: nuevoStockInsumo }).eq('id', descontarDeId);
+  } catch (e) { console.error('Error ajuste:', e); }
+}
+
 async function eliminarItem() {
   if (!confirm('¿Eliminar este item del inventario?')) return;
   await sb.from('inventario').delete().eq('id', _editId);
