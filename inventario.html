@@ -246,6 +246,12 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
     <div class="modal-title" id="itemModalTitulo">Nuevo Item</div>
     <label class="modal-label">Nombre</label>
     <input class="modal-input" id="itemNombre" placeholder="Ej: Carne de res">
+    <div id="descontarDeDiv" style="display: none;">
+      <label class="modal-label">Descontar de (Insumo)</label>
+      <select class="modal-input" id="itemDescontarDe" style="cursor:pointer">
+        <option value="">-- Selecciona un insumo --</option>
+      </select>
+    </div>
     <label class="modal-label">Stock</label>
     <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
       <input class="modal-input" type="number" id="itemStockActual" placeholder="0" style="flex: 1;">
@@ -888,6 +894,22 @@ function abrirModalNuevo(cat) {
   const mostrarPeso = categoriaAutomatica === 'produccion';
   document.getElementById('pesoUnitarioDiv').style.display = mostrarPeso ? 'block' : 'none';
   document.getElementById('unidadPesoDiv').style.display = mostrarPeso ? 'block' : 'none';
+  // Mostrar/ocultar selector de insumo en Producción
+  const mostrarDescontarDe = categoriaAutomatica === 'produccion';
+  document.getElementById('descontarDeDiv').style.display = mostrarDescontarDe ? 'block' : 'none';
+  if (mostrarDescontarDe) {
+    // Cargar insumos disponibles
+    const insumos = items.filter(i => i.categoria === 'insumos_produccion').sort((a, b) => a.nombre.localeCompare(b.nombre));
+    const select = document.getElementById('itemDescontarDe');
+    select.innerHTML = '<option value="">-- Selecciona un insumo --</option>';
+    insumos.forEach(insumo => {
+      const option = document.createElement('option');
+      option.value = insumo.id;
+      option.textContent = insumo.nombre;
+      select.appendChild(option);
+    });
+  }
+  document.getElementById('itemDescontarDe').value = '';
   // Guardar la categoría en un campo oculto
   _itemCategoriaAutomatica = categoriaAutomatica;
   document.getElementById('modalItem').classList.add('open');
@@ -909,6 +931,21 @@ function abrirEditar(id) {
   const mostrarPeso = item.categoria === 'produccion';
   document.getElementById('pesoUnitarioDiv').style.display = mostrarPeso ? 'block' : 'none';
   document.getElementById('unidadPesoDiv').style.display = mostrarPeso ? 'block' : 'none';
+  // Mostrar/ocultar selector de insumo en Producción
+  const mostrarDescontarDe = item.categoria === 'produccion';
+  document.getElementById('descontarDeDiv').style.display = mostrarDescontarDe ? 'block' : 'none';
+  if (mostrarDescontarDe) {
+    const insumos = items.filter(i => i.categoria === 'insumos_produccion').sort((a, b) => a.nombre.localeCompare(b.nombre));
+    const select = document.getElementById('itemDescontarDe');
+    select.innerHTML = '<option value="">-- Selecciona un insumo --</option>';
+    insumos.forEach(insumo => {
+      const option = document.createElement('option');
+      option.value = insumo.id;
+      option.textContent = insumo.nombre;
+      select.appendChild(option);
+    });
+    document.getElementById('itemDescontarDe').value = item.descontar_de || '';
+  }
   document.getElementById('btnEliminar').style.display = 'block';
   document.getElementById('modalItem').classList.add('open');
 }
@@ -937,6 +974,7 @@ async function guardarItem() {
   if (_itemCategoriaAutomatica === 'produccion') {
     data.peso_unitario = parseFloat(document.getElementById('itemPeso').value) || 0;
     data.unidad_peso = document.getElementById('itemUnidadPeso').value || 'gramos';
+    data.descontar_de = document.getElementById('itemDescontarDe').value || null;
   }
 
   if (_editId) {
