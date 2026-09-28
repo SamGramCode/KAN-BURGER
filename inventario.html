@@ -252,7 +252,13 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
       <option value="gramos">Gramo</option>
     </select>
     <label class="modal-label" style="color: var(--err); font-weight: 900;">Stock mínimo (alerta) *</label>
-    <input class="modal-input" type="number" id="itemMinimo" placeholder="0" required>
+    <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
+      <input class="modal-input" type="number" id="itemMinimo" placeholder="0" required style="flex: 1;">
+      <select class="modal-input" id="itemMinimoUnidadSelect" style="flex: 0.8; cursor:pointer">
+        <option value="unidades">Unidad</option>
+        <option value="gramos">Gramo</option>
+      </select>
+    </div>
     <label class="modal-label">Stock</label>
     <div style="display: flex; gap: 0.5rem; align-items: flex-end;">
       <input class="modal-input" type="number" id="itemStockActual" placeholder="0" style="flex: 1;">
@@ -866,6 +872,7 @@ function abrirModalNuevo(cat) {
   document.getElementById('itemNombre').value = '';
   document.getElementById('itemUnidad').value = 'unidades';
   document.getElementById('itemMinimo').value = '0';
+  document.getElementById('itemMinimoUnidadSelect').value = 'unidades';
   document.getElementById('itemStockActual').value = '0';
   document.getElementById('itemStockUnidadSelect').value = 'unidades';
   document.getElementById('itemStock').value = '0';
@@ -903,6 +910,7 @@ function abrirEditar(id) {
   document.getElementById('itemNombre').value = item.nombre;
   document.getElementById('itemUnidad').value = item.unidad;
   document.getElementById('itemMinimo').value = item.stock_minimo;
+  document.getElementById('itemMinimoUnidadSelect').value = item.unidad || 'unidades';
   document.getElementById('itemStockActual').value = item.stock || 0;
   document.getElementById('itemStockUnidadSelect').value = item.unidad || 'unidades';
   document.getElementById('itemStock').value = item.stock;
