@@ -164,40 +164,9 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
 <body>
 
 <!-- LOGIN -->
-<div id="loginScreen">
-  <div class="pin-box">
-    <img src="img/logo.jpg" alt="KAN BURGER" style="width:90px;height:90px;object-fit:cover;border-radius:16px;display:block;margin:0 auto 1rem">
-    <div class="pin-logo">KAN <span style="color:var(--or)">INVENTARIO</span></div>
-    <div class="pin-sub">Ingresa tu PIN de acceso</div>
-    <div class="pin-dots">
-      <div class="pin-dot" id="d0"></div>
-      <div class="pin-dot" id="d1"></div>
-      <div class="pin-dot" id="d2"></div>
-      <div class="pin-dot" id="d3"></div>
-    </div>
-    <div class="pin-pad">
-      <button class="pin-key" onclick="pinPress('1')">1</button>
-      <button class="pin-key" onclick="pinPress('2')">2</button>
-      <button class="pin-key" onclick="pinPress('3')">3</button>
-      <button class="pin-key" onclick="pinPress('4')">4</button>
-      <button class="pin-key" onclick="pinPress('5')">5</button>
-      <button class="pin-key" onclick="pinPress('6')">6</button>
-      <button class="pin-key" onclick="pinPress('7')">7</button>
-      <button class="pin-key" onclick="pinPress('8')">8</button>
-      <button class="pin-key" onclick="pinPress('9')">9</button>
-      <button class="pin-key" onclick="pinClear()" style="font-size:.9rem;color:var(--mt)">✕</button>
-      <button class="pin-key" onclick="pinPress('0')">0</button>
-      <button class="pin-key" onclick="pinBack()" style="font-size:.9rem">⌫</button>
-    </div>
-    <div class="pin-err" id="pinErr"></div>
-  </div>
-</div>
-
-<!-- APP -->
 <div id="app">
   <div class="inv-header">
     <div class="inv-title">KAN <span>INVENTARIO</span></div>
-    <button class="btn-logout" onclick="logout()">Salir</button>
   </div>
 
   <div class="alert-banner" id="alertBanner">
@@ -366,14 +335,10 @@ let sb, items = [], tabActual = 0;
 
 // Verificar sesión al cargar la página
 function verificarSesion() {
-  if (localStorage.getItem('inv_autenticado') === 'true') {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    document.getElementById('app').style.flexDirection = 'column';
-    iniciar();
-  }
+  document.getElementById("app").style.display = "flex";
+  document.getElementById("app").style.flexDirection = "column";
+  iniciar();
 }
-
 window.addEventListener('DOMContentLoaded', verificarSesion);
 let _ajusteId = null, _ajusteTipo = null, _ajusteCant = 1;
 let _transferId = null, _transferCant = 1;
