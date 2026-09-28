@@ -996,7 +996,7 @@ async function guardarItem() {
         const nuevoStock = parseFloat(document.getElementById('itemStockActual').value) || 0;
         const peso = parseFloat(document.getElementById('itemPeso').value) || 0;
         data.descontar_de = descontarDeValue;
-        if (descontarDeValue && peso > 0) {
+        if (descontarDeValue && peso > 0 && _itemCategoriaAutomatica === 'produccion') {
           await ajustarInsumoAlEditarProducto(_editId, nuevoStock, peso, descontarDeValue);
         }
       }
@@ -1025,6 +1025,7 @@ async function guardarItem() {
 }
 async function ajustarInsumoAlEditarProducto(itemId, nuevoStock, pesoUnitario, descontarDeId) {
   if (!descontarDeId || !pesoUnitario) return;
+  if (nuevoStock === 0) return;
   try {
     const { data: itemAnterior } = await sb.from('inventario').select('stock').eq('id', itemId).single();
     if (!itemAnterior) return;
