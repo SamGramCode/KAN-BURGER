@@ -242,8 +242,18 @@ button{cursor:pointer;border:none;outline:none;font-family:inherit;touch-action:
 <div class="modal-overlay" id="modalItem">
   <div class="modal-box">
     <div class="modal-title" id="itemModalTitulo">Nuevo Item</div>
+    <label class="modal-label">Lugar (Categoría)</label>
+    <select class="modal-input" id="itemCategoria" style="cursor:pointer" onchange="cargarNombresDeCategoria()">
+      <option value="">-- Selecciona una categoría --</option>
+      <option value="insumos_produccion">Insumos Producción</option>
+      <option value="produccion">Producción</option>
+      <option value="insumos_venta">Insumos Productos a Vender</option>
+      <option value="venta">Productos a Vender</option>
+    </select>
     <label class="modal-label">Nombre</label>
-    <input class="modal-input" id="itemNombre" placeholder="Ej: Carne de res">
+    <select class="modal-input" id="itemNombre" style="cursor:pointer">
+      <option value="">-- Selecciona un nombre --</option>
+    </select>
     <div id="descontarDeDiv" style="display: none;">
       <label class="modal-label">Descontar de (Insumo)</label>
       <select class="modal-input" id="itemDescontarDe" style="cursor:pointer">
@@ -926,12 +936,49 @@ function abrirModalNuevo(cat) {
   document.getElementById('itemDescontarDe').value = '';
   // Guardar la categoría en un campo oculto
   _itemCategoriaAutomatica = categoriaAutomatica;
+  // Llenar dropdown de categoría
+  document.getElementById('itemCategoria').value = categoriaAutomatica;
+  // Llenar dropdown de nombre según la categoría
+  cargarNombresDeCategoria();
   document.getElementById('modalItem').classList.add('open');
 }
+
+// Función para cargar nombres dinámicamente según la categoría seleccionada
+function cargarNombresDeCategoria() {
+  const categoriaSeleccionada = document.getElementById('itemCategoria').value;
+  const selectNombre = document.getElementById('itemNombre');
+
+  if (!categoriaSeleccionada) {
+    selectNombre.innerHTML = '<option value="">-- Selecciona un nombre --</option>';
+    _itemCategoriaAutomatica = '';
+    return;
+  }
+
+  // Actualizar la categoría automática
+  _itemCategoriaAutomatica = categoriaSeleccionada;
+
+  // Filtrar productos de la categoría seleccionada
+  const productosDeCategoria = items
+    .filter(i => i.categoria === categoriaSeleccionada)
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+  // Llenar el dropdown
+  selectNombre.innerHTML = '<option value="">-- Selecciona un nombre --</option>';
+  productosDeCategoria.forEach(producto => {
+    const option = document.createElement('option');
+    option.value = producto.nombre;
+    option.textContent = `${producto.nombre}`;
+    selectNombre.appendChild(option);
+  });
+}
+
 function abrirEditar(id) {
   _editId = id;
   const item = items.find(i => i.id === id);
   document.getElementById('itemModalTitulo').textContent = 'Editar Item';
+  // Llenar categoría y nombre
+  document.getElementById('itemCategoria').value = item.categoria;
+  cargarNombresDeCategoria();
   document.getElementById('itemNombre').value = item.nombre;
   document.getElementById('itemMinimo').value = item.stock_minimo;
   document.getElementById('itemMinimoUnidadSelect').value = item.unidad || 'unidades';
