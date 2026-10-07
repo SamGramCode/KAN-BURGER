@@ -1,0 +1,139 @@
+// ── MODALES DE ÓRDENES CANCELADAS ──────────────────────────────
+let _diaSeleccionadoCanceladas = null;
+let _canceladasTemp = {};
+
+async function abrirCanceladas(fecha) {
+  _diaSeleccionadoCanceladas = fecha;
+  document.getElementById('canceladasOverlay').classList.add('open');
+  document.getElementById('canceladasPanel').classList.add('open');
+  await cargarCanceladasDelDia(fecha);
+}
+
+function cerrarCanceladas() {
+  document.getElementById('canceladasOverlay').classList.remove('open');
+  document.getElementById('canceladasPanel').classList.remove('open');
+}
+
+async function cargarCanceladasDelDia(fecha) {
+  const body = document.getElementById('canceladasBody');
+  body.innerHTML = '<div style="color:var(--mt);text-align:center;padding:2rem">Cargando...</div>';
+
+  const diaInicio = new Date(fecha + 'T00:00:00');
+  diaInicio.setHours(diaInicio.getHours() + 5);
+  const diaFin = new Date(fecha + 'T23:59:59');
+  diaFin.setHours(diaFin.getHours() + 5);
+
+  try {
+    const { data } = await sb
+      .from('ordenes')
+      .select('*')
+      .eq('estado', 'rechazado')
+      .gte('fecha_hora', diaInicio.toISOString())
+      .lte('fecha_hora', diaFin.toISOString())
+      .order('fecha_hora', { ascending: false });
+
+    if (!data || data.length === 0) {
+      _canceladasTemp = {};
+      body.innerHTML = '<div style="color:var(--mt);text-align:center;padding:2rem;opacity:.6">Sin órdenes canceladas en este día</div>';
+      return;
+    }
+
+    _canceladasTemp = {};
+    data.forEach(o => _canceladasTemp[o.id] = o);
+
+    body.innerHTML = data.map(o => `
+      <div class="cancelada-line" onclick="mostrarCanceladaTicket('${o.id}')">
+        <div class="cancelada-line-info">
+          <div class="cancelada-line-num">KN-${String(o.id).slice(-4).padStart(4,'0')}</div>
+          <div class="cancelada-line-name">${o.telefono || 'Sin nombre'} • ${new Date(o.fecha_hora).toLocaleTimeString('es-CO', {hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--or);text-align:right">${fmt(o.total || 0)}</div>
+      </div>
+    `).join('');
+  } catch (e) {
+    _canceladasTemp = {};
+    body.innerHTML = '<div style="color:#E74C3C;text-align:center;padding:2rem">Error al cargar órdenes</div>';
+  }
+}
+
+function mostrarCanceladaTicket(ordenId) {
+  const orden = _canceladasTemp[ordenId];
+  if (!orden) return;
+
+  document.getElementById('canceladaTicketOverlay').classList.add('open');
+  document.getElementById('canceladaTicketPanel').classList.add('open');
+  document.getElementById('canceladaTicketTitle').textContent = `KN-${String(ordenId).slice(-4).padStart(4,'0')}`;
+
+  const ticketHTML = buildTicketCanceladaHTML(orden);
+  document.getElementById('canceladaTicketBody').innerHTML = ticketHTML;
+}
+
+function buildTicketCanceladaHTML(orden) {
+  const ts = new Date(orden.fecha_hora);
+  return `
+    <div style="margin-bottom:1.2rem">
+      <div style="font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">Datos de la orden</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;padding:.8rem;background:var(--dk3);border:1px solid var(--bd);border-radius:10px;font-size:.85rem">
+        <div><span style="color:var(--mt)">Fecha:</span> ${ts.toLocaleDateString('es-CO')}</div>
+        <div><span style="color:var(--mt)">Hora:</span> ${ts.toLocaleTimeString('es-CO', {hour:'2-digit',minute:'2-digit'})}</div>
+        <div><span style="color:var(--mt)">Teléfono:</span> ${orden.telefono || '—'}</div>
+        <div><span style="color:var(--mt)">Total:</span> <span style="color:var(--or);font-weight:900">${fmt(orden.total || 0)}</span></div>
+      </div>
+    </div>
+    
+    ${orden.comida && orden.comida.length > 0 ? `
+      <div style="margin-bottom:1.2rem">
+        <div style="font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">🍔 Comida</div>
+        ${orden.comida.map((c, i) => `
+          <div style="padding:.6rem .8rem;background:var(--dk3);border:1px solid var(--bd);border-radius:8px;margin-bottom:.3rem;font-size:.85rem">
+            <div><strong>${c.name}</strong> x${c.qty}</div>
+            <div style="color:var(--mt);font-size:.75rem">${fmt(c.price * c.qty)}</div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+    
+    ${orden.bebidas && orden.bebidas.length > 0 ? `
+      <div style="margin-bottom:1.2rem">
+        <div style="font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">🥤 Bebidas</div>
+        ${orden.bebidas.map(b => `
+          <div style="padding:.6rem .8rem;background:var(--dk3);border:1px solid var(--bd);border-radius:8px;margin-bottom:.3rem;font-size:.85rem">
+            <div><strong>${b.name}</strong> x${b.qty}</div>
+            <div style="color:var(--mt);font-size:.75rem">${fmt(b.price * b.qty)}</div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+    
+    ${orden.adiciones && orden.adiciones.length > 0 ? `
+      <div style="margin-bottom:1.2rem">
+        <div style="font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem">➕ Adiciones</div>
+        ${orden.adiciones.map(a => `
+          <div style="padding:.6rem .8rem;background:var(--dk3);border:1px solid var(--bd);border-radius:8px;margin-bottom:.3rem;font-size:.85rem">
+            <div><strong>${a.name}</strong> x${a.qty}</div>
+            <div style="color:var(--mt);font-size:.75rem">${fmt(a.price * a.qty)}</div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+    
+    ${orden.notas ? `
+      <div style="padding:.8rem;background:rgba(231,76,60,.1);border:1px solid rgba(231,76,60,.2);border-radius:10px;font-size:.85rem">
+        <div style="color:var(--mt);margin-bottom:.4rem">📝 Notas:</div>
+        <div>${orden.notas}</div>
+      </div>
+    ` : ''}
+  `;
+}
+
+function cerrarCanceladaTicket() {
+  document.getElementById('canceladaTicketOverlay').classList.remove('open');
+  document.getElementById('canceladaTicketPanel').classList.remove('open');
+}
+
+function volverCanceladas() {
+  cerrarCanceladaTicket();
+  setTimeout(() => {
+    abrirCanceladas(_diaSeleccionadoCanceladas);
+  }, 300);
+}
